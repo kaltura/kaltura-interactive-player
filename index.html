@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapt V3 Demo</title>
+</head>
+<body>
+    <script src="bundle.js" type="text/javascript"></script>
+    <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/42897631"></script>
+    <style>
+
+        #player {
+            width:500px;
+            height:300px;
+        }
+
+    </style>
+<div id="player"></div>
+<script>
+
+	var config = {
+		session:{
+			ks: "MjVkNTNhNzkyNjYxZDUyZWExNmM1YmI2OGVhZmExODRmNDMwMmQ4ZHwyNzAxNzsyNzAxNzsxNTM1OTgzODU5OzI7NTU0NDtfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
+		},
+		targetId: 'player',
+		playback:{
+			autoplay:true,
+			preload:"auto"
+		},
+		provider: {
+			partnerId: 27017
+		},
+        rapt:{}
+	};
+
+	var kalturaPlayer = KalturaPlayer;
+    var rapt = Rapt.setup(config , kalturaPlayer); // todo - maybe we can save kalturaPlayer param?
+	rapt.loadMedia({entryId: '1_4377j2jl'});
+
+</script>
+</body>
+</html>

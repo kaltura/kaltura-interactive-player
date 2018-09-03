@@ -1,0 +1,25 @@
+{
+  "name": "Kaltura-typescript-boylerplate",
+  "version": "1.0.0",
+  "description": "Webpack typescript Kaltura client boilerplate",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --open",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eitan Avgil",
+  "license": "MIT",
+  "dependencies": {
+    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
+  },
+  "devDependencies": {
+    "@types/core-js": "^2.5.0",
+    "@types/es6-promise": "^3.3.0",
+    "core-js": "^2.5.7",
+    "ts-loader": "^4.4.2",
+    "typescript": "^3.0.1",
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.5"
+  }
+}
