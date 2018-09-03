@@ -1,17 +1,23 @@
+import { States } from "./helpers/States";
 import { RaptClient } from "./RaptClient";
 import { PlayersManager } from "./PlayersManager";
 import IRaptConfig from "./interfaces/IRaptConfig";
 
-class Rapt {
+class Kip {
   config: any;
   playerManager: PlayersManager;
   playerLibrary: any;
+  rapt: any; // TODO - optimize
   playlistId: string;
-  client: RaptClient;
+  client: RaptClient; // Backend Client
+  state: string;
 
   constructor() {}
-  setup(config: IRaptConfig, playerLibrary: any): Rapt {
+
+  setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
+    this.state = States.INIT;
     this.config = config;
+    this.rapt = rapt;
     this.playerLibrary = playerLibrary;
     return this;
   }
@@ -42,9 +48,11 @@ class Rapt {
       this.config,
       this.playerLibrary,
       this.playlistId,
-      raptGraphData
+      raptGraphData,
+      this.rapt
     );
-    this.playerManager.initPlayback();
+    // this.playerManager.addEventListener(States.ERROR => {alert("ERROR")})
+    this.playerManager.init();
   }
 }
-export default new Rapt();
+export default new Kip();

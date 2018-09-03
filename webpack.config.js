@@ -1,10 +1,10 @@
 module.exports = {
 	mode: 'development',
-	entry: './src/app.ts',
+	entry: './src/Kip.ts',
 	output: {
 		filename: 'bundle.js',
 		path: __dirname,
-		library: 'Rapt',
+		library: 'Kip',
 		libraryTarget: 'window',
 		libraryExport: 'default'
 	},
