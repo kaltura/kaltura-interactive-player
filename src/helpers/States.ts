@@ -1,7 +1,11 @@
 export const States = {
-    INIT: "init", // loading and initializing the
-    LOAD_FIRST: "loadFirst", // loading the first node
-    CACHING: "caching", // caching phase.
-    IDEAL: "ideal", // finished caching
-    ERROR: "error"
+  INIT: "init",
+  LOADING: "loading",
+  CACHING: "caching",
+  IDEAL: "ideal",
+  ERROR: "error"
+};
+export const PlaybackState = {
+  PLAYING: "playing",
+  PAUSED: "paused"
 };

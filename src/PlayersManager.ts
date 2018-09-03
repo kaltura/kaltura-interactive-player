@@ -1,6 +1,6 @@
 import INode from "./interfaces/INode";
 import IRaptConfig from "./interfaces/IRaptConfig";
-import { States } from "./helpers/States";
+import { PlaybackState, States } from "./helpers/States";
 
 /**
  * This class manages players creations and additions to DOM, as well as the Rapt layer
@@ -8,6 +8,7 @@ import { States } from "./helpers/States";
 export class PlayersManager {
   conf: any;
   nodes: [];
+  players: any; // hold references to loaded players
   playerLibrary: any;
   raptData: any;
   raptEngine: any; // library
@@ -16,6 +17,7 @@ export class PlayersManager {
   mainDiv: HTMLElement;
   currentPlayer: any;
   element: any;
+  playbackState: string;
 
   constructor(
     conf: any,
@@ -26,6 +28,7 @@ export class PlayersManager {
   ) {
     this.conf = conf;
     this.raptData = raptData;
+    this.players = {};
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
@@ -48,19 +51,24 @@ export class PlayersManager {
       //TODO - handle error
       dispatchEvent(new Event(States.ERROR));
     }
-    dispatchEvent(new Event(States.LOAD_FIRST));
+    dispatchEvent(new Event(States.LOADING));
 
     // load the 1st media
     const nodeDiv: HTMLElement = this.createNodesDiv(firstNode);
     const nodeConf: object = this.getPlayerConf(firstNode, nodeDiv.id);
     this.currentPlayer = this.playerLibrary.setup(nodeConf);
+    // save the player for later use
+    this.players[firstNode.entryId] = {
+      player: this.currentPlayer,
+      state: States.LOADING
+    };
     this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
-
+    this.checkIfBuffered((entryId: string) => {
+      console.log(">>>>> FIRST LOADED", firstNode);
+      const nextNodes = this.getNextNodes(firstNode);
+      this.cacheNode(nextNodes[0]);
+    }, this.currentPlayer);
     this.initRapt();
-
-    // todo - preform this post first PLAYBACK
-    const nextNodes = this.getNextNodes(firstNode);
-    this.cacheNode(nextNodes[0]);
   }
 
   /**
@@ -118,7 +126,6 @@ export class PlayersManager {
         )
       : [];
   }
-
   /**
    * Return a rapt node
    * @param id
@@ -136,6 +143,9 @@ export class PlayersManager {
     const nodesDiv: HTMLElement = this.createNodesDiv(node, true);
     const nodeConf: object = this.getPlayerConf(node, nodesDiv.id, true);
     const player = this.playerLibrary.setup(nodeConf);
+    this.checkIfBuffered(function(entryId: string) {
+      console.log(">>>>> $$$", entryId);
+    }, player);
     player.loadMedia({ entryId: node.entryId });
   }
 
@@ -160,8 +170,20 @@ export class PlayersManager {
     setInterval(this.tick, 500, this.currentPlayer, this.raptEngine);
   }
 
-  //////////////////////  Rapt delegate functions  ////////////////////////
+  // Check if the current content of bufferPlayer was loaded;
+  checkIfBuffered(callback: (entryId: string) => void, bufferPlayer: any) {
+    if (bufferPlayer.buffered && bufferPlayer.buffered.length) {
+      setTimeout(() => {
+        callback(bufferPlayer._config.sources.id);
+      }, 250);
+    } else {
+      setTimeout(() => {
+        this.checkIfBuffered(callback, bufferPlayer);
+      }, 250);
+    }
+  }
 
+  //////////////////////  Rapt delegate functions  ////////////////////////
   load(media: any) {
     var id = media.sources[0].src;
     this.switchPlayer(id);
@@ -169,10 +191,12 @@ export class PlayersManager {
 
   play() {
     console.log(">>>>> play");
+    this.playbackState = PlaybackState.PLAYING;
     //window.mainPlayer.play();
   }
 
   pause() {
+    this.playbackState = PlaybackState.PAUSED;
     console.log(">>>>> pause");
     //window.mainPlayer.pause();
   }
@@ -184,11 +208,13 @@ export class PlayersManager {
 
   event(_event: any) {
     if (_event.type != "player:timeupdate") {
-      // console.log(">>>> Rapt event: "+ event.type);
+      console.log(">>>> Rapt event: " + _event.type);
     }
   }
-
   tick(currentPlayer: any, raptEngine: any) {
+    if (this.playbackState === PlaybackState.PAUSED) {
+      return; // no point updating when video is paused
+    }
     const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
     if (currentPlayingVideoElement) {
       raptEngine.update({
@@ -202,6 +228,5 @@ export class PlayersManager {
       });
     }
   }
-
   /////////////////////////////////////////////////////////////////////////
 }
