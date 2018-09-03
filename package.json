@@ -1,7 +1,7 @@
 {
-  "name": "Kaltura-typescript-boylerplate",
-  "version": "1.0.0",
-  "description": "Webpack typescript Kaltura client boilerplate",
+  "name": "kaltura-interactive-player",
+  "version": "0.1.0",
+  "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --open",

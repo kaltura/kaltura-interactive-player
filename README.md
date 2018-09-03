@@ -10,19 +10,19 @@ places the Rapt-engine layer (the layer that shows the IV UI) and in the backgro
 the user interacts with the Rapt engine layer, the KIP will move the next video to the front and play it.    
     
 
-##Install: 
+## Install: 
 ```
 git clone https://github.com/eitanavgil/kaltura-typescript-boilerplate.git
 cd kaltura-typescript-boilerplate
 npm install
 ```
 
-##Run: 
+## Run: 
 ```
 npm start
 ```
 
-##Embed: 
+## Embed: 
 This library will be bundled inside the Kaltura playkit-js library and served by it. This next snippet will show a typical embed code of a rapt player
 
  ```
@@ -57,7 +57,7 @@ This library will be bundled inside the Kaltura playkit-js library and served by
 ```
 
 
-##Configrations:
+## Configrations:
 The Rapt configuration is in fact an extension of the playkit-js configuration with the addition of the rapt section. 
 The configu 
  
