@@ -1,7 +1,7 @@
-import { States } from "./helpers/States";
 import { RaptClient } from "./RaptClient";
 import { PlayersManager } from "./PlayersManager";
 import IRaptConfig from "./interfaces/IRaptConfig";
+import { KipState } from "./helpers/States";
 
 class Kip {
   config: any;
@@ -15,7 +15,7 @@ class Kip {
   constructor() {}
 
   setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
-    this.state = States.INIT;
+    this.state = KipState.INIT;
     this.config = config;
     this.rapt = rapt;
     this.playerLibrary = playerLibrary;

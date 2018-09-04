@@ -1,15 +1,17 @@
 import INode from "./interfaces/INode";
 import IRaptConfig from "./interfaces/IRaptConfig";
-import { PlaybackState, States } from "./helpers/States";
-import {BufferManager} from "./BufferManager";
+import { PlaybackState } from "./helpers/States";
+import { BufferManager } from "./BufferManager";
+import { Dispatcher } from "./helpers/Dispatcher";
+import { KipEvent } from "./helpers/KipEvents";
 
 /**
  * This class manages players creations and additions to DOM, as well as the Rapt layer
  */
-export class PlayersManager {
+export class PlayersManager extends Dispatcher {
   conf: any;
   nodes: [];
-  players: any; // hold references to loaded players
+  // players: any; // hold references to loaded players
   playerLibrary: any;
   raptData: any;
   raptEngine: any; // library
@@ -28,13 +30,17 @@ export class PlayersManager {
     raptData: any,
     raptEngine: any
   ) {
+    super();
     this.conf = conf;
     this.raptData = raptData;
-    this.players = {};
+    // this.players = {};
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
     this.bufferManager = new BufferManager();
+    this.bufferManager.addListener("bibi", (q: any) => {
+      console.log(">>>>> @@@@@@@ ", q);
+    });
     this.mainDiv = document.getElementById(this.conf.targetId);
   }
 
@@ -53,19 +59,18 @@ export class PlayersManager {
     });
     if (!firstNode) {
       //TODO - handle error
-      dispatchEvent(new Event(States.ERROR));
+      this.dispatch(KipEvent.FIRST_PLAY_ERROR);
     }
-    dispatchEvent(new Event(States.LOADING));
 
     // load the 1st media
     const nodeDiv: HTMLElement = this.createNodesDiv(firstNode);
     const nodeConf: object = this.getPlayerConf(firstNode, nodeDiv.id);
     this.currentPlayer = this.playerLibrary.setup(nodeConf);
-    // save the player for later use
-    this.players[firstNode.entryId] = {
-      player: this.currentPlayer,
-      state: States.LOADING
-    };
+    // // save the player for later use
+    // this.players[firstNode.entryId] = {
+    //   player: this.currentPlayer,
+    //   state:
+    // };
     this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
     this.checkIfBuffered((entryId: string) => {
       console.log(">>>>> FIRST LOADED", firstNode);
@@ -189,7 +194,7 @@ export class PlayersManager {
 
   //////////////////////  Rapt delegate functions  ////////////////////////
   load(media: any) {
-    var id = media.sources[0].src;
+    const id = media.sources[0].src;
     this.switchPlayer(id);
   }
 
