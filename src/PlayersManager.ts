@@ -1,6 +1,7 @@
 import INode from "./interfaces/INode";
 import IRaptConfig from "./interfaces/IRaptConfig";
 import { PlaybackState, States } from "./helpers/States";
+import {BufferManager} from "./BufferManager";
 
 /**
  * This class manages players creations and additions to DOM, as well as the Rapt layer
@@ -14,6 +15,7 @@ export class PlayersManager {
   raptEngine: any; // library
   rapt: any; // instance of Rapt engine
   raptProjectId: string;
+  bufferManager: BufferManager;
   mainDiv: HTMLElement;
   currentPlayer: any;
   element: any;
@@ -32,6 +34,7 @@ export class PlayersManager {
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
+    this.bufferManager = new BufferManager();
     this.mainDiv = document.getElementById(this.conf.targetId);
   }
 
@@ -40,6 +43,7 @@ export class PlayersManager {
    * specific node.
    */
   init(): void {
+    this.log("log");
     const { nodes, settings } = this.raptData;
     this.nodes = nodes;
     const startNodeId = settings.startNodeId;
@@ -211,6 +215,7 @@ export class PlayersManager {
       console.log(">>>> Rapt event: " + _event.type);
     }
   }
+
   tick(currentPlayer: any, raptEngine: any) {
     if (this.playbackState === PlaybackState.PAUSED) {
       return; // no point updating when video is paused
@@ -229,4 +234,10 @@ export class PlayersManager {
     }
   }
   /////////////////////////////////////////////////////////////////////////
+
+  log(str: string) {
+    // if (window.logMsg) {
+    //   window.logMsg(str);
+    // }
+  }
 }

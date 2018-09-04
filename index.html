@@ -41,6 +41,13 @@
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
 	kip.loadMedia({entryId: '1_4377j2jl'});
 
+
+	// logger
+	function logMsg(str){
+		document.getElementById("log").value = str;
+    }
+
 </script>
+<textarea id="log" style="width: 200px;height: 100%;position: absolute;left:550px;top:0"></textarea>
 </body>
 </html>
