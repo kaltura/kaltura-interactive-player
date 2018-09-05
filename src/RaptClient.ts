@@ -10,13 +10,15 @@ import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/a
 import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetFilter";
 import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
 import { KalturaFileAssetListResponse } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetListResponse";
+import { Dispatcher } from "./helpers/Dispatcher";
+import { KipEvent } from "./helpers/KipEvents";
 
 interface clientConfig {
   ks?: string;
   serviceUrl?: string;
 }
 
-export class RaptClient {
+export class RaptClient extends Dispatcher {
   kClient: KalturaClient;
   serviceUrl: string;
   clientTag: string = "rapt-v3-app";
@@ -24,6 +26,7 @@ export class RaptClient {
   ks: string;
 
   constructor(config: clientConfig) {
+    super();
     this.serviceUrl = config.serviceUrl
       ? config.serviceUrl
       : "http://www.kaltura.com";
@@ -85,11 +88,9 @@ export class RaptClient {
         },
         err => {
           if (err instanceof KalturaClientException) {
-            // TODO handle errors
-            // network error etc
+            reject("Network/Client error");
           } else if (err instanceof KalturaAPIException) {
-            // TODO handle errors
-            // api exception
+            reject("API error, check your KS and Playlist data validation");
           }
         }
       );

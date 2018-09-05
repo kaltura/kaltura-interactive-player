@@ -3,25 +3,23 @@ import IRaptConfig from "./interfaces/IRaptConfig";
 import { PlaybackState } from "./helpers/States";
 import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
-import { KipEvent } from "./helpers/KipEvents";
+import { BufferEvent, KipEvent } from "./helpers/KipEvents";
 
 /**
- * This class manages players creations and additions to DOM, as well as the Rapt layer
+ * This class manages players, placing and managing the Rapt engine layer
  */
 export class PlayersManager extends Dispatcher {
-  conf: any;
   nodes: [];
   // players: any; // hold references to loaded players
   playerLibrary: any;
   raptData: any;
   raptEngine: any; // library
   rapt: any; // instance of Rapt engine
-  raptProjectId: string;
   bufferManager: BufferManager;
-  mainDiv: HTMLElement;
   currentPlayer: any;
   element: any;
   playbackState: string;
+  raptProjectId: string;
 
   constructor(
     conf: any,
@@ -31,24 +29,35 @@ export class PlayersManager extends Dispatcher {
     raptEngine: any
   ) {
     super();
-    this.conf = conf;
+    // set data to class
     this.raptData = raptData;
-    // this.players = {};
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
-    this.bufferManager = new BufferManager();
-    this.bufferManager.addListener("bibi", (q: any) => {
-      console.log(">>>>> @@@@@@@ ", q);
+    const mainDiv = document.getElementById(conf.targetId);
+
+    // init bufferManager
+    this.bufferManager = new BufferManager(
+      this.playerLibrary,
+      mainDiv,
+      raptProjectId,
+      conf
+    );
+
+    this.bufferManager.addListener(BufferEvent.BUFFERED, (entryId: string) => {
+      console.log(">>>>> BUFFERED ", entryId);
     });
-    this.mainDiv = document.getElementById(this.conf.targetId);
+
+    this.bufferManager.addListener(BufferEvent.DONE, (nodeEntryId: string) => {
+      console.log(">>>>> DONE buffering for node ", nodeEntryId);
+    });
   }
 
   /**
    * Assuming we have all the data, find the 1st node and load it. Once loaded, start cache relevant entries of that
    * specific node.
    */
-  init(): void {
+  init(mainDiv: HTMLElement): void {
     this.log("log");
     const { nodes, settings } = this.raptData;
     this.nodes = nodes;
@@ -63,60 +72,27 @@ export class PlayersManager extends Dispatcher {
     }
 
     // load the 1st media
-    const nodeDiv: HTMLElement = this.createNodesDiv(firstNode);
-    const nodeConf: object = this.getPlayerConf(firstNode, nodeDiv.id);
+    const nodeDiv: HTMLElement = this.bufferManager.createNodesDiv(firstNode);
+    const nodeConf: object = this.bufferManager.getPlayerConf(
+      firstNode,
+      nodeDiv.id
+    );
     this.currentPlayer = this.playerLibrary.setup(nodeConf);
-    // // save the player for later use
-    // this.players[firstNode.entryId] = {
-    //   player: this.currentPlayer,
-    //   state:
-    // };
     this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
-    this.checkIfBuffered((entryId: string) => {
+
+    this.bufferManager.checkIfBuffered((entryId: string) => {
       console.log(">>>>> FIRST LOADED", firstNode);
       const nextNodes = this.getNextNodes(firstNode);
-      this.cacheNode(nextNodes[0]);
+      //this.cacheNode(nextNodes[0]);
     }, this.currentPlayer);
+    // create the rapt-engine layer
+    this.element = document.createElement("div");
+    this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
+    this.element.setAttribute("style", "width:100%;height:100%;z-index:9999");
+    // adding the rapt layer to the main-app div
+    mainDiv.appendChild(this.element);
+
     this.initRapt();
-  }
-
-  /**
-   * Extract the player configuration from the KIV generic config: remove the rapt element and add specific target id
-   * @param raptNode
-   * @param targetName
-   * @param cache - if set to true, the config will use autoPlay=false and preload=true;
-   */
-  getPlayerConf(
-    raptNode: any,
-    targetName: string,
-    isCache: boolean = false
-  ): object {
-    const newConf: IRaptConfig = Object.assign(this.conf);
-    newConf.targetId = targetName;
-    if (isCache) {
-      newConf.playback = {
-        autoplay: false,
-        preload: "auto"
-      };
-    }
-    delete newConf.rapt;
-    return newConf;
-  }
-
-  /**
-   * Creates a unique div per node by the node entryId. Concat it's name to the playlist-id so it will allow to embed
-   * 2 different rapt projects on the same page.
-   * @param node
-   */
-  createNodesDiv(node: INode, isCachePlayer: boolean = false): HTMLElement {
-    const newDiv = document.createElement("div");
-    newDiv.setAttribute("id", this.raptProjectId + "__" + node.entryId);
-    newDiv.setAttribute("style", "width:100%;height:100%");
-    if (isCachePlayer) {
-      newDiv.setAttribute("class", "kiv-cache-player");
-    }
-    this.mainDiv.appendChild(newDiv);
-    return newDiv;
   }
 
   /**
@@ -145,20 +121,6 @@ export class PlayersManager extends Dispatcher {
   }
 
   /**
-   * Load a specific player per-node in "cache" mode
-   * @param node
-   */
-  cacheNode(node: INode): void {
-    const nodesDiv: HTMLElement = this.createNodesDiv(node, true);
-    const nodeConf: object = this.getPlayerConf(node, nodesDiv.id, true);
-    const player = this.playerLibrary.setup(nodeConf);
-    this.checkIfBuffered(function(entryId: string) {
-      console.log(">>>>> $$$", entryId);
-    }, player);
-    player.loadMedia({ entryId: node.entryId });
-  }
-
-  /**
    * Switch to a new player, by the Kaltura Entry id
    * @param id
    */
@@ -167,29 +129,12 @@ export class PlayersManager extends Dispatcher {
     this.currentPlayer.pause();
   }
 
+  // initiate Rapt-engine layer
   initRapt() {
-    // create the rapt-engine layer
-    this.element = document.createElement("div");
-    this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-    this.element.setAttribute("style", "width:100%;height:100%;z-index:9999");
-    this.mainDiv.appendChild(this.element);
     this.raptEngine = new this.raptEngine.Engine(this);
     this.raptEngine.load(this.raptData);
     this.raptEngine.resize({ width: 500, height: 300 });
     setInterval(this.tick, 500, this.currentPlayer, this.raptEngine);
-  }
-
-  // Check if the current content of bufferPlayer was loaded;
-  checkIfBuffered(callback: (entryId: string) => void, bufferPlayer: any) {
-    if (bufferPlayer.buffered && bufferPlayer.buffered.length) {
-      setTimeout(() => {
-        callback(bufferPlayer._config.sources.id);
-      }, 250);
-    } else {
-      setTimeout(() => {
-        this.checkIfBuffered(callback, bufferPlayer);
-      }, 250);
-    }
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////
@@ -199,19 +144,19 @@ export class PlayersManager extends Dispatcher {
   }
 
   play() {
-    console.log(">>>>> play");
+    // console.log(">>>>> play");
     this.playbackState = PlaybackState.PLAYING;
     //window.mainPlayer.play();
   }
 
   pause() {
     this.playbackState = PlaybackState.PAUSED;
-    console.log(">>>>> pause");
+    // console.log(">>>>> pause");
     //window.mainPlayer.pause();
   }
 
   seek(time: number) {
-    console.log(">>>>> seek ", time);
+    // console.log(">>>>> seek ", time);
     //window.mainPlayer.currentTime = time;
   }
 

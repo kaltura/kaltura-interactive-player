@@ -20,11 +20,12 @@
 
     </style>
 <div id="player"></div>
+<div id="logDiv" style="width: 450px;height: 100%;position: absolute;left:550px;top:0"></div>
 <script>
 
 	var config = {
 		session:{
-			ks: "MWQ4NzFlYjJkODNlOTI0M2JjNzMxMDg5NWY3MGI2MmQ5ODZjZDliZnwyNzAxNzsyNzAxNzsxNTM2MDcxNzA1OzI7MjY1NzQ7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
+			ks: "MjJmNmVjYjNjMDllY2E3YWJmZjYwNGVhYjNjZWRhZjIxMTBjNzAyMHwyNzAxNzsyNzAxNzsxNTM2MjIwMDI2OzI7MjQ5NDY7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
 		},
 		targetId: 'player',
 		playback:{
@@ -34,20 +35,29 @@
 		provider: {
 			partnerId: 27017
 		},
-        rapt:{}
+        rapt:{
+			debug:true
+        }
 	};
 
-	var kalturaPlayer = KalturaPlayer;
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
+	kip.addListener("log" , logMsg); // track all events when rapt.debug=true
 	kip.loadMedia({entryId: '1_4377j2jl'});
 
 
 	// logger
-	function logMsg(str){
-		document.getElementById("log").value = str;
+	function logMsg(logObject){
+		const logDiv = document.createElement("div");
+		logDiv.innerHTML = logObject.event;
+		document.getElementById("logDiv").appendChild(logDiv);
+		if(logObject.data){
+            const dataDiv = document.createElement("div");
+			dataDiv.style.cssText = "color: blue";
+			dataDiv.innerHTML = logObject.data;
+            document.getElementById("logDiv").appendChild(dataDiv);
+        }
     }
 
 </script>
-<textarea id="log" style="width: 200px;height: 100%;position: absolute;left:550px;top:0"></textarea>
 </body>
 </html>

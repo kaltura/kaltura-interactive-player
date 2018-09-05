@@ -2,8 +2,9 @@ import { RaptClient } from "./RaptClient";
 import { PlayersManager } from "./PlayersManager";
 import IRaptConfig from "./interfaces/IRaptConfig";
 import { KipState } from "./helpers/States";
+import { Dispatcher } from "./helpers/Dispatcher";
 
-class Kip {
+class Kip extends Dispatcher {
   config: any;
   playerManager: PlayersManager;
   playerLibrary: any;
@@ -12,7 +13,9 @@ class Kip {
   client: RaptClient; // Backend Client
   state: string;
 
-  constructor() {}
+  constructor() {
+    super();
+  }
 
   setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
     this.state = KipState.INIT;
@@ -34,8 +37,8 @@ class Kip {
       .then(graphData => {
         this.dataLoaded(graphData);
       })
-      .catch(err => {
-        //todo handle err later
+      .catch((err: string) => {
+        this.dispatchApi(err);
       });
   }
 
@@ -52,7 +55,21 @@ class Kip {
       this.rapt
     );
     // this.playerManager.addEventListener(States.ERROR => {alert("ERROR")})
-    this.playerManager.init();
+    const mainDiv = document.getElementById(this.config.targetId);
+    this.playerManager.init(mainDiv);
+  }
+
+  dispatchApi(event: string, data?: any) {
+    if (this.config && this.config.rapt && this.config.rapt.debug) {
+      console.warn("Rapt >> ", event);
+      if (data) {
+        console.warn("Rapt >> >>", data);
+      }
+      // Log API
+      this.dispatch("log", { event: event, data: data });
+    }
+    // expose API
+    this.dispatch(event, data);
   }
 }
 export default new Kip();
