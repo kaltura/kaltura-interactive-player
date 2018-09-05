@@ -4,7 +4,6 @@ export const KipState = {
 
 export const BufferState = {
   INIT: "init",
-  LOADING: "loading",
   CACHING: "caching",
   READY: "ready",
   ERROR: "error"

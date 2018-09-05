@@ -7,8 +7,9 @@ export const KipEvent = {
 
 
 export const BufferEvent = {
-    BUFFERED: "buffered", // buffered a specific entry - argument will be the entry id
-	DONE: "done" // Done buffering all relevant entries of this node
+    BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
+	DONE: "done", // Done buffering all relevant entries of this node
+	ALL_DONE: "allDone" // Done buffering all relevant entries of this node
 };
 
 

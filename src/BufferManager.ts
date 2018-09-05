@@ -1,12 +1,20 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import INode from "./interfaces/INode";
 import IRaptConfig from "./interfaces/IRaptConfig";
+import { BufferState } from "./helpers/States";
+import { BufferEvent } from "./helpers/KipEvents";
+import ICachingPlayer from "./interfaces/ICachingPlayer";
+
+/**
+ * This class is in charge of the creation of all players, and to handle their statuses (init,caching,ready)
+ */
 
 export class BufferManager extends Dispatcher {
-  players: [];
+  players: any;
   playerLibrary: any;
   mainDiv: HTMLElement;
   raptProjectId: string;
+  currentNode: INode;
   conf: any;
 
   constructor(
@@ -23,6 +31,43 @@ export class BufferManager extends Dispatcher {
     this.players = [];
   }
 
+  cacheNodes(nodes: INode[], currentNode: INode) {
+    this.currentNode = currentNode;
+    // store the nodes in case they are not stored yet
+    for (const node of nodes) {
+      if (!this.players.find((item: ICachingPlayer) => item.id === node.id)) {
+        // use Rapt id as a key since we might have kaltura-entry in different rapt nodes
+        this.players.push({
+          status: BufferState.INIT,
+          id: node.id,
+          node: node
+        });
+      }
+    }
+    this.cacheNextUncachedPlayer();
+  }
+
+  /**
+   * From current session - find if there is an unbuffered node, if so - create it and start caching it
+   */
+  cacheNextUncachedPlayer() {
+    // TODO add order logic later (or not?)
+    // find first un-cached
+    let unbufferedPlayer: ICachingPlayer = this.players.find(
+      (item: any) => item.status === BufferState.INIT
+    );
+    if (unbufferedPlayer) {
+      // found one - add it and start caching it. Notify PlayerManager of this
+      this.dispatch(BufferEvent.BUFFERING, unbufferedPlayer.node);
+      // update status of current player
+      unbufferedPlayer.status = BufferState.CACHING;
+      // create player and cache it
+      this.cacheNode(unbufferedPlayer.node);
+    } else {
+      this.dispatch(BufferEvent.ALL_DONE, this.currentNode);
+    }
+  }
+
   /**
    * Load a specific player per-node in "cache" mode
    * @param node
@@ -31,8 +76,12 @@ export class BufferManager extends Dispatcher {
     const nodesDiv: HTMLElement = this.createNodesDiv(node, true);
     const nodeConf: object = this.getPlayerConf(node, nodesDiv.id, true);
     const player = this.playerLibrary.setup(nodeConf);
-    this.checkIfBuffered(function(entryId: string) {
-      console.log(">>>>> $$$", entryId);
+    this.checkIfBuffered((entryId: string) => {
+      const finished: ICachingPlayer = this.players.find(
+        (item: ICachingPlayer) => item.node.entryId === entryId
+      );
+      this.dispatch(BufferEvent.DONE, finished);
+      this.cacheNextUncachedPlayer();
     }, player);
     player.loadMedia({ entryId: node.entryId });
   }

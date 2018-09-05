@@ -1,16 +1,14 @@
 import INode from "./interfaces/INode";
-import IRaptConfig from "./interfaces/IRaptConfig";
 import { PlaybackState } from "./helpers/States";
 import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent } from "./helpers/KipEvents";
 
 /**
- * This class manages players, placing and managing the Rapt engine layer
+ * This class manages players, and places and interact with the Rapt engine layer
+ * This class creates and manages BufferManager
  */
 export class PlayersManager extends Dispatcher {
-  nodes: [];
-  // players: any; // hold references to loaded players
   playerLibrary: any;
   raptData: any;
   raptEngine: any; // library
@@ -44,12 +42,16 @@ export class PlayersManager extends Dispatcher {
       conf
     );
 
-    this.bufferManager.addListener(BufferEvent.BUFFERED, (entryId: string) => {
-      console.log(">>>>> BUFFERED ", entryId);
+    this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
+      console.log(">>>>> buffering ", node);
     });
 
-    this.bufferManager.addListener(BufferEvent.DONE, (nodeEntryId: string) => {
-      console.log(">>>>> DONE buffering for node ", nodeEntryId);
+    this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
+      console.log(">>>>> all done ", node);
+    });
+
+    this.bufferManager.addListener(BufferEvent.DONE, (node: INode) => {
+      console.log(">>>>> DONE buffering for node ", node);
     });
   }
 
@@ -60,17 +62,14 @@ export class PlayersManager extends Dispatcher {
   init(mainDiv: HTMLElement): void {
     this.log("log");
     const { nodes, settings } = this.raptData;
-    this.nodes = nodes;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
     const firstNode = nodes.find(function(element: any) {
       return element.id === startNodeId;
     });
     if (!firstNode) {
-      //TODO - handle error
       this.dispatch(KipEvent.FIRST_PLAY_ERROR);
     }
-
     // load the 1st media
     const nodeDiv: HTMLElement = this.bufferManager.createNodesDiv(firstNode);
     const nodeConf: object = this.bufferManager.getPlayerConf(
@@ -79,11 +78,8 @@ export class PlayersManager extends Dispatcher {
     );
     this.currentPlayer = this.playerLibrary.setup(nodeConf);
     this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
-
     this.bufferManager.checkIfBuffered((entryId: string) => {
-      console.log(">>>>> FIRST LOADED", firstNode);
-      const nextNodes = this.getNextNodes(firstNode);
-      //this.cacheNode(nextNodes[0]);
+      this.bufferManager.cacheNodes(this.getNextNodes(firstNode), firstNode);
     }, this.currentPlayer);
     // create the rapt-engine layer
     this.element = document.createElement("div");
@@ -91,15 +87,8 @@ export class PlayersManager extends Dispatcher {
     this.element.setAttribute("style", "width:100%;height:100%;z-index:9999");
     // adding the rapt layer to the main-app div
     mainDiv.appendChild(this.element);
-
     this.initRapt();
   }
-
-  /**
-   * Create a player-per-node to a list of IV nodes and stack them beneath the current players
-   */
-  cacheNodes() {}
-
   /**
    * Get optional playable nodes of a given node
    * @param node
@@ -144,25 +133,20 @@ export class PlayersManager extends Dispatcher {
   }
 
   play() {
-    // console.log(">>>>> play");
     this.playbackState = PlaybackState.PLAYING;
-    //window.mainPlayer.play();
   }
 
   pause() {
     this.playbackState = PlaybackState.PAUSED;
-    // console.log(">>>>> pause");
-    //window.mainPlayer.pause();
   }
 
   seek(time: number) {
-    // console.log(">>>>> seek ", time);
     //window.mainPlayer.currentTime = time;
   }
 
   event(_event: any) {
     if (_event.type != "player:timeupdate") {
-      console.log(">>>> Rapt event: " + _event.type);
+      // console.log(">>>> Rapt event: " + _event.type);
     }
   }
 
