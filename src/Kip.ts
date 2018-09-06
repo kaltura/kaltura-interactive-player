@@ -1,8 +1,8 @@
 import { RaptClient } from "./RaptClient";
-import { PlayersManager } from "./PlayersManager";
-import IRaptConfig from "./interfaces/IRaptConfig";
 import { KipState } from "./helpers/States";
+import { PlayersManager } from "./PlayersManager";
 import { Dispatcher } from "./helpers/Dispatcher";
+import IRaptConfig from "./interfaces/IRaptConfig";
 
 class Kip extends Dispatcher {
   config: any;
@@ -54,6 +54,11 @@ class Kip extends Dispatcher {
       raptGraphData,
       this.rapt
     );
+
+    this.playerManager.addListener("message", (data: any) => {
+      this.dispatch("log", { event: "log", data: data });
+    });
+
     // this.playerManager.addEventListener(States.ERROR => {alert("ERROR")})
     const mainDiv = document.getElementById(this.config.targetId);
     this.playerManager.init(mainDiv);

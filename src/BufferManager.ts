@@ -44,13 +44,13 @@ export class BufferManager extends Dispatcher {
         });
       }
     }
-    this.cacheNextUncachedPlayer();
+    this.cacheNextPlayer();
   }
 
   /**
    * From current session - find if there is an unbuffered node, if so - create it and start caching it
    */
-  cacheNextUncachedPlayer() {
+  cacheNextPlayer() {
     // TODO add order logic later (or not?)
     // find first un-cached
     let unbufferedPlayer: ICachingPlayer = this.players.find(
@@ -62,8 +62,9 @@ export class BufferManager extends Dispatcher {
       // update status of current player
       unbufferedPlayer.status = BufferState.CACHING;
       // create player and cache it
-      this.cacheNode(unbufferedPlayer.node);
+      this.cachePlayer(unbufferedPlayer);
     } else {
+      // no more unbuffered players - we must be done
       this.dispatch(BufferEvent.ALL_DONE, this.currentNode);
     }
   }
@@ -72,18 +73,19 @@ export class BufferManager extends Dispatcher {
    * Load a specific player per-node in "cache" mode
    * @param node
    */
-  cacheNode(node: INode): void {
-    const nodesDiv: HTMLElement = this.createNodesDiv(node, true);
-    const nodeConf: object = this.getPlayerConf(node, nodesDiv.id, true);
-    const player = this.playerLibrary.setup(nodeConf);
+  cachePlayer(player: ICachingPlayer): void {
+    const nodesDiv: HTMLElement = this.createNodesDiv(player.node, true);
+    const conf: object = this.getPlayerConf(player.node, nodesDiv.id, true);
+    const newPlayer = this.playerLibrary.setup(conf);
+    player.player = newPlayer; // save so we have reference later
     this.checkIfBuffered((entryId: string) => {
       const finished: ICachingPlayer = this.players.find(
         (item: ICachingPlayer) => item.node.entryId === entryId
       );
-      this.dispatch(BufferEvent.DONE, finished);
-      this.cacheNextUncachedPlayer();
-    }, player);
-    player.loadMedia({ entryId: node.entryId });
+      this.dispatch(BufferEvent.DONE, finished.node);
+      this.cacheNextPlayer();
+    }, newPlayer);
+    newPlayer.loadMedia({ entryId: player.node.entryId });
   }
 
   /**
@@ -140,5 +142,22 @@ export class BufferManager extends Dispatcher {
     }
     delete newConf.rapt;
     return newConf;
+  }
+
+  /**
+   * Retreive a player by its Kaltura entry id
+   */
+  getPlayerByKalturaId(entryId: string): any {
+    const cachePlayer: ICachingPlayer = this.players.find(
+      (item: ICachingPlayer) => item.node.entryId === entryId
+    );
+    if (!cachePlayer || !cachePlayer.player) {
+      return false;
+      // player was not created yet, or was created but was not initiated - force it now!
+    }
+    if (cachePlayer.player && cachePlayer.status === BufferState.READY) {
+      //
+      return cachePlayer.player;
+    }
   }
 }

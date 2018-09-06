@@ -18,6 +18,7 @@ export class PlayersManager extends Dispatcher {
   element: any;
   playbackState: string;
   raptProjectId: string;
+  mainDiv: HTMLElement;
 
   constructor(
     conf: any,
@@ -32,26 +33,29 @@ export class PlayersManager extends Dispatcher {
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
-    const mainDiv = document.getElementById(conf.targetId);
+    this.mainDiv = document.getElementById(conf.targetId);
 
     // init bufferManager
     this.bufferManager = new BufferManager(
       this.playerLibrary,
-      mainDiv,
+      this.mainDiv,
       raptProjectId,
       conf
     );
 
     this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
-      console.log(">>>>> buffering ", node);
+      this.dispatch("message", "buffering " + node.name + " "+node.entryId);
+      console.log(">>>>> buffering ", node.name, node.entryId);
     });
 
     this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
-      console.log(">>>>> all done ", node);
+      this.dispatch("message", "all done " + node.name + " "+node.entryId);
+      console.log(">>>>> all done for ", node.name, node.entryId);
     });
 
     this.bufferManager.addListener(BufferEvent.DONE, (node: INode) => {
-      console.log(">>>>> DONE buffering for node ", node);
+      this.dispatch("message", "one done " + node.name + " "+node.entryId);
+      console.log(">>>>> cached ", node.name, node.entryId);
     });
   }
 
@@ -60,7 +64,6 @@ export class PlayersManager extends Dispatcher {
    * specific node.
    */
   init(mainDiv: HTMLElement): void {
-    this.log("log");
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
@@ -84,7 +87,7 @@ export class PlayersManager extends Dispatcher {
     // create the rapt-engine layer
     this.element = document.createElement("div");
     this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-    this.element.setAttribute("style", "width:100%;height:100%;z-index:9999");
+    this.element.setAttribute("style", "width:0;height:0;z-index:9999");
     // adding the rapt layer to the main-app div
     mainDiv.appendChild(this.element);
     this.initRapt();
@@ -116,13 +119,21 @@ export class PlayersManager extends Dispatcher {
   switchPlayer(id: string) {
     console.log(">>>>> switchPlayer", id);
     this.currentPlayer.pause();
+    const nextPlayer = this.bufferManager.getPlayerByKalturaId(id);
+    if (!nextPlayer) {
+    } else {
+      nextPlayer.play();
+    }
   }
 
   // initiate Rapt-engine layer
   initRapt() {
     this.raptEngine = new this.raptEngine.Engine(this);
     this.raptEngine.load(this.raptData);
-    this.raptEngine.resize({ width: 500, height: 300 });
+    this.raptEngine.resize({
+      width: this.mainDiv.offsetWidth,
+      height: this.mainDiv.offsetHeight
+    });
     setInterval(this.tick, 500, this.currentPlayer, this.raptEngine);
   }
 
@@ -168,10 +179,4 @@ export class PlayersManager extends Dispatcher {
     }
   }
   /////////////////////////////////////////////////////////////////////////
-
-  log(str: string) {
-    // if (window.logMsg) {
-    //   window.logMsg(str);
-    // }
-  }
 }
