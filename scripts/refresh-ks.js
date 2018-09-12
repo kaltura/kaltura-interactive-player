@@ -4,8 +4,10 @@
 const fs = require("fs");
 const fetch = require("node-fetch");
 const indexFile = "index.html";
+const cyan = "\x1b[36m%s\x1b[0m";
 
-console.warn(
+console.log(
+  cyan,
   "Setting KS into index.html. It is expected that you have localhost with a file that generates KS for pid 27017 "
 );
 
@@ -21,7 +23,7 @@ fetch("http://localhost/a/keep/27017.php")
       const postKS = splittedFile[1];
       const quotesPosition = postKS.indexOf('"');
       const afterQuotes = postKS.substring(quotesPosition);
-      const result = preKS+response+afterQuotes;
+      const result = preKS + response + afterQuotes;
       fs.writeFile(indexFile, result, "utf8", function(err) {
         if (err) return console.log(err);
       });
