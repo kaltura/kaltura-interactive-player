@@ -31,7 +31,7 @@ export class BufferManager extends Dispatcher {
     this.players = [];
   }
 
-  cacheNodes(nodes: INode[], currentNode: INode) {
+  cacheNodes(currentNode: INode, nodes: INode[]) {
     this.currentNode = currentNode;
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
@@ -82,6 +82,7 @@ export class BufferManager extends Dispatcher {
       const finished: ICachingPlayer = this.players.find(
         (item: ICachingPlayer) => item.node.entryId === entryId
       );
+      finished.status = BufferState.READY;
       this.dispatch(BufferEvent.DONE, finished.node);
       this.cacheNextPlayer();
     }, newPlayer);
@@ -151,13 +152,10 @@ export class BufferManager extends Dispatcher {
     const cachePlayer: ICachingPlayer = this.players.find(
       (item: ICachingPlayer) => item.node.entryId === entryId
     );
-    if (!cachePlayer || !cachePlayer.player) {
+    if (!cachePlayer) {
       return false;
       // player was not created yet, or was created but was not initiated - force it now!
     }
-    if (cachePlayer.player && cachePlayer.status === BufferState.READY) {
-      //
-      return cachePlayer.player;
-    }
+    return cachePlayer;
   }
 }

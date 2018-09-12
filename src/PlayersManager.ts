@@ -1,8 +1,9 @@
 import INode from "./interfaces/INode";
-import { PlaybackState } from "./helpers/States";
+import { BufferState, PlaybackState } from "./helpers/States";
 import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent } from "./helpers/KipEvents";
+import ICachingPlayer from "./interfaces/ICachingPlayer";
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer
@@ -44,17 +45,17 @@ export class PlayersManager extends Dispatcher {
     );
 
     this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
-      this.dispatch("message", "buffering " + node.name + " "+node.entryId);
+      this.dispatch("message", "buffering " + node.name + " " + node.entryId);
       console.log(">>>>> buffering ", node.name, node.entryId);
     });
 
     this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
-      this.dispatch("message", "all done " + node.name + " "+node.entryId);
+      this.dispatch("message", "all done " + node.name + " " + node.entryId);
       console.log(">>>>> all done for ", node.name, node.entryId);
     });
 
     this.bufferManager.addListener(BufferEvent.DONE, (node: INode) => {
-      this.dispatch("message", "one done " + node.name + " "+node.entryId);
+      this.dispatch("message", "one done " + node.name + " " + node.entryId);
       console.log(">>>>> cached ", node.name, node.entryId);
     });
   }
@@ -81,8 +82,9 @@ export class PlayersManager extends Dispatcher {
     );
     this.currentPlayer = this.playerLibrary.setup(nodeConf);
     this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
+    // with 1st node we do not want to start caching other nodes. First get playback, then start caching other nodes
     this.bufferManager.checkIfBuffered((entryId: string) => {
-      this.bufferManager.cacheNodes(this.getNextNodes(firstNode), firstNode);
+      this.bufferManager.cacheNodes(firstNode, this.getNextNodes(firstNode));
     }, this.currentPlayer);
     // create the rapt-engine layer
     this.element = document.createElement("div");
@@ -117,12 +119,25 @@ export class PlayersManager extends Dispatcher {
    * @param id
    */
   switchPlayer(id: string) {
-    console.log(">>>>> switchPlayer", id);
     this.currentPlayer.pause();
-    const nextPlayer = this.bufferManager.getPlayerByKalturaId(id);
+    const nextPlayer: ICachingPlayer = this.bufferManager.getPlayerByKalturaId(
+      id
+    );
     if (!nextPlayer) {
+      // next player was not created. handle new node
     } else {
-      nextPlayer.play();
+      // switch players by status:
+      switch (nextPlayer.status) {
+        case BufferState.READY:
+          nextPlayer.player.play();
+          const node: INode = nextPlayer.node;
+          this.bufferManager.cacheNodes(node, this.getNextNodes(node));
+          // TODO handle z-index later
+          break;
+        case BufferState.CACHING:
+          nextPlayer.player.play();
+          break;
+      }
     }
   }
 
@@ -134,7 +149,7 @@ export class PlayersManager extends Dispatcher {
       width: this.mainDiv.offsetWidth,
       height: this.mainDiv.offsetHeight
     });
-    setInterval(this.tick, 500, this.currentPlayer, this.raptEngine);
+    setInterval(this.tick, 250, this.currentPlayer, this.raptEngine);
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////

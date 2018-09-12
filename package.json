@@ -4,13 +4,15 @@
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "scripts": {
+    "get-ks": "node scripts/refresh-ks.js",
     "start": "webpack-dev-server --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Eitan Avgil",
   "license": "MIT",
   "dependencies": {
-    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
+    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz",
+    "node-fetch": "^2.2.0"
   },
   "devDependencies": {
     "@types/core-js": "^2.5.0",

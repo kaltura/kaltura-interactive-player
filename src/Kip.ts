@@ -8,6 +8,7 @@ class Kip extends Dispatcher {
   config: any;
   playerManager: PlayersManager;
   playerLibrary: any;
+  mainDiv: HTMLElement;
   rapt: any; // TODO - optimize
   playlistId: string;
   client: RaptClient; // Backend Client
@@ -15,6 +16,19 @@ class Kip extends Dispatcher {
 
   constructor() {
     super();
+    const css = document.createElement("style");
+    css.textContent = `
+      .kip-message__title {
+      }
+      .kip-message__body{
+      }
+      .kip-message__message{
+          corner-radius:4px;
+          background: #EEEEEE;
+      }
+      
+    `;
+    document.head.appendChild(css);
   }
 
   setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
@@ -22,6 +36,7 @@ class Kip extends Dispatcher {
     this.config = config;
     this.rapt = rapt;
     this.playerLibrary = playerLibrary;
+    this.mainDiv = document.getElementById(this.config.targetId);
     return this;
   }
 
@@ -38,6 +53,10 @@ class Kip extends Dispatcher {
         this.dataLoaded(graphData);
       })
       .catch((err: string) => {
+        this.printMessage(
+          "API Error",
+          "Please check your KS and Playlist data validation"
+        );
         this.dispatchApi(err);
       });
   }
@@ -58,10 +77,7 @@ class Kip extends Dispatcher {
     this.playerManager.addListener("message", (data: any) => {
       this.dispatch("log", { event: "log", data: data });
     });
-
-    // this.playerManager.addEventListener(States.ERROR => {alert("ERROR")})
-    const mainDiv = document.getElementById(this.config.targetId);
-    this.playerManager.init(mainDiv);
+    this.playerManager.init(this.mainDiv);
   }
 
   dispatchApi(event: string, data?: any) {
@@ -75,6 +91,20 @@ class Kip extends Dispatcher {
     }
     // expose API
     this.dispatch(event, data);
+  }
+
+  printMessage(title: string, text: string = "") {
+    const messageDiv = document.createElement("div");
+    const titleDiv = document.createElement("div");
+    const bodeDiv = document.createElement("div");
+    messageDiv.classList.add("kip-message__message");
+    titleDiv.classList.add("kip-message__title");
+    titleDiv.innerHTML = title;
+    bodeDiv.classList.add("kip-message__body");
+    bodeDiv.innerHTML = text;
+    messageDiv.appendChild(titleDiv);
+    messageDiv.appendChild(bodeDiv);
+    this.mainDiv.appendChild(messageDiv);
   }
 }
 export default new Kip();
