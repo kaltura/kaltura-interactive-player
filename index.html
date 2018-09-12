@@ -19,7 +19,7 @@
 <script>
 	var config = {
 		session:{
-			ks: "OWViZDhlNmFlMzRmNDg5ZThhNTQ5YWQ4Y2U5ZTJmY2YwNDRjNDQ0ZHwyNzAxNzsyNzAxNzsxNTM2ODE4OTgwOzI7ODE5MDtfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
+			ks: "YTM2ODcwYjA1Y2U1NGNkMzk0NDk1YzkxNTllN2Y2N2Q2MWJhZGUxM3wyNzAxNzsyNzAxNzsxNTM2ODQ3NDg1OzI7ODgxMztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
 		},
 		targetId: 'player',
 		playback:{
@@ -37,8 +37,6 @@
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
 	kip.addListener("log" , logMsg); // track all events when rapt.debug=true
 	kip.loadMedia({entryId: '1_51tet0hy'});
-
-
 	// logger
 	function logMsg(logObject){
 		const logDiv = document.createElement("div");

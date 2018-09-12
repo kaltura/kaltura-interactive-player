@@ -10,16 +10,15 @@ import ICachingPlayer from "./interfaces/ICachingPlayer";
  * This class creates and manages BufferManager
  */
 export class PlayersManager extends Dispatcher {
-  playerLibrary: any;
+  playerLibrary: any; // playkit-js library ref'
   raptData: any;
-  raptEngine: any; // library
-  rapt: any; // instance of Rapt engine
+  raptEngine: any; // rapt engine library ref'
   bufferManager: BufferManager;
   currentPlayer: any;
-  element: any;
+  element: any; // must be called 'element' because rapt delegate implementation
   playbackState: string;
   raptProjectId: string;
-  mainDiv: HTMLElement;
+  mainDiv: HTMLElement; // the parent id that holds all layers
 
   constructor(
     conf: any,
@@ -41,7 +40,8 @@ export class PlayersManager extends Dispatcher {
       this.playerLibrary,
       this.mainDiv,
       raptProjectId,
-      conf
+      conf,
+      this.raptData
     );
 
     this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
@@ -74,44 +74,17 @@ export class PlayersManager extends Dispatcher {
     if (!firstNode) {
       this.dispatch(KipEvent.FIRST_PLAY_ERROR);
     }
+
     // load the 1st media
-    const nodeDiv: HTMLElement = this.bufferManager.createNodesDiv(firstNode);
-    const nodeConf: object = this.bufferManager.getPlayerConf(
-      firstNode,
-      nodeDiv.id
-    );
-    this.currentPlayer = this.playerLibrary.setup(nodeConf);
-    this.currentPlayer.loadMedia({ entryId: firstNode.entryId });
-    // with 1st node we do not want to start caching other nodes. First get playback, then start caching other nodes
-    this.bufferManager.checkIfBuffered((entryId: string) => {
-      this.bufferManager.cacheNodes(firstNode, this.getNextNodes(firstNode));
-    }, this.currentPlayer);
-    // create the rapt-engine layer
-    this.element = document.createElement("div");
-    this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-    this.element.setAttribute("style", "width:0;height:0;z-index:9999");
-    // adding the rapt layer to the main-app div
-    mainDiv.appendChild(this.element);
-    this.initRapt();
-  }
-  /**
-   * Get optional playable nodes of a given node
-   * @param node
-   */
-  getNextNodes(node: INode): INode[] {
-    return node.prefetchNodeIds.length
-      ? node.prefetchNodeIds.map((nodeId: string) =>
-          this.getNodeByRaptId(nodeId)
-        )
-      : [];
-  }
-  /**
-   * Return a rapt node
-   * @param id
-   */
-  getNodeByRaptId(id: string): INode {
-    const nodes: INode[] = this.raptData.nodes;
-    return nodes.find((item: INode) => item.id === id);
+    this.currentPlayer = this.bufferManager.loadPlayer(firstNode, () => {
+      // create the rapt-engine layer
+      this.element = document.createElement("div");
+      this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
+      this.element.setAttribute("style", "width:0;height:0;z-index:9999");
+      // adding the rapt layer to the main-app div
+      mainDiv.appendChild(this.element);
+      this.initRapt();
+    });
   }
 
   /**
@@ -126,15 +99,21 @@ export class PlayersManager extends Dispatcher {
     if (!nextPlayer) {
       // next player was not created. handle new node
     } else {
-      // switch players by status:
+      // switch players according to the player BufferState
       switch (nextPlayer.status) {
         case BufferState.READY:
+          // the next player is already buffered
           nextPlayer.player.play();
+          this.currentPlayer = nextPlayer.player;
           const node: INode = nextPlayer.node;
-          this.bufferManager.cacheNodes(node, this.getNextNodes(node));
+          this.bufferManager.cacheNodes(
+            node,
+            this.bufferManager.getNextNodes(node)
+          );
           // TODO handle z-index later
           break;
         case BufferState.CACHING:
+          // the next player is created but still buffering
           nextPlayer.player.play();
           break;
       }
@@ -149,7 +128,7 @@ export class PlayersManager extends Dispatcher {
       width: this.mainDiv.offsetWidth,
       height: this.mainDiv.offsetHeight
     });
-    setInterval(this.tick, 250, this.currentPlayer, this.raptEngine);
+    setInterval(() => this.tick(this.currentPlayer, this.raptEngine), 250);
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////
@@ -177,9 +156,10 @@ export class PlayersManager extends Dispatcher {
   }
 
   tick(currentPlayer: any, raptEngine: any) {
-    if (this.playbackState === PlaybackState.PAUSED) {
-      return; // no point updating when video is paused
-    }
+    // console.log(">>>>>", this.currentPlayer);
+    // if (this.playbackState === PlaybackState.PAUSED) {
+    //   return; // no point updating when video is paused
+    // }
     const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
     if (currentPlayingVideoElement) {
       raptEngine.update({

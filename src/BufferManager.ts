@@ -14,6 +14,7 @@ export class BufferManager extends Dispatcher {
   playerLibrary: any;
   mainDiv: HTMLElement;
   raptProjectId: string;
+  raptData: any;
   currentNode: INode;
   conf: any;
 
@@ -21,20 +22,55 @@ export class BufferManager extends Dispatcher {
     playerLibrary: any,
     mainDiv: HTMLElement,
     raptProjectId: string,
-    conf: any
+    conf: any,
+    raptData: any
   ) {
     super();
     this.playerLibrary = playerLibrary;
     this.mainDiv = mainDiv;
     this.raptProjectId = raptProjectId;
     this.conf = conf;
+    this.raptData = raptData;
     this.players = [];
+  }
+
+  loadPlayer(node: INode, callback: () => void = null): any {
+    const nodeDiv: HTMLElement = this.createNodesDiv(node);
+    const nodeConf: object = this.getPlayerConf(node, nodeDiv.id);
+    const player = this.playerLibrary.setup(nodeConf);
+
+    // with 1st node we do not want to start caching other nodes. First get playback, then start caching other nodes
+    player.loadMedia({ entryId: node.entryId });
+
+    // store the player
+    this.players.push({
+      status: BufferState.CACHING,
+      id: node.id,
+      node: node,
+      player: player
+    });
+
+    this.checkIfBuffered((entryId: string) => {
+      // cache next entries;
+      if (callback) {
+        callback();
+      }
+      const firstPlayer: ICachingPlayer | false = this.getPlayerByKalturaId(
+        node.entryId
+      );
+      if (firstPlayer) {
+        firstPlayer.status = BufferState.READY;
+      }
+      this.cacheNodes(node, this.getNextNodes(node));
+    }, player);
+    return player;
   }
 
   cacheNodes(currentNode: INode, nodes: INode[]) {
     this.currentNode = currentNode;
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
+      // cache new players only
       if (!this.players.find((item: ICachingPlayer) => item.id === node.id)) {
         // use Rapt id as a key since we might have kaltura-entry in different rapt nodes
         this.players.push({
@@ -42,6 +78,12 @@ export class BufferManager extends Dispatcher {
           id: node.id,
           node: node
         });
+      } else {
+        // if we got here - the player for this node was already created
+        const existingPlayer: ICachingPlayer | null = this.getPlayerByKalturaId(
+          node.entryId
+        );
+        existingPlayer.player.currentTime = 0;
       }
     }
     this.cacheNextPlayer();
@@ -148,14 +190,34 @@ export class BufferManager extends Dispatcher {
   /**
    * Retreive a player by its Kaltura entry id
    */
-  getPlayerByKalturaId(entryId: string): any {
+  getPlayerByKalturaId(entryId: string): ICachingPlayer | null {
     const cachePlayer: ICachingPlayer = this.players.find(
       (item: ICachingPlayer) => item.node.entryId === entryId
     );
     if (!cachePlayer) {
-      return false;
+      return null;
       // player was not created yet, or was created but was not initiated - force it now!
     }
     return cachePlayer;
+  }
+
+  /**
+   * Get optional playable nodes of a given node
+   * @param node
+   */
+  getNextNodes(node: INode): INode[] {
+    return node.prefetchNodeIds.length
+      ? node.prefetchNodeIds.map((nodeId: string) =>
+          this.getNodeByRaptId(nodeId)
+        )
+      : [];
+  }
+  /**
+   * Return a rapt node
+   * @param id
+   */
+  getNodeByRaptId(id: string): INode {
+    const nodes: INode[] = this.raptData.nodes;
+    return nodes.find((item: INode) => item.id === id);
   }
 }
