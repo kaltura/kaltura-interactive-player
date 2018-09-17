@@ -48,6 +48,9 @@ export class PlayersManager extends Dispatcher {
       this.dispatch("message", "buffering " + node.name + " " + node.entryId);
       console.log(">>>>> buffering ", node.name, node.entryId);
     });
+    this.bufferManager.addListener("log", (str: string) => {
+      this.dispatch("message", str);
+    });
 
     this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
       this.dispatch("message", "all done " + node.name + " " + node.entryId);
@@ -97,23 +100,20 @@ export class PlayersManager extends Dispatcher {
       id
     );
     if (!nextPlayer) {
-      // next player was not created. handle new node
+      // TODO next player was not created. handle new node
     } else {
       // switch players according to the player BufferState
       switch (nextPlayer.status) {
+        // the next player is already buffered
         case BufferState.READY:
-          // the next player is already buffered
           nextPlayer.player.play();
           this.currentPlayer = nextPlayer.player;
           const node: INode = nextPlayer.node;
-          this.bufferManager.cacheNodes(
-            node,
-            this.bufferManager.getNextNodes(node)
-          );
+          this.bufferManager.cacheNodes(node);
           // TODO handle z-index later
           break;
+        // the next player is created but still buffering
         case BufferState.CACHING:
-          // the next player is created but still buffering
           nextPlayer.player.play();
           break;
       }

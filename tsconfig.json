@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "downlevelIteration": true,
     "target": "ES5",
     "lib": ["es6", "dom"],
     "sourceMap": true,

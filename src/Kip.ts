@@ -20,13 +20,18 @@ class Kip extends Dispatcher {
     css.textContent = `
       .kip-message__title {
       }
+      
       .kip-message__body{
       }
+      
       .kip-message__message{
           corner-radius:4px;
           background: #EEEEEE;
       }
       
+      .kiv-cache-player{
+      
+      }
     `;
     document.head.appendChild(css);
   }
@@ -77,6 +82,7 @@ class Kip extends Dispatcher {
     this.playerManager.addListener("message", (data: any) => {
       this.dispatch("log", { event: "log", data: data });
     });
+
     this.playerManager.init(this.mainDiv);
   }
 

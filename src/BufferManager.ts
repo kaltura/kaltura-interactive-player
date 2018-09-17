@@ -10,13 +10,17 @@ import ICachingPlayer from "./interfaces/ICachingPlayer";
  */
 
 export class BufferManager extends Dispatcher {
-  players: any;
+  players: ICachingPlayer[];
   playerLibrary: any;
   mainDiv: HTMLElement;
   raptProjectId: string;
   raptData: any;
   currentNode: INode;
   conf: any;
+
+  SECONDS_TO_BUFFER: number = 5;
+  BUFFER_CHECK_INTERVAL: number = 10;
+  BUFFER_DONE_TIMEOUT: number = 0;
 
   constructor(
     playerLibrary: any,
@@ -61,13 +65,57 @@ export class BufferManager extends Dispatcher {
       if (firstPlayer) {
         firstPlayer.status = BufferState.READY;
       }
-      this.cacheNodes(node, this.getNextNodes(node));
+      this.cacheNodes(node);
     }, player);
     return player;
   }
 
-  cacheNodes(currentNode: INode, nodes: INode[]) {
+  /**
+   * Stop the current buffering player, unless it is the one that was requested to play.
+   * @param nodeToPlay
+   */
+  stopCurrentCachedPlayer(nodeToPlay: INode) {
+    const cachingNow: ICachingPlayer = this.players.find(
+      (player: ICachingPlayer) => player.status === BufferState.CACHING
+    );
+    if (cachingNow && cachingNow.player && cachingNow.id !== nodeToPlay.id) {
+      cachingNow.player.destroy();
+      cachingNow.player = null;
+      cachingNow.status = BufferState.INIT;
+    }
+  }
+
+  cacheNodes(currentNode: INode) {
+    // in case there is a caching player - stop caching it.
+    this.stopCurrentCachedPlayer(currentNode);
     this.currentNode = currentNode;
+    let nodes: INode[] = this.getNextNodes(currentNode);
+    // optimize 1 - find items that are cached/created but not relevant for this current node
+
+    // helper - extract the nodes from the currentPlayers
+    const currentPlayersNodes: INode[] = this.players.map(
+      (cachePlayer: ICachingPlayer) => cachePlayer.node
+    );
+    // find which nodes we want to destroy
+    let nodesToDestroy = currentPlayersNodes.filter(
+      (node: INode) => !nodes.find((tmp: INode) => node.id === tmp.id)
+    );
+    // ignore the given node
+    nodesToDestroy = nodesToDestroy.filter(
+      (node: INode) => node.id !== currentNode.id
+    );
+    // Now destroy them
+    for (const nodeToDestroy of nodesToDestroy) {
+      this.destroyPlayer(nodeToDestroy);
+    }
+
+    //
+    // // remove the current node from the next nodes to cache - it is playing and no need to cache it
+    // nodes = nodes.filter((node: INode) => node.id === currentNode.id);
+
+    // Optimization! re-order nodes, depending appearance time
+    nodes = this.sortByApearenceTime(nodes, currentNode);
+
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
       // cache new players only
@@ -83,10 +131,49 @@ export class BufferManager extends Dispatcher {
         const existingPlayer: ICachingPlayer | null = this.getPlayerByKalturaId(
           node.entryId
         );
-        existingPlayer.player.currentTime = 0;
+        if (
+          existingPlayer &&
+          existingPlayer.player &&
+          existingPlayer.player.currentTime
+        ) {
+          existingPlayer.player.currentTime = 0;
+        }
       }
     }
     this.cacheNextPlayer();
+  }
+
+  /**
+   * Sort a given nodes-array by the appearance-order of the hotspots in that node
+   * @param arr of INodes
+   * @param givenNode
+   */
+  sortByApearenceTime(arr: INode[], givenNode: INode): INode[] {
+    // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
+    const hotspots: any[] = this.raptData.hotspots
+      .filter((hotspot: any) => hotspot.nodeId === givenNode.id)
+      .sort((a: any, b: any) => a.showAt > b.showAt);
+
+    // todo - later elegant with func' prog
+    const arrayToCache: INode[] = [];
+    for (const n of hotspots) {
+      arrayToCache.push(
+        arr.find((itm: INode) => {
+          if (
+            n &&
+            n.onClick &&
+            n.onClick[0] && // todo - find if there is an option that the onClick can have more than 1 items
+            n.onClick[0].type &&
+            n.onClick[0].type === "project:jump" &&
+            n.onClick[0].payload.destination === itm.id
+          ) {
+            return true;
+          }
+          return false;
+        })
+      );
+    }
+    return arrayToCache;
   }
 
   /**
@@ -140,11 +227,11 @@ export class BufferManager extends Dispatcher {
     if (bufferPlayer.buffered && bufferPlayer.buffered.length) {
       setTimeout(() => {
         callback(bufferPlayer._config.sources.id);
-      }, 250);
+      }, this.BUFFER_DONE_TIMEOUT);
     } else {
       setTimeout(() => {
         this.checkIfBuffered(callback, bufferPlayer);
-      }, 250);
+      }, this.BUFFER_CHECK_INTERVAL);
     }
   }
 
@@ -206,12 +293,15 @@ export class BufferManager extends Dispatcher {
    * @param node
    */
   getNextNodes(node: INode): INode[] {
-    return node.prefetchNodeIds.length
+    let nodes: INode[] = node.prefetchNodeIds.length
       ? node.prefetchNodeIds.map((nodeId: string) =>
           this.getNodeByRaptId(nodeId)
         )
       : [];
+    // remove duplicities in case of defaultPath
+    return [...new Set(nodes)];
   }
+
   /**
    * Return a rapt node
    * @param id
@@ -219,5 +309,33 @@ export class BufferManager extends Dispatcher {
   getNodeByRaptId(id: string): INode {
     const nodes: INode[] = this.raptData.nodes;
     return nodes.find((item: INode) => item.id === id);
+  }
+
+  /**
+   * Destroy a player and remove it from the players list
+   * @param node
+   */
+  destroyPlayer(node: INode): void {
+    this.dispatch("log", "removed node : " + node.name);
+    const cachingPlayer: ICachingPlayer = this.getPlayerByKalturaId(
+      node.entryId
+    );
+    if (!cachingPlayer) {
+      return;
+    }
+    // if a player was already created for this entry - destroy it.
+    if (cachingPlayer.player) {
+      cachingPlayer.player.destroy();
+      // remove the parent id
+      this.mainDiv
+        .querySelector(
+          "[id='" + this.raptProjectId + "__" + node.entryId + "']"
+        )
+        .remove();
+    }
+    this.players = this.players.filter(
+      (item: ICachingPlayer) => item.id !== node.id
+    );
+    console.log(">>>>>  this.players removed node", node, this.players);
   }
 }
