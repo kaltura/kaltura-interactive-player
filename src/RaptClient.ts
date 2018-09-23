@@ -3,7 +3,9 @@ import { KalturaFilterPager } from "kaltura-typescript-client/api/types/KalturaF
 import {
   KalturaAPIException,
   KalturaClient,
-  KalturaClientException
+  KalturaClientException,
+  KalturaMultiRequest,
+  KalturaRequestOptions
 } from "kaltura-typescript-client";
 import { KalturaFileAsset } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAsset";
 import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/api/types/FileAssetListAction";
@@ -11,16 +13,22 @@ import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-clien
 import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
 import { KalturaFileAssetListResponse } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetListResponse";
 import { Dispatcher } from "./helpers/Dispatcher";
-import { KipEvent } from "./helpers/KipEvents";
+import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
 
 interface clientConfig {
   ks?: string;
   serviceUrl?: string;
+  partnerId?: string;
 }
+
+/**
+ * This class handles all BE callbacks API
+ */
 
 export class RaptClient extends Dispatcher {
   kClient: KalturaClient;
   serviceUrl: string;
+  partnerId: string;
   clientTag: string = "rapt-v3-app";
   config: clientConfig;
   ks: string;
@@ -31,6 +39,7 @@ export class RaptClient extends Dispatcher {
       ? config.serviceUrl
       : "http://www.kaltura.com";
     this.ks = config.ks;
+    this.partnerId = config.partnerId;
     this.config = { ks: this.ks, serviceUrl: this.serviceUrl };
   }
 
@@ -58,27 +67,68 @@ export class RaptClient extends Dispatcher {
    */
   loadRaptData(raptPlaylistId: string): Promise<object> {
     return new Promise((resolve, reject) => {
-      //todo handle widgetSession later
       this.kClient = this.initClient(
         this.config.serviceUrl,
         this.clientTag,
         this.config.ks
       );
 
-      const pager: KalturaFilterPager = new KalturaFilterPager();
-      pager.pageSize = 1;
-      pager.pageIndex = 1;
+      // TODO clean
+      // const pager: KalturaFilterPager = new KalturaFilterPager();
+      // pager.pageSize = 1;
+      // pager.pageIndex = 1;
 
       const filter: KalturaFileAssetFilter = new KalturaFileAssetFilter();
       filter.objectIdEqual = raptPlaylistId;
       filter.fileAssetObjectTypeEqual = KalturaFileAssetObjectType.entry;
 
-      const request = new FileAssetListAction({ filter: filter, pager: null });
+      let multiRequest: KalturaMultiRequest;
 
-      this.kClient.request(request).then(
-        (data: KalturaFileAssetListResponse) => {
-          // extract the graph-data asset
-          let graphDataFileAsset: any = data.objects.find(
+      if (!this.config.ks) {
+        // no given KS - we need to add a widget-session request
+        multiRequest = new KalturaMultiRequest(
+          new SessionStartWidgetSessionAction({
+            widgetId: "_" + this.partnerId
+          }),
+          new FileAssetListAction({
+            filter: filter
+          }).setRequestOptions(
+            new KalturaRequestOptions({}).setDependency(["ks", 0, "ks"])
+          )
+        );
+      } else {
+        multiRequest = new KalturaMultiRequest(
+          new FileAssetListAction({
+            filter: filter
+          })
+        );
+      }
+
+      this.kClient.multiRequest(multiRequest).then(
+        (data: any) => {
+
+          let fileAssetObjects: any;
+          if (data.length === 2) {
+            // this was a request with a KS request - extract the KS, set it to the client and then continue with data
+            if (data[0].error) {
+              reject(
+                "Error with generating widget session KS for pid " +
+                  this.partnerId
+              );
+            }
+
+            if (!data[1].result.objects || !data[1].result.objects.length) {
+              reject("API error, check your KS and Playlist data validation 0");
+            }
+
+            this.ks = data[0].result.ks;
+            this.kClient.setDefaultRequestOptions({ ks: this.ks });
+            fileAssetObjects = data[1].result.objects;
+          } else {
+            // Just a FileAssetList request
+            fileAssetObjects = data[0].result.objects;
+          }
+          const graphDataFileAsset: any = fileAssetObjects.find(
             (item: KalturaFileAsset) => item.systemName === "GRAPH_DATA"
           );
           // get the graph-data file content
@@ -90,7 +140,7 @@ export class RaptClient extends Dispatcher {
           if (err instanceof KalturaClientException) {
             reject("Network/Client error");
           } else if (err instanceof KalturaAPIException) {
-            reject("API error, check your KS and Playlist data validation");
+            reject("Multirequest API error, check your KS and Playlist data validation");
           }
         }
       );
