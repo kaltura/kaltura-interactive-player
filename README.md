@@ -12,10 +12,17 @@ the user interacts with the Rapt engine layer, the KIP will move the next video 
 
 ## Install: 
 ```
-git clone https://github.com/eitanavgil/kaltura-typescript-boilerplate.git
-cd kaltura-typescript-boilerplate
+git clone https://github.com/kaltura/kaltura-interactive-player.git
+cd kaltura-interactive-player
 npm install
 ```
+
+## Dev setup 
+Since most Interactive Videos today are generated in MediaSpace™, they are KS protected. This means that the index.html
+is expected to have a valid KS in it. The default entry is of partner-id 27017 and the hard-coded KS will expire around
+Sep 23 2019. Please do not edit this entry as it is designed to cover many use cases.  
+The default index.html also has an example of how to embed a KIV, and how to integrate with it and listen to events
+                                                                  
 
 ## Run: 
 ```
@@ -59,7 +66,11 @@ This library will be bundled inside the Kaltura playkit-js library and served by
 
 ## Configrations:
 The Rapt configuration is in fact an extension of the playkit-js configuration with the addition of the rapt section. 
-The configu 
+
+## API 
+The KIV has some unique IV API. These are the events and their payload data: 
+
+
  
 
 
