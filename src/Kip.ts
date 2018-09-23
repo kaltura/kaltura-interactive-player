@@ -50,7 +50,10 @@ class Kip extends Dispatcher {
       this.config.session && this.config.session.ks
         ? this.config.session.ks
         : "";
-    this.client = new RaptClient({ ks: ks });
+    this.client = new RaptClient({
+      ks: ks,
+      partnerId: this.config.provider.partnerId
+    }); //TODO add serviceUrl
     this.playlistId = obj.entryId;
     this.client
       .loadRaptData(this.playlistId)
@@ -58,10 +61,7 @@ class Kip extends Dispatcher {
         this.dataLoaded(graphData);
       })
       .catch((err: string) => {
-        this.printMessage(
-          "API Error",
-          "Please check your KS and Playlist data validation"
-        );
+        this.printMessage("API Error", err);
         this.dispatchApi(err);
       });
   }
@@ -86,8 +86,14 @@ class Kip extends Dispatcher {
     this.playerManager.init(this.mainDiv);
   }
 
+  /**
+   * Expose API to the wrapping page
+   * @param event
+   * @param data
+   */
   dispatchApi(event: string, data?: any) {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
+      // debug mode - print to console
       console.warn("Rapt >> ", event);
       if (data) {
         console.warn("Rapt >> >>", data);
@@ -99,6 +105,11 @@ class Kip extends Dispatcher {
     this.dispatch(event, data);
   }
 
+  /**
+   * Print a message on the main div, usually used to show error messages to the end-user (E.G. missing rapt data)
+   * @param title
+   * @param text
+   */
   printMessage(title: string, text: string = "") {
     const messageDiv = document.createElement("div");
     const titleDiv = document.createElement("div");
