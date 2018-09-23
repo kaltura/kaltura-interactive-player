@@ -11,8 +11,8 @@
     <!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
     <style>
         #player {
-            width:260px;
-            height:146px;
+            width:350px;
+            height:197px;
         }
     </style>
 <div id="player"></div>
@@ -20,13 +20,14 @@
 <script>
 	var config = {
 		session:{
-			ks: "MmEwMjk3ZDU1ZTcwYmI0ZjdlYzU5ZjQ5MTA3NGY0YjdjNzE1NjA1MHwyNzAxNzsyNzAxNzsxNTM3MjY2MjY0OzI7MTA4NjE7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
+			ks: "YWFhNzVkZDEwZTc0ZDZmZmJiZGNkMmVhZTBmMWU5NWM4ZThiOGY4NnwyNzAxNzsyNzAxNzsxNTM3Nzc0MTM2OzA7MTUzNzY4NzczNi4zODYyOzA7dmlldzoqLHdpZGdldDoxOzs="
 		},
 		targetId: 'player',
 		playback:{
 			autoplay:true,
 			preload:"auto"
 		},
+
 		provider: {
 			partnerId: 27017
 		},
@@ -34,10 +35,11 @@
 			debug:true
         }
 	};
-
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
+
 	kip.addListener("log" , logMsg); // track all events when rapt.debug=true
 	kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy
+
 	// logger
 	function logMsg(logObject){
 		const logDiv = document.createElement("div");
