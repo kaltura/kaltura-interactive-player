@@ -151,25 +151,24 @@ export class BufferManager extends Dispatcher {
   sortByApearenceTime(arr: INode[], givenNode: INode): INode[] {
     // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
     const hotspots: any[] = this.raptData.hotspots
-      .filter((hotspot: any) => hotspot.nodeId === givenNode.id)
-      .sort((a: any, b: any) => a.showAt > b.showAt);
+      .filter((hotSpot: any) => {
+        return (
+          hotSpot.nodeId === givenNode.id &&
+          hotSpot.onClick &&
+          hotSpot.onClick.find((itm: any) => itm.type === "project:jump") // filter out only-URL clicks
+        );
+      })
+      .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
 
-    // todo - later elegant with func' prog
     const arrayToCache: INode[] = [];
-    for (const n of hotspots) {
+    for (const hotSpot of hotspots) {
       arrayToCache.push(
         arr.find((itm: INode) => {
-          if (
-            n &&
-            n.onClick &&
-            n.onClick[0] && // todo - find if there is an option that the onClick can have more than 1 items
-            n.onClick[0].type &&
-            n.onClick[0].type === "project:jump" &&
-            n.onClick[0].payload.destination === itm.id
-          ) {
-            return true;
-          }
-          return false;
+          // extract the onClick element with type 'project:jump'
+          const clickItem: any = hotSpot.onClick.find(
+            (itm: any) => itm.type === "project:jump"
+          );
+          return clickItem.payload.destination === itm.id;
         })
       );
     }
