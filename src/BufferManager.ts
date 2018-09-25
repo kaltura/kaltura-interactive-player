@@ -12,26 +12,26 @@ import ICachingPlayer from "./interfaces/ICachingPlayer";
 export class BufferManager extends Dispatcher {
   players: ICachingPlayer[];
   playerLibrary: any;
-  mainDiv: HTMLElement;
+  playersContainer: HTMLElement;
   raptProjectId: string;
   raptData: any;
   currentNode: INode;
   conf: any;
 
   SECONDS_TO_BUFFER: number = 5;
-  BUFFER_CHECK_INTERVAL: number = 10;
-  BUFFER_DONE_TIMEOUT: number = 0;
+  BUFFER_CHECK_INTERVAL: number = 100;
+  BUFFER_DONE_TIMEOUT: number = 100;
 
   constructor(
     playerLibrary: any,
-    mainDiv: HTMLElement,
+    playersContainer: HTMLElement,
     raptProjectId: string,
     conf: any,
     raptData: any
   ) {
     super();
     this.playerLibrary = playerLibrary;
-    this.mainDiv = mainDiv;
+    this.playersContainer = playersContainer;
     this.raptProjectId = raptProjectId;
     this.conf = conf;
     this.raptData = raptData;
@@ -247,7 +247,7 @@ export class BufferManager extends Dispatcher {
     if (isCachePlayer) {
       newDiv.setAttribute("class", "kiv-cache-player");
     }
-    this.mainDiv.appendChild(newDiv);
+    this.playersContainer.appendChild(newDiv);
     return newDiv;
   }
 
@@ -276,6 +276,7 @@ export class BufferManager extends Dispatcher {
 
   /**
    * Retreive a player by its Kaltura entry id
+   * @param entryId
    */
   getPlayerByKalturaId(entryId: string): ICachingPlayer | null {
     const cachePlayer: ICachingPlayer = this.players.find(
@@ -327,7 +328,7 @@ export class BufferManager extends Dispatcher {
     if (cachingPlayer.player) {
       cachingPlayer.player.destroy();
       // remove the parent id
-      this.mainDiv
+      this.playersContainer
         .querySelector(
           "[id='" + this.raptProjectId + "__" + node.entryId + "']"
         )

@@ -35,10 +35,20 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine = raptEngine;
     this.mainDiv = document.getElementById(conf.targetId);
 
+    // create a container to all players
+    const playerContainer: HTMLElement = document.createElement("div");
+    playerContainer.setAttribute(
+      "id",
+      this.raptProjectId + "-kip-players-container"
+    );
+    playerContainer.setAttribute("style", "width:100%;height:100%");
+    // adding the rapt layer to the main-app div
+    this.mainDiv.appendChild(playerContainer);
+
     // init bufferManager
     this.bufferManager = new BufferManager(
       this.playerLibrary,
-      this.mainDiv,
+      playerContainer,
       raptProjectId,
       conf,
       this.raptData
@@ -74,10 +84,10 @@ export class PlayersManager extends Dispatcher {
     const firstNode = nodes.find(function(element: any) {
       return element.id === startNodeId;
     });
+
     if (!firstNode) {
       this.dispatch(KipEvent.FIRST_PLAY_ERROR);
     }
-
     // load the 1st media
     this.currentPlayer = this.bufferManager.loadPlayer(firstNode, () => {
       // create the rapt-engine layer
