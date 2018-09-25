@@ -14,6 +14,21 @@ class Kip extends Dispatcher {
   client: RaptClient; // Backend Client
   state: string;
 
+  API_EVENTS: string[] = [
+    "project:load",
+    "project:ready",
+    "project:start",
+    "player:play",
+    "player:pause",
+    "player:progress",
+    "node:enter",
+    "node:ended",
+    "node:exit",
+    "hotspot:click",
+    "browser:hidden",
+    "browser:open"
+  ];
+
   constructor() {
     super();
     const css = document.createElement("style");
@@ -83,6 +98,12 @@ class Kip extends Dispatcher {
       this.dispatch("log", { event: "log", data: data });
     });
 
+    for (let eventName of this.API_EVENTS) {
+      this.playerManager.addListener(eventName, (data: any) => {
+        this.dispatch(eventName, { event: eventName, data: data });
+      });
+    }
+
     this.playerManager.init(this.mainDiv);
   }
 
@@ -94,9 +115,9 @@ class Kip extends Dispatcher {
   dispatchApi(event: string, data?: any) {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
       // debug mode - print to console
-      console.warn("Rapt >> ", event);
+      // console.warn("Rapt >> ", event);
       if (data) {
-        console.warn("Rapt >> >>", data);
+        // console.warn("Rapt >> >>", data);
       }
       // Log API
       this.dispatch("log", { event: event, data: data });

@@ -15,10 +15,13 @@ export class PlayersManager extends Dispatcher {
   raptEngine: any; // rapt engine library ref'
   bufferManager: BufferManager;
   currentPlayer: any;
+  currentNode: any;
   element: any; // must be called 'element' because rapt delegate implementation
   playbackState: string;
   raptProjectId: string;
   mainDiv: HTMLElement; // the parent id that holds all layers
+
+  PLAYER_TICK_INTRTVAL: number = 250;
 
   constructor(
     conf: any,
@@ -55,21 +58,18 @@ export class PlayersManager extends Dispatcher {
     );
 
     this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
-      this.dispatch("message", "buffering " + node.name + " " + node.entryId);
-      console.log(">>>>> buffering ", node.name, node.entryId);
+      this.dispatch("message", "> buffering " + node.name + " " + node.entryId);
     });
     this.bufferManager.addListener("log", (str: string) => {
       this.dispatch("message", str);
     });
 
     this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
-      this.dispatch("message", "all done " + node.name + " " + node.entryId);
-      console.log(">>>>> all done for ", node.name, node.entryId);
+      this.dispatch("message", "> all cached for " + node.name + " " + node.entryId);
     });
 
     this.bufferManager.addListener(BufferEvent.DONE, (node: INode) => {
-      this.dispatch("message", "one done " + node.name + " " + node.entryId);
-      console.log(">>>>> cached ", node.name, node.entryId);
+      this.dispatch("message", "> node cached: " + node.name + " " + node.entryId);
     });
   }
 
@@ -89,6 +89,7 @@ export class PlayersManager extends Dispatcher {
       this.dispatch(KipEvent.FIRST_PLAY_ERROR);
     }
     // load the 1st media
+    this.currentNode = firstNode;
     this.currentPlayer = this.bufferManager.loadPlayer(firstNode, () => {
       // create the rapt-engine layer
       this.element = document.createElement("div");
@@ -117,6 +118,7 @@ export class PlayersManager extends Dispatcher {
         // the next player is already buffered
         case BufferState.READY:
           nextPlayer.player.play();
+          this.currentNode = nextPlayer.node;
           this.currentPlayer = nextPlayer.player;
           const node: INode = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
@@ -138,7 +140,10 @@ export class PlayersManager extends Dispatcher {
       width: this.mainDiv.offsetWidth,
       height: this.mainDiv.offsetHeight
     });
-    setInterval(() => this.tick(this.currentPlayer, this.raptEngine), 250);
+    setInterval(
+      () => this.tick(this.currentPlayer, this.raptEngine),
+      this.PLAYER_TICK_INTRTVAL
+    );
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////
@@ -161,7 +166,9 @@ export class PlayersManager extends Dispatcher {
 
   event(_event: any) {
     if (_event.type != "player:timeupdate") {
-      // console.log(">>>> Rapt event: " + _event.type);
+      this.dispatch(_event.type);
+      this.dispatch("message" , _event.type);
+      // console.log(">>>> Rapt event: ", _event.type, this.currentNode);
     }
   }
 
