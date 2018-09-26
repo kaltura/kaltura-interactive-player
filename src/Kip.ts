@@ -87,23 +87,18 @@ class Kip extends Dispatcher {
    */
   dataLoaded(raptGraphData: object): void {
     this.playerManager = new PlayersManager(
-      this.config,
+      Object.assign({}, this.config),
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
       this.rapt
     );
 
-    this.playerManager.addListener("message", (data: any) => {
-      this.dispatch("log", { event: "log", data: data });
-    });
-
     for (let eventName of this.API_EVENTS) {
-      this.playerManager.addListener(eventName, (data: any) => {
-        this.dispatch(eventName, { event: eventName, data: data });
+      this.playerManager.addListener(eventName, () => {
+        this.dispatchApi(eventName);
       });
     }
-
     this.playerManager.init(this.mainDiv);
   }
 
@@ -112,18 +107,22 @@ class Kip extends Dispatcher {
    * @param event
    * @param data
    */
-  dispatchApi(event: string, data?: any) {
+  dispatchApi(event: string) {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
       // debug mode - print to console
-      // console.warn("Rapt >> ", event);
-      if (data) {
-        // console.warn("Rapt >> >>", data);
+      console.warn("Rapt >> ", event);
+      // send ALL events with an object with 'event' and the current running node.
+      if (this.playerManager.currentNode) {
+        this.dispatch("debug", {
+          event: event,
+          node: this.playerManager.currentNode
+        });
+      } else {
+        this.dispatch("debug", { event: event });
       }
-      // Log API
-      this.dispatch("log", { event: event, data: data });
     }
     // expose API
-    this.dispatch(event, data);
+    this.dispatch(event);
   }
 
   /**
