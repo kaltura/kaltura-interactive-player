@@ -3,7 +3,7 @@
     "module": "commonjs",
     "downlevelIteration": true,
     "target": "ES5",
-    "lib": ["es6", "dom"],
+    "lib": ["es2015", "es2017", "dom"],
     "sourceMap": true,
     "outDir": "./src/",
     "noImplicitAny": true
