@@ -336,6 +336,5 @@ export class BufferManager extends Dispatcher {
     this.players = this.players.filter(
       (item: ICachingPlayer) => item.id !== node.id
     );
-    console.log(">>>>>  this.players removed node", node, this.players);
   }
 }
