@@ -56,21 +56,12 @@ export class PlayersManager extends Dispatcher {
       conf,
       this.raptData
     );
-
-    this.bufferManager.addListener(BufferEvent.BUFFERING, (node: INode) => {
-      this.dispatch("message", "> buffering " + node.name + " " + node.entryId);
-    });
-    this.bufferManager.addListener("log", (str: string) => {
-      this.dispatch("message", str);
-    });
-
-    this.bufferManager.addListener(BufferEvent.ALL_DONE, (node: INode) => {
-      this.dispatch("message", "> all cached for " + node.name + " " + node.entryId);
-    });
-
-    this.bufferManager.addListener(BufferEvent.DONE, (node: INode) => {
-      this.dispatch("message", "> node cached: " + node.name + " " + node.entryId);
-    });
+    // listen to all BufferEvent types
+    for (let o of Object.values(BufferEvent)) {
+      this.bufferManager.addListener(o, (event: KipEvent) => {
+        this.dispatch(event);
+      });
+    }
   }
 
   /**
@@ -86,7 +77,7 @@ export class PlayersManager extends Dispatcher {
     });
 
     if (!firstNode) {
-      this.dispatch(KipEvent.FIRST_PLAY_ERROR);
+      this.dispatch({ type: KipEvent.FIRST_PLAY_ERROR });
     }
     // load the 1st media
     this.currentNode = firstNode;
@@ -164,11 +155,9 @@ export class PlayersManager extends Dispatcher {
     //window.mainPlayer.currentTime = time;
   }
 
-  event(_event: any) {
-    if (_event.type != "player:timeupdate") {
-      this.dispatch(_event.type);
-      this.dispatch("message" , _event.type);
-      // console.log(">>>> Rapt event: ", _event.type, this.currentNode);
+  event(event: any, o?: any) {
+    if (event.type != "player:timeupdate") {
+      this.dispatch(event);
     }
   }
 

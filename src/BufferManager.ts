@@ -186,14 +186,20 @@ export class BufferManager extends Dispatcher {
     );
     if (unbufferedPlayer) {
       // found one - add it and start caching it. Notify PlayerManager of this
-      this.dispatch(BufferEvent.BUFFERING, unbufferedPlayer.node);
+      this.dispatch({
+        type: BufferEvent.BUFFERING,
+        data: unbufferedPlayer.node.name
+      });
       // update status of current player
       unbufferedPlayer.status = BufferState.CACHING;
       // create player and cache it
       this.cachePlayer(unbufferedPlayer);
     } else {
       // no more unbuffered players - we must be done
-      this.dispatch(BufferEvent.ALL_DONE, this.currentNode);
+      this.dispatch({
+        type: BufferEvent.ALL_BUFFERED,
+        data: this.currentNode.name
+      });
     }
   }
 
@@ -211,7 +217,10 @@ export class BufferManager extends Dispatcher {
         (item: ICachingPlayer) => item.node.entryId === entryId
       );
       finished.status = BufferState.READY;
-      this.dispatch(BufferEvent.DONE, finished.node);
+      this.dispatch({
+        type: BufferEvent.DONE,
+        data: finished.node.name
+      });
       this.cacheNextPlayer();
     }, newPlayer);
     newPlayer.loadMedia({ entryId: player.node.entryId });
@@ -316,7 +325,7 @@ export class BufferManager extends Dispatcher {
    * @param node
    */
   destroyPlayer(node: INode): void {
-    this.dispatch("log", "removed node : " + node.name);
+    this.dispatch({ type: BufferEvent.DESTROYING, data: node.name });
     const cachingPlayer: ICachingPlayer = this.getPlayerByKalturaId(
       node.entryId
     );
@@ -336,5 +345,6 @@ export class BufferManager extends Dispatcher {
     this.players = this.players.filter(
       (item: ICachingPlayer) => item.id !== node.id
     );
+    this.dispatch({ type: BufferEvent.DESTROYED, data: node.name });
   }
 }

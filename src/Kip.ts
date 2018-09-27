@@ -3,6 +3,7 @@ import { KipState } from "./helpers/States";
 import { PlayersManager } from "./PlayersManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import IRaptConfig from "./interfaces/IRaptConfig";
+import { BufferEvent } from "./helpers/KipEvents";
 
 class Kip extends Dispatcher {
   config: any;
@@ -94,35 +95,37 @@ class Kip extends Dispatcher {
       this.rapt
     );
 
-    for (let eventName of this.API_EVENTS) {
-      this.playerManager.addListener(eventName, () => {
-        this.dispatchApi(eventName);
+    // reflect all buffering evnets to the API
+    for (let o of Object.values(BufferEvent)) {
+      this.playerManager.addListener(o, (data?: any) => {
+        this.dispatchApi(o, data);
       });
     }
+
+    for (let eventName of this.API_EVENTS) {
+      this.playerManager.addListener(eventName, (event: any) => {
+        this.dispatchApi(eventName, event);
+      });
+    }
+
     this.playerManager.init(this.mainDiv);
   }
 
   /**
-   * Expose API to the wrapping page
+   * Expose API to the wrapping page/app
    * @param event
    * @param data
    */
-  dispatchApi(event: string) {
+  dispatchApi(event: string, data?: any) {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
       // debug mode - print to console
-      console.warn("Rapt >> ", event);
-      // send ALL events with an object with 'event' and the current running node.
-      if (this.playerManager.currentNode) {
-        this.dispatch("debug", {
-          event: event,
-          node: this.playerManager.currentNode
-        });
-      } else {
-        this.dispatch("debug", { event: event });
-      }
+      console.warn("Rapt: > " + event + data ? data : "");
     }
-    // expose API
-    this.dispatch(event);
+    // expose API, add the current node and
+    this.dispatch({
+      type: event,
+      data: data
+    });
   }
 
   /**

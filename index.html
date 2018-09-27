@@ -31,35 +31,48 @@
 		provider: {
 			partnerId: 27017
 		},
+
         rapt:{
-			debug:false,
+			debug:true,
             bufferNextNodes: true
         }
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
 
     // example of events listening:
-	kip.addListener("log" , logMsg); // track all events when rapt.debug=true
-	kip.addListener("project:load" , function (a) {
+    kip.addListener("project:load" , function (a) {
 		console.log(">>>>> project:load",a);
-	}); // track all events when rapt.debug=true
+	});
+
+    kip.addListener("hotspot:click" , function (a) {
+		console.log(">>>>> hotspot:click",a);
+	});
+
 	kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy
 
-	// logger
-	function logMsg(logObject){
-		const logDiv = document.createElement("div");
-		//logDiv.innerHTML = logObject.event;
-		document.getElementById("logDiv").appendChild(logDiv);
-		if(logObject.data){
-            const dataDiv = document.createElement("div");
-            if(logObject.data.indexOf(">")===0){
-            	dataDiv.style.cssText = "color: green"; // mark buffering events
-            }else{
-			    dataDiv.style.cssText = "color: blue";
+    // for debug purposes - these are the buffering events
+    var bufferingEvents = ["buffering","destroying","destroyed","done","allBuffered"];
+
+	// logger - debug mode !
+	function logDebugMsg(logObject){
+        const oneLine = document.createElement("div");
+        // mark buffering event in green
+        var printStr = logObject.data.originalEvent;
+        if( bufferingEvents.some( a => a ===logObject.data.originalEvent) ){
+        	// this is a buffering event
+            oneLine.style.cssText = "color: green";
+            printStr+='<span style="color: purple"> ['+logObject.data.data+']</span>';
+        }else{
+        	// this is a Rapt event
+            oneLine.style.cssText = "color: blue";
+            printStr+='<span style="color: purple"> ['+logObject.data.type+']</span>';
+            if(logObject.data.type === "hotspot:click"){
+				console.log(">>>>>",logObject.data);
+                // printStr+='<span style="color: orangered"> ['+logObject.data.payload.hotspot.name+']</span>';
             }
-			dataDiv.innerHTML = logObject.data;
-            document.getElementById("logDiv").appendChild(dataDiv);
         }
+        oneLine.innerHTML = printStr;
+        document.getElementById("logDiv").appendChild(oneLine);
     }
 
 </script>
