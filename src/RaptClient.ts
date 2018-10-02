@@ -1,5 +1,4 @@
 import { Promise } from "es6-promise";
-import { KalturaFilterPager } from "kaltura-typescript-client/api/types/KalturaFilterPager";
 import {
   KalturaAPIException,
   KalturaClient,
@@ -11,7 +10,6 @@ import { KalturaFileAsset } from "../node_modules/kaltura-typescript-client/api/
 import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/api/types/FileAssetListAction";
 import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetFilter";
 import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
-import { KalturaFileAssetListResponse } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetListResponse";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
 
@@ -72,12 +70,6 @@ export class RaptClient extends Dispatcher {
         this.clientTag,
         this.config.ks
       );
-
-      // TODO clean
-      // const pager: KalturaFilterPager = new KalturaFilterPager();
-      // pager.pageSize = 1;
-      // pager.pageIndex = 1;
-
       const filter: KalturaFileAssetFilter = new KalturaFileAssetFilter();
       filter.objectIdEqual = raptPlaylistId;
       filter.fileAssetObjectTypeEqual = KalturaFileAssetObjectType.entry;

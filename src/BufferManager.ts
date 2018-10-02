@@ -2,8 +2,9 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import INode from "./interfaces/INode";
 import IRaptConfig from "./interfaces/IRaptConfig";
 import { BufferState } from "./helpers/States";
-import { BufferEvent } from "./helpers/KipEvents";
+import { BufferEvent, KipFullscreen } from "./helpers/KipEvents";
 import ICachingPlayer from "./interfaces/ICachingPlayer";
+import { PlaybackPreset } from "./ui/PlaybackPreset";
 
 /**
  * This class is in charge of the creation of all players, and to handle their statuses (init,caching,ready)
@@ -17,6 +18,8 @@ export class BufferManager extends Dispatcher {
   raptData: any;
   currentNode: INode;
   conf: any;
+  playbackPreset: any;
+  isFullScreen: boolean = false;
 
   SECONDS_TO_BUFFER: number = 5;
   BUFFER_CHECK_INTERVAL: number = 100;
@@ -36,9 +39,19 @@ export class BufferManager extends Dispatcher {
     this.conf = conf;
     this.raptData = raptData;
     this.players = [];
+    this.playbackPreset = new PlaybackPreset(
+      this.playerLibrary.ui.h,
+      this.playerLibrary.ui.Components,
+      () => this.toggleFullscreen()
+    ).preset;
+  }
+
+  toggleFullscreen() {
+    this.dispatch({ type: KipFullscreen.FULL_SCREEN_CLICKED });
   }
 
   loadPlayer(node: INode, callback: () => void = null): any {
+
     const nodeDiv: HTMLElement = this.createNodesDiv(node);
     const nodeConf: object = this.getPlayerConf(node, nodeDiv.id);
     const player = this.playerLibrary.setup(nodeConf);
@@ -270,13 +283,23 @@ export class BufferManager extends Dispatcher {
     targetName: string,
     isCache: boolean = false
   ): object {
-    const newConf: IRaptConfig = Object.assign(this.conf);
+    let newConf: IRaptConfig = Object.assign(this.conf);
     newConf.targetId = targetName;
     if (isCache) {
       newConf.playback = {
         autoplay: false,
         preload: "auto"
       };
+    }
+    try {
+      let uis = [
+        {
+          template: props => this.playbackPreset(props)
+        }
+      ];
+      newConf.ui = { customPreset: uis };
+    } catch (e) {
+      alert();
     }
     delete newConf.rapt;
     return newConf;

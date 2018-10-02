@@ -5,6 +5,11 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import IRaptConfig from "./interfaces/IRaptConfig";
 import { BufferEvent } from "./helpers/KipEvents";
 
+/**
+ * Main app class. This class is in charge of initiating everything and orchestrate tha API, the data-fetching and
+ * the app bootstrap flow.
+ */
+
 class Kip extends Dispatcher {
   config: any;
   playerManager: PlayersManager;
@@ -38,6 +43,7 @@ class Kip extends Dispatcher {
       }
       
       .kip-message__body{
+      
       }
       
       .kip-message__message{

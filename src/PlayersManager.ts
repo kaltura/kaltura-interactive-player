@@ -2,7 +2,7 @@ import INode from "./interfaces/INode";
 import { BufferState, PlaybackState } from "./helpers/States";
 import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
-import { BufferEvent, KipEvent } from "./helpers/KipEvents";
+import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import ICachingPlayer from "./interfaces/ICachingPlayer";
 
 /**
@@ -20,8 +20,7 @@ export class PlayersManager extends Dispatcher {
   playbackState: string;
   raptProjectId: string;
   mainDiv: HTMLElement; // the parent id that holds all layers
-
-  PLAYER_TICK_INTRTVAL: number = 250;
+  PLAYER_TICK_INTERVAL: number = 250;
 
   constructor(
     conf: any,
@@ -56,12 +55,58 @@ export class PlayersManager extends Dispatcher {
       conf,
       this.raptData
     );
+
     // listen to all BufferEvent types
     for (let o of Object.values(BufferEvent)) {
       this.bufferManager.addListener(o, (event: KipEvent) => {
         this.dispatch(event);
       });
     }
+
+    // TODO - move to fullscreenManager?
+    document.addEventListener("fullscreenchange", () => this.exitHandler());
+    document.addEventListener("webkitfullscreenchange", () =>
+      this.exitHandler()
+    );
+
+    // listen to fullscreen clicks
+    this.bufferManager.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
+      this.toggleFullscreenState();
+    });
+  }
+
+  // TODO - move to fullscreenManager?
+  toggleFullscreenState() {
+    let element: HTMLElement;
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    } else {
+      element = this.mainDiv;
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      }
+    }
+    setTimeout(() => {
+      this.resizeEngine();
+    }, 100);
+  }
+
+  // TODO - move to fullscreenManager?
+  exitHandler() {
+    if (!document.fullscreenElement && !document.webkitIsFullScreen) {
+      this.toggleFullscreenState();
+    }
+  }
+
+  resizeEngine() {
+    this.raptEngine.resize({
+      width: this.mainDiv.offsetWidth,
+      height: this.mainDiv.offsetHeight
+    });
   }
 
   /**
@@ -85,7 +130,10 @@ export class PlayersManager extends Dispatcher {
       // create the rapt-engine layer
       this.element = document.createElement("div");
       this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-      this.element.setAttribute("style", "width:0;height:0;z-index:9999");
+      this.element.setAttribute(
+        "style",
+        "width:100%;height:100%;z-index:9999;background:green"
+      );
       // adding the rapt layer to the main-app div
       mainDiv.appendChild(this.element);
       this.initRapt();
@@ -127,13 +175,10 @@ export class PlayersManager extends Dispatcher {
   initRapt() {
     this.raptEngine = new this.raptEngine.Engine(this);
     this.raptEngine.load(this.raptData);
-    this.raptEngine.resize({
-      width: this.mainDiv.offsetWidth,
-      height: this.mainDiv.offsetHeight
-    });
+    this.resizeEngine();
     setInterval(
       () => this.tick(this.currentPlayer, this.raptEngine),
-      this.PLAYER_TICK_INTRTVAL
+      this.PLAYER_TICK_INTERVAL
     );
   }
 
@@ -162,10 +207,6 @@ export class PlayersManager extends Dispatcher {
   }
 
   tick(currentPlayer: any, raptEngine: any) {
-    // console.log(">>>>>", this.currentPlayer);
-    // if (this.playbackState === PlaybackState.PAUSED) {
-    //   return; // no point updating when video is paused
-    // }
     const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
     if (currentPlayingVideoElement) {
       raptEngine.update({
