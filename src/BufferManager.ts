@@ -51,7 +51,6 @@ export class BufferManager extends Dispatcher {
   }
 
   loadPlayer(node: INode, callback: () => void = null): any {
-
     const nodeDiv: HTMLElement = this.createNodesDiv(node);
     const nodeConf: object = this.getPlayerConf(node, nodeDiv.id);
     const player = this.playerLibrary.setup(nodeConf);
@@ -264,9 +263,11 @@ export class BufferManager extends Dispatcher {
   createNodesDiv(node: INode, isCachePlayer: boolean = false): HTMLElement {
     const newDiv = document.createElement("div");
     newDiv.setAttribute("id", this.raptProjectId + "__" + node.entryId);
-    newDiv.setAttribute("style", "width:100%;height:100%");
     if (isCachePlayer) {
-      newDiv.setAttribute("class", "kiv-cache-player");
+      newDiv.setAttribute("class", "kiv-player kiv-cache-player");
+    } else {
+      // first player
+      newDiv.setAttribute("class", "kiv-player current-playing");
     }
     this.playersContainer.appendChild(newDiv);
     return newDiv;

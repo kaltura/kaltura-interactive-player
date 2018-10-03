@@ -52,7 +52,20 @@ class Kip extends Dispatcher {
       }
       
       .kiv-cache-player{
-      
+        
+      }
+      .current-playing{
+        z-index: 9999;
+      }
+      .kip-players-container{
+       
+      }
+      .kiv-rapt-engine,
+      .kiv-player,
+      .kip-players-container
+      {
+        width: 100%;
+        height: 100%;
       }
     `;
     document.head.appendChild(css);

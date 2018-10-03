@@ -39,11 +39,12 @@ export class PlayersManager extends Dispatcher {
 
     // create a container to all players
     const playerContainer: HTMLElement = document.createElement("div");
+    // set id that contains the rapt playlist-id to support multiple KIV on the same player
     playerContainer.setAttribute(
       "id",
       this.raptProjectId + "-kip-players-container"
     );
-    playerContainer.setAttribute("style", "width:100%;height:100%");
+    playerContainer.setAttribute("class", "kip-players-container");
     // adding the rapt layer to the main-app div
     this.mainDiv.appendChild(playerContainer);
 
@@ -92,7 +93,7 @@ export class PlayersManager extends Dispatcher {
     }
     setTimeout(() => {
       this.resizeEngine();
-    }, 100);
+    }, 100); // todo - optimize / dom-event
   }
 
   // TODO - move to fullscreenManager?
@@ -130,10 +131,7 @@ export class PlayersManager extends Dispatcher {
       // create the rapt-engine layer
       this.element = document.createElement("div");
       this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-      this.element.setAttribute(
-        "style",
-        "width:100%;height:100%;z-index:9999;background:green"
-      );
+      this.element.setAttribute("class", "kiv-rapt-engine");
       // adding the rapt layer to the main-app div
       mainDiv.appendChild(this.element);
       this.initRapt();
@@ -149,6 +147,12 @@ export class PlayersManager extends Dispatcher {
     const nextPlayer: ICachingPlayer = this.bufferManager.getPlayerByKalturaId(
       id
     );
+
+    // remove current player from top z-index stack
+    const currentPlayingDiv = this.mainDiv.querySelector(
+      "[id='" + this.raptProjectId + "__" + this.currentNode.entryId + "']"
+    );
+    // currentPlayingDiv.classList.remove("current-playing");
     if (!nextPlayer) {
       // TODO next player was not created. handle new node
     } else {
@@ -161,7 +165,13 @@ export class PlayersManager extends Dispatcher {
           this.currentPlayer = nextPlayer.player;
           const node: INode = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
-          // TODO handle z-index later
+          // todo - make function "getPlayerDivById"
+          const newPlayerDiv = this.mainDiv.querySelector(
+            "[id='" + this.raptProjectId + "__" + id + "']"
+          );
+          debugger;
+          newPlayerDiv.classList.add("current-playing");
+
           break;
         // the next player is created but still buffering
         case BufferState.CACHING:
