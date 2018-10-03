@@ -79,11 +79,12 @@ export class PlayersManager extends Dispatcher {
   // TODO - move to fullscreenManager?
   toggleFullscreenState() {
     let element: HTMLElement;
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
+    const doc: any = document; // todo handle more elegantly
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
+        doc.exitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
       }
     } else {
       element = this.mainDiv;
@@ -98,7 +99,8 @@ export class PlayersManager extends Dispatcher {
 
   // TODO - move to fullscreenManager?
   exitHandler() {
-    if (!document.fullscreenElement && !document.webkitIsFullScreen) {
+    const doc: any = document;
+    if (!doc.fullscreenElement && !doc.webkitIsFullScreen) {
       this.toggleFullscreenState();
     }
   }
@@ -169,9 +171,7 @@ export class PlayersManager extends Dispatcher {
           const newPlayerDiv = this.mainDiv.querySelector(
             "[id='" + this.raptProjectId + "__" + id + "']"
           );
-          debugger;
           newPlayerDiv.classList.add("current-playing");
-
           break;
         // the next player is created but still buffering
         case BufferState.CACHING:

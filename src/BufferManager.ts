@@ -252,7 +252,7 @@ export class BufferManager extends Dispatcher {
       bufferPlayer.buffered.length &&
       bufferPlayer.buffered.end
     ) {
-      console.log(">>>>>", bufferPlayer.buffered.end(0));
+      //console.log(">>>>>", bufferPlayer.buffered.end(0));
     }
 
     if (
