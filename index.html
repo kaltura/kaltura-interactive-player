@@ -11,8 +11,8 @@
     <!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
     <style>
         #player {
-            width:350px;
-            height:197px;
+            width:500px;
+            height:281px;
         }
     </style>
 <div id="player"></div>
@@ -20,7 +20,7 @@
 <script>
 	var config = {
 		session:{
-			// ks: "MjVkYTQyMDY1OWNhYjhkNjNlMzY1N2QzOWFhNGRlYTkzODE3YjM3NXwyNzAxNzsyNzAxNzsxNTM3OTQ5MjUyOzI7NzA3OTtfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
+			// ks: "ZGVhOTFiZDU4ZjE1MjQxYzA4NjE3ZWQ3ODRkNGEzZjEzOTVjY2E2M3wyNzAxNzsyNzAxNzsxNTM4MTQyMjA4OzI7MTIwODM7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
 		},
 		targetId: 'player',
 		playback:{
@@ -33,8 +33,9 @@
 		},
 
         rapt:{
-			debug:true,
-            bufferNextNodes: true
+			debug:false,
+            bufferNextNodes: true,
+            bufferTime: 8
         }
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
@@ -48,7 +49,7 @@
 		console.log(">>>>> hotspot:click",a);
 	});
 
-	kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy
+	kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
 
     // for debug purposes - these are the buffering events
     var bufferingEvents = ["buffering","destroying","destroyed","done","allBuffered"];
