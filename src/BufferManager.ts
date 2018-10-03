@@ -19,9 +19,8 @@ export class BufferManager extends Dispatcher {
   currentNode: INode;
   conf: any;
   playbackPreset: any;
-  isFullScreen: boolean = false;
 
-  SECONDS_TO_BUFFER: number = 5;
+  SECONDS_TO_BUFFER: number = 6;
   BUFFER_CHECK_INTERVAL: number = 100;
   BUFFER_DONE_TIMEOUT: number = 100;
 
@@ -37,6 +36,9 @@ export class BufferManager extends Dispatcher {
     this.playersContainer = playersContainer;
     this.raptProjectId = raptProjectId;
     this.conf = conf;
+    if (conf.rapt.bufferTime) {
+      this.SECONDS_TO_BUFFER = conf.rapt.bufferTime;
+    }
     this.raptData = raptData;
     this.players = [];
     this.playbackPreset = new PlaybackPreset(
@@ -244,11 +246,26 @@ export class BufferManager extends Dispatcher {
    * @param bufferPlayer
    */
   checkIfBuffered(callback: (entryId: string) => void, bufferPlayer: any) {
-    if (bufferPlayer.buffered && bufferPlayer.buffered.length) {
+    // todo - remove once optomize buffer
+    if (
+      bufferPlayer.buffered &&
+      bufferPlayer.buffered.length &&
+      bufferPlayer.buffered.end
+    ) {
+      console.log(">>>>>", bufferPlayer.buffered.end(0));
+    }
+
+    if (
+      bufferPlayer.buffered &&
+      bufferPlayer.buffered.length &&
+      bufferPlayer.buffered.end &&
+      bufferPlayer.buffered.end(0) > this.SECONDS_TO_BUFFER - 1
+    ) {
       setTimeout(() => {
         callback(bufferPlayer._config.sources.id);
       }, this.BUFFER_DONE_TIMEOUT);
     } else {
+      // not buffered yet - check again
       setTimeout(() => {
         this.checkIfBuffered(callback, bufferPlayer);
       }, this.BUFFER_CHECK_INTERVAL);
@@ -289,7 +306,14 @@ export class BufferManager extends Dispatcher {
     if (isCache) {
       newConf.playback = {
         autoplay: false,
-        preload: "auto"
+        preload: "auto",
+        options: {
+          html5: {
+            hls: {
+              maxMaxBufferLength: this.SECONDS_TO_BUFFER
+            }
+          }
+        }
       };
     }
     try {
