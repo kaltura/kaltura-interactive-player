@@ -4,7 +4,6 @@
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "scripts": {
-    "get-ks": "node scripts/refresh-ks.js",
     "start": "webpack-dev-server --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
