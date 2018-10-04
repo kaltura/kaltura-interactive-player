@@ -3,19 +3,38 @@
   "version": "0.1.0",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
+  "license": "AGPL-3.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaltura/kaltura-interactive-player.git"
+  },
+  "keywords": ["kaltura", "interactive-video"],
+  "author": {
+    "name": "Kaltura Community",
+    "email": "community@kaltura.com"
+  },
+  "contributors": [
+    {
+      "name": "Eitan Avgil",
+      "email": "eitan.avgil@kaltura.com"
+    },
+    {
+      "name": "Eran Sakal",
+      "email": "eran@sakalim.com"
+    }
+  ],
   "scripts": {
     "start": "webpack-dev-server --open",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Eitan Avgil",
-  "license": "MIT",
   "dependencies": {
-    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz",
+    "kaltura-typescript-client":
+      "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz",
     "node-fetch": "^2.2.0"
   },
   "devDependencies": {
     "@types/core-js": "^2.5.0",
-    "@types/es6-promise": "^3.3.0",
     "core-js": "^2.5.7",
     "ts-loader": "^4.4.2",
     "typescript": "^3.0.1",
