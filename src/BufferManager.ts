@@ -1,8 +1,9 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import INode from "./interfaces/INode";
 import { BufferState } from "./helpers/States";
 import { BufferEvent, KipFullscreen } from "./helpers/KipEvents";
 import { PlaybackPreset } from "./ui/PlaybackPreset";
+import { RaptConfig } from "./Kip";
+import { RaptNode } from "./PlayersManager";
 
 /**
  * id: rapt id
@@ -12,7 +13,7 @@ import { PlaybackPreset } from "./ui/PlaybackPreset";
  */
 export interface CachingPlayer {
   id: string; // rapt id
-  node: INode; // rapt node raw data
+  node: RaptNode; // rapt node raw data
   status: BufferState; // init,caching,ready,error
   player?: any; // the actual player
 }
@@ -21,13 +22,12 @@ export interface CachingPlayer {
  * This class is in charge of the creation of all players, and to handle their statuses (init,caching,ready)
  */
 export class BufferManager extends Dispatcher {
-
   players: CachingPlayer[];
   playerLibrary: any;
   playersContainer: HTMLElement;
   raptProjectId: string;
   raptData: any;
-  currentNode: INode;
+  currentNode: RaptNode;
   conf: any;
   playbackPreset: any;
 
@@ -63,7 +63,7 @@ export class BufferManager extends Dispatcher {
     this.dispatch({ type: KipFullscreen.FULL_SCREEN_CLICKED });
   }
 
-  loadPlayer(node: INode, callback: () => void = null): any {
+  loadPlayer(node: RaptNode, callback: () => void = null): any {
     const nodeDiv: HTMLElement = this.createNodesDiv(node);
     const nodeConf: object = this.getPlayerConf(node, nodeDiv.id);
     const player = this.playerLibrary.setup(nodeConf);
@@ -99,7 +99,7 @@ export class BufferManager extends Dispatcher {
    * Stop the current buffering player, unless it is the one that was requested to play.
    * @param nodeToPlay
    */
-  stopCurrentCachedPlayer(nodeToPlay: INode) {
+  stopCurrentCachedPlayer(nodeToPlay: RaptNode) {
     const cachingNow: CachingPlayer = this.players.find(
       (player: CachingPlayer) => player.status === BufferState.caching
     );
@@ -110,24 +110,24 @@ export class BufferManager extends Dispatcher {
     }
   }
 
-  cacheNodes(currentNode: INode) {
+  cacheNodes(currentNode: RaptNode) {
     // in case there is a caching player - stop caching it.
     this.stopCurrentCachedPlayer(currentNode);
     this.currentNode = currentNode;
-    let nodes: INode[] = this.getNextNodes(currentNode);
+    let nodes: RaptNode[] = this.getNextNodes(currentNode);
     // optimize 1 - find items that are cached/created but not relevant for this current node
 
     // helper - extract the nodes from the currentPlayers
-    const currentPlayersNodes: INode[] = this.players.map(
+    const currentPlayersNodes: RaptNode[] = this.players.map(
       (cachePlayer: CachingPlayer) => cachePlayer.node
     );
     // find which nodes we want to destroy
     let nodesToDestroy = currentPlayersNodes.filter(
-      (node: INode) => !nodes.find((tmp: INode) => node.id === tmp.id)
+      (node: RaptNode) => !nodes.find((tmp: RaptNode) => node.id === tmp.id)
     );
     // ignore the given node
     nodesToDestroy = nodesToDestroy.filter(
-      (node: INode) => node.id !== currentNode.id
+      (node: RaptNode) => node.id !== currentNode.id
     );
     // Now destroy them
     for (const nodeToDestroy of nodesToDestroy) {
@@ -136,7 +136,7 @@ export class BufferManager extends Dispatcher {
 
     //
     // // remove the current node from the next nodes to cache - it is playing and no need to cache it
-    // nodes = nodes.filter((node: INode) => node.id === currentNode.id);
+    // nodes = nodes.filter((node: Node) => node.id === currentNode.id);
 
     // Optimization! re-order nodes, depending appearance time
     nodes = this.sortByApearenceTime(nodes, currentNode);
@@ -170,10 +170,10 @@ export class BufferManager extends Dispatcher {
 
   /**
    * Sort a given nodes-array by the appearance-order of the hotspots in that node
-   * @param arr of INodes
+   * @param arr of Nodes
    * @param givenNode
    */
-  sortByApearenceTime(arr: INode[], givenNode: INode): INode[] {
+  sortByApearenceTime(arr: RaptNode[], givenNode: RaptNode): RaptNode[] {
     // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
     const hotspots: any[] = this.raptData.hotspots
       .filter((hotSpot: any) => {
@@ -185,10 +185,10 @@ export class BufferManager extends Dispatcher {
       })
       .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
 
-    const arrayToCache: INode[] = [];
+    const arrayToCache: RaptNode[] = [];
     for (const hotSpot of hotspots) {
       arrayToCache.push(
-        arr.find((itm: INode) => {
+        arr.find((itm: RaptNode) => {
           // extract the onClick element with type 'project:jump'
           const clickItem: any = hotSpot.onClick.find(
             (itm: any) => itm.type === "project:jump"
@@ -288,7 +288,7 @@ export class BufferManager extends Dispatcher {
    * 2 different rapt projects on the same page.
    * @param node
    */
-  createNodesDiv(node: INode, isCachePlayer: boolean = false): HTMLElement {
+  createNodesDiv(node: RaptNode, isCachePlayer: boolean = false): HTMLElement {
     const newDiv = document.createElement("div");
     newDiv.setAttribute("id", this.raptProjectId + "__" + node.entryId);
     if (isCachePlayer) {
@@ -312,7 +312,7 @@ export class BufferManager extends Dispatcher {
     targetName: string,
     isCache: boolean = false
   ): object {
-    let newConf: IRaptConfig = Object.assign(this.conf);
+    let newConf: RaptConfig = Object.assign(this.conf);
     newConf.targetId = targetName;
     if (isCache) {
       newConf.playback = {
@@ -360,8 +360,8 @@ export class BufferManager extends Dispatcher {
    * Get optional playable nodes of a given node
    * @param node
    */
-  getNextNodes(node: INode): INode[] {
-    let nodes: INode[] = node.prefetchNodeIds.length
+  getNextNodes(node: RaptNode): RaptNode[] {
+    let nodes: RaptNode[] = node.prefetchNodeIds.length
       ? node.prefetchNodeIds.map((nodeId: string) =>
           this.getNodeByRaptId(nodeId)
         )
@@ -374,16 +374,16 @@ export class BufferManager extends Dispatcher {
    * Return a rapt node
    * @param id
    */
-  getNodeByRaptId(id: string): INode {
-    const nodes: INode[] = this.raptData.nodes;
-    return nodes.find((item: INode) => item.id === id);
+  getNodeByRaptId(id: string): RaptNode {
+    const nodes: RaptNode[] = this.raptData.nodes;
+    return nodes.find((item: RaptNode) => item.id === id);
   }
 
   /**
    * Destroy a player and remove it from the players list
    * @param node
    */
-  destroyPlayer(node: INode): void {
+  destroyPlayer(node: RaptNode): void {
     this.dispatch({ type: BufferEvent.DESTROYING, data: node.name });
     const cachingPlayer: CachingPlayer = this.getPlayerByKalturaId(
       node.entryId

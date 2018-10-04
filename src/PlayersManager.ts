@@ -4,7 +4,7 @@ import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
 import { BufferManager, CachingPlayer } from "./BufferManager";
 
-export default interface Node {
+export interface RaptNode {
   id: string;
   entryId: string;
   name: string;
@@ -176,7 +176,7 @@ export class PlayersManager extends Dispatcher {
           nextPlayer.player.play();
           this.currentNode = nextPlayer.node;
           this.currentPlayer = nextPlayer.player;
-          const node: Node = nextPlayer.node;
+          const node: RaptNode = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
           // todo - make function "getPlayerDivById"
           const newPlayerDiv = this.mainDiv.querySelector(
