@@ -1,25 +1,32 @@
-import {RaptClient} from "./RaptClient";
-import {KipState} from "./helpers/States";
-import {PlayersManager} from "./PlayersManager";
-import {Dispatcher} from "./helpers/Dispatcher";
-import IRaptConfig from "./interfaces/IRaptConfig";
-import {BufferEvent} from "./helpers/KipEvents";
-import {CreateElement} from "./helpers/CreateElement";
+import { RaptClient } from "./RaptClient";
+import { KipState } from "./helpers/States";
+import { PlayersManager } from "./PlayersManager";
+import { Dispatcher } from "./helpers/Dispatcher";
+import { BufferEvent } from "./helpers/KipEvents";
+import { CreateElement } from "./helpers/CreateElement";
 
 const API_EVENTS = [
-    "project:load",
-    "project:ready",
-    "project:start",
-    "player:play",
-    "player:pause",
-    "player:progress",
-    "node:enter",
-    "node:ended",
-    "node:exit",
-    "hotspot:click",
-    "browser:hidden",
-    "browser:open"
+  "project:load",
+  "project:ready",
+  "project:start",
+  "player:play",
+  "player:pause",
+  "player:progress",
+  "node:enter",
+  "node:ended",
+  "node:exit",
+  "hotspot:click",
+  "browser:hidden",
+  "browser:open"
 ];
+
+export interface RaptConfig {
+  ui?: any;
+  rapt: any;
+  targetId: string;
+  playback?: object;
+  provider?: object;
+}
 
 /**
  * Main app class. This class is in charge of initiating everything and orchestrate tha API, the data-fetching and
@@ -27,14 +34,14 @@ const API_EVENTS = [
  */
 
 class Kip extends Dispatcher {
-  config: any;
-  playerManager: PlayersManager;
-  playerLibrary: any;
-  mainDiv: HTMLElement;
-  rapt: any; // TODO - optimize
-  playlistId: string;
-  client: RaptClient; // Backend Client
-  state: KipState = KipState.preinit;
+  private config: any;
+  private playerManager: PlayersManager;
+  private playerLibrary: any;
+  private mainDiv: HTMLElement;
+  private rapt: any; // TODO - optimize
+  private playlistId: string;
+  private client: RaptClient; // Backend Client
+  public state: KipState = KipState.preinit;
 
   constructor() {
     super();
@@ -84,7 +91,12 @@ class Kip extends Dispatcher {
     document.head.appendChild(css);
   }
 
-  setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
+  setup(config: RaptConfig, playerLibrary: any, rapt: any): Kip {
+    if (this.state !== KipState.preinit) {
+      // todo - handle errors
+      this.printMessage("Error", "Setup should be called once!");
+      return;
+    }
     this.state = KipState.init;
     this.config = config;
     this.rapt = rapt;
@@ -93,6 +105,11 @@ class Kip extends Dispatcher {
   }
 
   loadMedia(obj: any): void {
+    if (this.state !== KipState.init) {
+      // todo - handle errors
+      this.printMessage("Error", "loadMedia should be called after setup");
+      return;
+    }
     // create a top-level container
     this.mainDiv = CreateElement(
       "div",

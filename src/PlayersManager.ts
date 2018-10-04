@@ -1,10 +1,16 @@
-import INode from "./interfaces/INode";
 import { BufferState, PlaybackState } from "./helpers/States";
-import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
-import ICachingPlayer from "./interfaces/ICachingPlayer";
 import { CreateElement } from "./helpers/CreateElement";
+import { BufferManager, CachingPlayer } from "./BufferManager";
+
+export default interface Node {
+  id: string;
+  entryId: string;
+  name: string;
+  customData?: any;
+  prefetchNodeIds?: string[];
+}
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer
@@ -151,7 +157,7 @@ export class PlayersManager extends Dispatcher {
    */
   switchPlayer(id: string) {
     this.currentPlayer.pause();
-    const nextPlayer: ICachingPlayer = this.bufferManager.getPlayerByKalturaId(
+    const nextPlayer: CachingPlayer = this.bufferManager.getPlayerByKalturaId(
       id
     );
 
@@ -170,7 +176,7 @@ export class PlayersManager extends Dispatcher {
           nextPlayer.player.play();
           this.currentNode = nextPlayer.node;
           this.currentPlayer = nextPlayer.player;
-          const node: INode = nextPlayer.node;
+          const node: Node = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
           // todo - make function "getPlayerDivById"
           const newPlayerDiv = this.mainDiv.querySelector(
