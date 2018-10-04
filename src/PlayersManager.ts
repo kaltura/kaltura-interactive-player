@@ -4,6 +4,7 @@ import { BufferManager } from "./BufferManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import ICachingPlayer from "./interfaces/ICachingPlayer";
+import { CreateElement } from "./helpers/CreateElement";
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer
@@ -27,6 +28,7 @@ export class PlayersManager extends Dispatcher {
     playerLibrary: any,
     raptProjectId: string,
     raptData: any,
+    mainDiv: HTMLElement,
     raptEngine: any
   ) {
     super();
@@ -35,18 +37,27 @@ export class PlayersManager extends Dispatcher {
     this.playerLibrary = playerLibrary;
     this.raptProjectId = raptProjectId;
     this.raptEngine = raptEngine;
-    this.mainDiv = document.getElementById(conf.targetId);
+    this.mainDiv = mainDiv;
 
     // create a container to all players
-    const playerContainer: HTMLElement = document.createElement("div");
     // set id that contains the rapt playlist-id to support multiple KIV on the same player
-    playerContainer.setAttribute(
-      "id",
-      this.raptProjectId + "-kip-players-container"
+    const playerContainer: HTMLElement = CreateElement(
+      "div",
+      this.raptProjectId + "-kip-players-container",
+      "kip-players-container"
     );
-    playerContainer.setAttribute("class", "kip-players-container");
+
     // adding the rapt layer to the main-app div
     this.mainDiv.appendChild(playerContainer);
+
+    // create the rapt-engine layer
+    this.element = CreateElement(
+      "div",
+      this.raptProjectId + "-rapt-engine",
+      "kiv-rapt-engine"
+    );
+    // adding the rapt layer to the main-app div
+    playerContainer.appendChild(this.element);
 
     // init bufferManager
     this.bufferManager = new BufferManager(
@@ -130,12 +141,6 @@ export class PlayersManager extends Dispatcher {
     // load the 1st media
     this.currentNode = firstNode;
     this.currentPlayer = this.bufferManager.loadPlayer(firstNode, () => {
-      // create the rapt-engine layer
-      this.element = document.createElement("div");
-      this.element.setAttribute("id", this.raptProjectId + "-rapt-engine");
-      this.element.setAttribute("class", "kiv-rapt-engine");
-      // adding the rapt layer to the main-app div
-      mainDiv.appendChild(this.element);
       this.initRapt();
     });
   }
@@ -161,7 +166,7 @@ export class PlayersManager extends Dispatcher {
       // switch players according to the player BufferState
       switch (nextPlayer.status) {
         // the next player is already buffered
-        case BufferState.READY:
+        case BufferState.ready:
           nextPlayer.player.play();
           this.currentNode = nextPlayer.node;
           this.currentPlayer = nextPlayer.player;
@@ -174,7 +179,7 @@ export class PlayersManager extends Dispatcher {
           newPlayerDiv.classList.add("current-playing");
           break;
         // the next player is created but still buffering
-        case BufferState.CACHING:
+        case BufferState.caching:
           nextPlayer.player.play();
           break;
       }

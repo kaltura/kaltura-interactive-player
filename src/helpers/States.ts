@@ -1,13 +1,17 @@
-export const KipState = {
-  INIT: "init"
-};
+export const enum KipState {
+  "preinit",
+  "init",
+  "loading",
+  "playing",
+  "error"
+}
 
-export const BufferState = {
-  INIT: "init",
-  CACHING: "caching",
-  READY: "ready",
-  ERROR: "error"
-};
+export const enum BufferState {
+  "init",
+  "caching",
+  "ready",
+  "error"
+}
 
 export const PlaybackState = {
   PLAYING: "playing",

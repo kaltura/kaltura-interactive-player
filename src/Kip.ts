@@ -1,9 +1,25 @@
-import { RaptClient } from "./RaptClient";
-import { KipState } from "./helpers/States";
-import { PlayersManager } from "./PlayersManager";
-import { Dispatcher } from "./helpers/Dispatcher";
+import {RaptClient} from "./RaptClient";
+import {KipState} from "./helpers/States";
+import {PlayersManager} from "./PlayersManager";
+import {Dispatcher} from "./helpers/Dispatcher";
 import IRaptConfig from "./interfaces/IRaptConfig";
-import { BufferEvent } from "./helpers/KipEvents";
+import {BufferEvent} from "./helpers/KipEvents";
+import {CreateElement} from "./helpers/CreateElement";
+
+const API_EVENTS = [
+    "project:load",
+    "project:ready",
+    "project:start",
+    "player:play",
+    "player:pause",
+    "player:progress",
+    "node:enter",
+    "node:ended",
+    "node:exit",
+    "hotspot:click",
+    "browser:hidden",
+    "browser:open"
+];
 
 /**
  * Main app class. This class is in charge of initiating everything and orchestrate tha API, the data-fetching and
@@ -18,22 +34,7 @@ class Kip extends Dispatcher {
   rapt: any; // TODO - optimize
   playlistId: string;
   client: RaptClient; // Backend Client
-  state: string;
-
-  API_EVENTS: string[] = [
-    "project:load",
-    "project:ready",
-    "project:start",
-    "player:play",
-    "player:pause",
-    "player:progress",
-    "node:enter",
-    "node:ended",
-    "node:exit",
-    "hotspot:click",
-    "browser:hidden",
-    "browser:open"
-  ];
+  state: KipState = KipState.preinit;
 
   constructor() {
     super();
@@ -55,11 +56,23 @@ class Kip extends Dispatcher {
         
       }
       .current-playing{
-        z-index: 9999;
+        z-index: 99;
       }
       .kip-players-container{
-       
+          position: relative;
+           z-index: 500;
       }
+      .kiv-player{
+        position: absolute
+      }
+      .kiv-rapt-engine{
+        z-index: 1000;
+        position: absolute;
+      }
+      .kiv-container{
+        position: relative;
+      }
+      .kiv-container,
       .kiv-rapt-engine,
       .kiv-player,
       .kip-players-container
@@ -72,15 +85,22 @@ class Kip extends Dispatcher {
   }
 
   setup(config: IRaptConfig, playerLibrary: any, rapt: any): Kip {
-    this.state = KipState.INIT;
+    this.state = KipState.init;
     this.config = config;
     this.rapt = rapt;
     this.playerLibrary = playerLibrary;
-    this.mainDiv = document.getElementById(this.config.targetId);
     return this;
   }
 
   loadMedia(obj: any): void {
+    // create a top-level container
+    this.mainDiv = CreateElement(
+      "div",
+      "kiv-container__" + obj.entryId,
+      "kiv-container"
+    );
+    document.getElementById(this.config.targetId).appendChild(this.mainDiv);
+
     let ks: string =
       this.config.session && this.config.session.ks
         ? this.config.session.ks
@@ -111,6 +131,7 @@ class Kip extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
+      this.mainDiv,
       this.rapt
     );
 
@@ -121,7 +142,7 @@ class Kip extends Dispatcher {
       });
     }
 
-    for (let eventName of this.API_EVENTS) {
+    for (let eventName of API_EVENTS) {
       this.playerManager.addListener(eventName, (event: any) => {
         this.dispatchApi(eventName, event);
       });
@@ -153,13 +174,10 @@ class Kip extends Dispatcher {
    * @param text
    */
   printMessage(title: string, text: string = "") {
-    const messageDiv = document.createElement("div");
-    const titleDiv = document.createElement("div");
-    const bodeDiv = document.createElement("div");
-    messageDiv.classList.add("kip-message__message");
-    titleDiv.classList.add("kip-message__title");
+    const messageDiv = CreateElement("div", null, "kip-message__message");
+    const titleDiv = CreateElement("div", null, "kip-message__title");
+    const bodeDiv = CreateElement("div", null, "kip-message__body");
     titleDiv.innerHTML = title;
-    bodeDiv.classList.add("kip-message__body");
     bodeDiv.innerHTML = text;
     messageDiv.appendChild(titleDiv);
     messageDiv.appendChild(bodeDiv);

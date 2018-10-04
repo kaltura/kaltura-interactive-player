@@ -1,4 +1,5 @@
 import INode from "./INode";
+import { BufferState } from "../helpers/States";
 
 /**
  * id: rapt id
@@ -9,8 +10,6 @@ import INode from "./INode";
 export default interface ICachingPlayer {
   id: string; // rapt id
   node: INode; // rapt node raw data
-  status: string; // init,caching,ready,error
+  status: BufferState; // init,caching,ready,error
   player?: any; // the actual player
 }
-
-

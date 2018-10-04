@@ -62,7 +62,7 @@ export class BufferManager extends Dispatcher {
 
     // store the player
     this.players.push({
-      status: BufferState.CACHING,
+      status: BufferState.caching,
       id: node.id,
       node: node,
       player: player
@@ -77,7 +77,7 @@ export class BufferManager extends Dispatcher {
         node.entryId
       );
       if (firstPlayer) {
-        firstPlayer.status = BufferState.READY;
+        firstPlayer.status = BufferState.ready;
       }
       this.cacheNodes(node);
     }, player);
@@ -90,12 +90,12 @@ export class BufferManager extends Dispatcher {
    */
   stopCurrentCachedPlayer(nodeToPlay: INode) {
     const cachingNow: ICachingPlayer = this.players.find(
-      (player: ICachingPlayer) => player.status === BufferState.CACHING
+      (player: ICachingPlayer) => player.status === BufferState.caching
     );
     if (cachingNow && cachingNow.player && cachingNow.id !== nodeToPlay.id) {
       cachingNow.player.destroy();
       cachingNow.player = null;
-      cachingNow.status = BufferState.INIT;
+      cachingNow.status = BufferState.init;
     }
   }
 
@@ -136,7 +136,7 @@ export class BufferManager extends Dispatcher {
       if (!this.players.find((item: ICachingPlayer) => item.id === node.id)) {
         // use Rapt id as a key since we might have kaltura-entry in different rapt nodes
         this.players.push({
-          status: BufferState.INIT,
+          status: BufferState.init,
           id: node.id,
           node: node
         });
@@ -196,7 +196,7 @@ export class BufferManager extends Dispatcher {
     // TODO add order logic later (or not?)
     // find first un-cached
     let unbufferedPlayer: ICachingPlayer = this.players.find(
-      (item: any) => item.status === BufferState.INIT
+      (item: any) => item.status === BufferState.init
     );
     if (unbufferedPlayer) {
       // found one - add it and start caching it. Notify PlayerManager of this
@@ -205,7 +205,7 @@ export class BufferManager extends Dispatcher {
         data: unbufferedPlayer.node.name
       });
       // update status of current player
-      unbufferedPlayer.status = BufferState.CACHING;
+      unbufferedPlayer.status = BufferState.caching;
       // create player and cache it
       this.cachePlayer(unbufferedPlayer);
     } else {
@@ -230,7 +230,7 @@ export class BufferManager extends Dispatcher {
       const finished: ICachingPlayer = this.players.find(
         (item: ICachingPlayer) => item.node.entryId === entryId
       );
-      finished.status = BufferState.READY;
+      finished.status = BufferState.ready;
       this.dispatch({
         type: BufferEvent.DONE,
         data: finished.node.name
