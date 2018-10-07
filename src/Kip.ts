@@ -1,4 +1,4 @@
-import { KipClient } from "./RaptClient";
+import { KipClient } from "./KipClient";
 import { PlayersManager } from "./PlayersManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent } from "./helpers/KipEvents";
