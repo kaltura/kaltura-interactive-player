@@ -9,7 +9,10 @@
     "type": "git",
     "url": "https://github.com/kaltura/kaltura-interactive-player.git"
   },
-  "keywords": ["kaltura", "interactive-video"],
+  "keywords": [
+    "kaltura",
+    "interactive-video"
+  ],
   "author": {
     "name": "Kaltura Community",
     "email": "community@kaltura.com"
@@ -29,8 +32,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "kaltura-typescript-client":
-      "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
+    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
   },
   "devDependencies": {
     "node-fetch": "^2.2.0",

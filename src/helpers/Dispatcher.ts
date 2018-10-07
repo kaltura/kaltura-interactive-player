@@ -33,7 +33,7 @@ export class Dispatcher {
     );
   }
 
-  dispatch(event: KipEvent) {
+  dispatch(event: any) { // todo - resolve 'any' type later
     // If event doesn't have a listener - don't do anything
     if (this.events[event.type] === undefined) {
       return false;

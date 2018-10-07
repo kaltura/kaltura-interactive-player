@@ -46,13 +46,14 @@ class Kip extends Dispatcher {
   private playerLibrary: any;
   private mainDiv: HTMLElement;
   private rapt: any; // TODO - optimize
-  private playlistId: string;
+  private playlistId: string = "";
   private client: KipClient; // Backend Client
   public state: KipState = KipState.preinit;
 
   constructor() {
     super();
     const css = document.createElement("style");
+    // todo - maintain as external CSS file later
     css.textContent = `
       .kip-message__title {
       }
@@ -100,7 +101,7 @@ class Kip extends Dispatcher {
 
   setup(config: RaptConfig, playerLibrary: any, rapt: any): Kip {
     if (this.state !== KipState.preinit) {
-      // todo - handle errors
+      // todo - handle errors on the API level
       this.printMessage("Error", "Setup should be called once!");
       return;
     }
@@ -113,8 +114,13 @@ class Kip extends Dispatcher {
 
   loadMedia(obj: any): void {
     if (this.state !== KipState.init) {
-      // todo - handle errors
+      // todo - handle errors API
       this.printMessage("Error", "loadMedia should be called after setup");
+      return;
+    }
+    if(!obj || !obj.entryId){
+      // todo - handle errors API
+      this.printMessage("Error", "missing rapt project id");
       return;
     }
     // create a top-level container

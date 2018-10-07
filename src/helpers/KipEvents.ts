@@ -13,11 +13,6 @@ export const BufferEvent = {
   ALL_BUFFERED: "allBuffered" // Done buffering all relevant entries of this node
 };
 
-export interface KipEvent {
-  type: string;
-  data?: any;
-}
-
 export const KipFullscreen = {
   FULL_SCREEN_CLICKED: "fullScreenClicked",
   ENTER_FULL_SCREEN: "enterFullScreen",
