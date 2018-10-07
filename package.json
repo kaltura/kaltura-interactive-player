@@ -30,10 +30,10 @@
   },
   "dependencies": {
     "kaltura-typescript-client":
-      "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz",
-    "node-fetch": "^2.2.0"
+      "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
   },
   "devDependencies": {
+    "node-fetch": "^2.2.0",
     "@types/core-js": "^2.5.0",
     "core-js": "^2.5.7",
     "ts-loader": "^4.4.2",

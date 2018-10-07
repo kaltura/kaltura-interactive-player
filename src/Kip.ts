@@ -1,4 +1,4 @@
-import { RaptClient } from "./RaptClient";
+import { KipClient } from "./RaptClient";
 import { PlayersManager } from "./PlayersManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent } from "./helpers/KipEvents";
@@ -47,7 +47,7 @@ class Kip extends Dispatcher {
   private mainDiv: HTMLElement;
   private rapt: any; // TODO - optimize
   private playlistId: string;
-  private client: RaptClient; // Backend Client
+  private client: KipClient; // Backend Client
   public state: KipState = KipState.preinit;
 
   constructor() {
@@ -129,7 +129,7 @@ class Kip extends Dispatcher {
       this.config.session && this.config.session.ks
         ? this.config.session.ks
         : "";
-    this.client = new RaptClient({
+    this.client = new KipClient({
       ks: ks,
       partnerId: this.config.provider.partnerId
     }); //TODO add serviceUrl

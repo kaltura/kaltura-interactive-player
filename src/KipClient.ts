@@ -23,7 +23,7 @@ interface clientConfig {
  * This class handles all BE callbacks API
  */
 
-export class RaptClient extends Dispatcher {
+export class KipClient extends Dispatcher {
   kClient: KalturaClient;
   serviceUrl: string;
   partnerId: string;
