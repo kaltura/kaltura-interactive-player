@@ -97,7 +97,12 @@ export class KipClient extends Dispatcher {
 
       this.kClient.multiRequest(multiRequest).then(
         (data: any) => {
-
+          // API error
+          if (data[0].error) {
+            console.log(data[0].error);
+            reject(data[0].error);
+            return;
+          }
           let fileAssetObjects: any;
           if (data.length === 2) {
             // this was a request with a KS request - extract the KS, set it to the client and then continue with data
@@ -131,7 +136,9 @@ export class KipClient extends Dispatcher {
           if (err instanceof KalturaClientException) {
             reject("Network/Client error");
           } else if (err instanceof KalturaAPIException) {
-            reject("Multirequest API error, check your KS and Playlist data validation");
+            reject(
+              "Multirequest API error, check your KS and Playlist data validation"
+            );
           }
         }
       );

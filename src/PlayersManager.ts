@@ -53,8 +53,8 @@ export class PlayersManager extends Dispatcher {
     // set id that contains the rapt playlist-id to support multiple KIV on the same player
     const playerContainer: HTMLElement = CreateElement(
       "div",
-      this.raptProjectId + "-kip-players-container",
-      "kip-players-container"
+      this.raptProjectId + "-kiv-players-container",
+      "kiv-players-container"
     );
 
     // adding the rapt layer to the main-app div
