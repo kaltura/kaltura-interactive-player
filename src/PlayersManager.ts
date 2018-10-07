@@ -1,8 +1,7 @@
-import { BufferState, PlaybackState } from "./helpers/States";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
-import { BufferManager, CachingPlayer } from "./BufferManager";
+import {BufferManager, BufferState, CachingPlayer} from "./BufferManager";
 
 export interface RaptNode {
   id: string;
@@ -11,6 +10,11 @@ export interface RaptNode {
   customData?: any;
   prefetchNodeIds?: string[];
 }
+
+export const PlaybackState = {
+    PLAYING: "playing",
+    PAUSED: "paused"
+};
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer

@@ -1,5 +1,4 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { BufferState } from "./helpers/States";
 import { BufferEvent, KipFullscreen } from "./helpers/KipEvents";
 import { PlaybackPreset } from "./ui/PlaybackPreset";
 import { RaptConfig } from "./Kip";
@@ -16,6 +15,13 @@ export interface CachingPlayer {
   node: RaptNode; // rapt node raw data
   status: BufferState; // init,caching,ready,error
   player?: any; // the actual player
+}
+
+export const enum BufferState {
+  "init",
+  "caching",
+  "ready",
+  "error"
 }
 
 /**

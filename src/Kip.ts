@@ -1,5 +1,4 @@
 import { RaptClient } from "./RaptClient";
-import { KipState } from "./helpers/States";
 import { PlayersManager } from "./PlayersManager";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent } from "./helpers/KipEvents";
@@ -19,6 +18,14 @@ const API_EVENTS = [
   "browser:hidden",
   "browser:open"
 ];
+
+export const enum KipState {
+    "preinit",
+    "init",
+    "loading",
+    "playing",
+    "error"
+}
 
 export interface RaptConfig {
   ui?: any;
