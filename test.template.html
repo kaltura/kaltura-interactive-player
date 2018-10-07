@@ -33,44 +33,57 @@
 		},
 
         rapt:{
-			debug:true,
+			debug:false,
             bufferNextNodes: false,
             bufferTime: 8
         }
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
-
-    // example of events listening:
-    kip.addListener("project:load" , function (a) {
-		console.log(">>>>> project:load",a);
-	});
-
-    kip.addListener("hotspot:click" , function (a) {
-		console.log(">>>>> hotspot:click",a);
-	});
-
-	kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
+    kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
 
     // for debug purposes - these are the buffering events
     var bufferingEvents = ["buffering","destroying","destroyed","done","allBuffered"];
+    var apiEvents = [
+		"browser:hidden",
+		"browser:open",
+		"cue:forward",
+		"cue:reverse",
+		"hotspot:click",
+		"node:enter",
+		"node:ended",
+		"node:exit",
+		"project:load",
+		"project:ready",
+		"project:start",
+		"project:unload",
+		"player:play",
+		"player:pause",
+		"player:progress",
+		"player:ratechange",
+		"player:timeupdate",
+		"player:volumechange"
+	];
+
+    var allEvents = apiEvents.concat(bufferingEvents);
+
+    for (var i = 0 ; i< allEvents.length; i++){
+		kip.addListener(allEvents[i] , function (a) {
+			logDebugMsg(a);
+		});
+    }
 
 	// logger - debug mode !
 	function logDebugMsg(logObject){
         const oneLine = document.createElement("div");
         // mark buffering event in green
-        var printStr = logObject.data.originalEvent;
-        if( bufferingEvents.some( a => a ===logObject.data.originalEvent) ){
+        var printStr = logObject.data.type;
+        if( bufferingEvents.some( a => a ===logObject.type) ){
         	// this is a buffering event
             oneLine.style.cssText = "color: green";
             printStr+='<span style="color: purple"> ['+logObject.data.data+']</span>';
         }else{
         	// this is a Rapt event
             oneLine.style.cssText = "color: blue";
-            printStr+='<span style="color: purple"> ['+logObject.data.type+']</span>';
-            if(logObject.data.type === "hotspot:click"){
-				console.log(">>>>>",logObject.data);
-                // printStr+='<span style="color: orangered"> ['+logObject.data.payload.hotspot.name+']</span>';
-            }
         }
         oneLine.innerHTML = printStr;
         document.getElementById("logDiv").appendChild(oneLine);

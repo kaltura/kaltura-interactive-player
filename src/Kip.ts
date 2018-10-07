@@ -5,26 +5,32 @@ import { BufferEvent } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
 
 const API_EVENTS = [
-  "project:load",
-  "project:ready",
-  "project:start",
-  "player:play",
-  "player:pause",
-  "player:progress",
+  "browser:hidden",
+  "browser:open",
+  "cue:forward",
+  "cue:reverse",
+  "hotspot:click",
   "node:enter",
   "node:ended",
   "node:exit",
-  "hotspot:click",
-  "browser:hidden",
-  "browser:open"
+  "project:load",
+  "project:ready",
+  "project:start",
+  "project:unload",
+  "player:play",
+  "player:pause",
+  "player:progress",
+  "player:ratechange",
+  "player:timeupdate",
+  "player:volumechange"
 ];
 
 export const enum KipState {
-    "preinit",
-    "init",
-    "loading",
-    "playing",
-    "error"
+  "preinit",
+  "init",
+  "loading",
+  "playing",
+  "error"
 }
 
 export interface RaptConfig {
@@ -117,7 +123,7 @@ class Kip extends Dispatcher {
       this.printMessage("Error", "loadMedia should be called after setup");
       return;
     }
-    if(!obj || !obj.entryId){
+    if (!obj || !obj.entryId) {
       // todo - handle errors API
       this.printMessage("Error", "missing rapt project id");
       return;

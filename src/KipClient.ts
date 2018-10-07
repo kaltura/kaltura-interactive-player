@@ -12,7 +12,7 @@ import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-c
 import { Dispatcher } from "./helpers/Dispatcher";
 import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
 
-interface clientConfig {
+interface ClientConfig {
   ks?: string;
   serviceUrl?: string;
   partnerId?: string;
@@ -27,10 +27,10 @@ export class KipClient extends Dispatcher {
   serviceUrl: string;
   partnerId: string;
   clientTag: string = "rapt-v3-app";
-  config: clientConfig;
+  config: ClientConfig;
   ks: string;
 
-  constructor(config: clientConfig) {
+  constructor(config: ClientConfig) {
     super();
     this.serviceUrl = config.serviceUrl
       ? config.serviceUrl
