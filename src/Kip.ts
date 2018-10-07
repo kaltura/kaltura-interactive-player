@@ -34,7 +34,6 @@ export interface RaptConfig {
   playback?: object;
   provider?: object;
 }
-
 /**
  * Main app class. This class is in charge of initiating everything and orchestrate tha API, the data-fetching and
  * the app bootstrap flow.

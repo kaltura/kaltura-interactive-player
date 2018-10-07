@@ -80,7 +80,7 @@ export class PlayersManager extends Dispatcher {
 
     // listen to all BufferEvent types
     for (let o of Object.values(BufferEvent)) {
-      this.bufferManager.addListener(o, (event: KipEvent) => {
+      this.bufferManager.addListener(o, (event: any) => {
         this.dispatch(event);
       });
     }
