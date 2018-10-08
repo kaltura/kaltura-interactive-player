@@ -48,6 +48,10 @@ class Kip {
         position: absolute
       }
       
+      .kiv-hidden{
+        display: none;
+      }
+      
       .kiv-rapt-engine{
         z-index: 1000;
         position: absolute;

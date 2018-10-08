@@ -65,11 +65,36 @@ export class BufferManager extends Dispatcher {
     ).preset;
   }
 
-  toggleFullscreen() {
+  // User had clicked on a player that was not cached yet. Make this player load its content immediately and notify
+  // the player manager when it is played
+  playImmediate(cachingPlayer: CachingPlayer): void {
+    const node: RaptNode = cachingPlayer.node;
+    const nodeDiv: HTMLElement = this.createNodesDiv(node);
+    let nodeConf: any = this.getPlayerConf(node, nodeDiv.id);
+    // autoplay !
+    nodeConf.playback.autoplay = true;
+
+    const player = this.playerLibrary.setup(nodeConf);
+    player.loadMedia({ entryId: node.entryId });
+    cachingPlayer.status = BufferState.caching;
+    cachingPlayer.player = player;
+    // when buffered and played - notify and cache next videos
+    this.checkIfBuffered(player, (entryId: string) => {
+      this.dispatch({ type: BufferEvent.CATCHUP, data: cachingPlayer });
+    });
+  }
+
+  toggleFullscreen(): void {
     this.dispatch({ type: KipFullscreen.FULL_SCREEN_CLICKED });
   }
 
-  loadPlayer(node: RaptNode, callback: () => void = null): any {
+  /**
+   * Load a player by rapt node, once buffered call the callback function. Also, once done, start caching the
+   * next items.
+   * @param node
+   * @param callback
+   */
+  init(node: RaptNode, callback: () => void = null): any {
     const nodeDiv: HTMLElement = this.createNodesDiv(node);
     const nodeConf: object = this.getPlayerConf(node, nodeDiv.id);
     const player = this.playerLibrary.setup(nodeConf);
@@ -85,7 +110,7 @@ export class BufferManager extends Dispatcher {
       player: player
     });
 
-    this.checkIfBuffered((entryId: string) => {
+    this.checkIfBuffered(player, (entryId: string) => {
       // cache next entries;
       if (callback) {
         callback();
@@ -97,7 +122,7 @@ export class BufferManager extends Dispatcher {
         firstPlayer.status = BufferState.ready;
       }
       this.cacheNodes(node);
-    }, player);
+    });
     return player;
   }
 
@@ -140,13 +165,11 @@ export class BufferManager extends Dispatcher {
       this.destroyPlayer(nodeToDestroy);
     }
 
-    //
-    // // remove the current node from the next nodes to cache - it is playing and no need to cache it
+    // remove the current node from the next nodes to cache - it is playing and no need to cache it
     // nodes = nodes.filter((node: Node) => node.id === currentNode.id);
 
     // Optimization! re-order nodes, depending appearance time
     nodes = this.sortByApearenceTime(nodes, currentNode);
-
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
       // cache new players only
@@ -243,7 +266,7 @@ export class BufferManager extends Dispatcher {
     const conf: object = this.getPlayerConf(player.node, nodesDiv.id, true);
     const newPlayer = this.playerLibrary.setup(conf);
     player.player = newPlayer; // save so we have reference later
-    this.checkIfBuffered((entryId: string) => {
+    this.checkIfBuffered(newPlayer, (entryId: string) => {
       const finished: CachingPlayer = this.players.find(
         (item: CachingPlayer) => item.node.entryId === entryId
       );
@@ -253,7 +276,7 @@ export class BufferManager extends Dispatcher {
         data: finished.node.name
       });
       this.cacheNextPlayer();
-    }, newPlayer);
+    });
     newPlayer.loadMedia({ entryId: player.node.entryId });
   }
 
@@ -262,7 +285,7 @@ export class BufferManager extends Dispatcher {
    * @param callback
    * @param bufferPlayer
    */
-  checkIfBuffered(callback: (entryId: string) => void, bufferPlayer: any) {
+  checkIfBuffered(bufferPlayer: any, callback: (entryId: string) => void) {
     // todo - remove once optomize buffer
     if (
       bufferPlayer.buffered &&
@@ -279,7 +302,12 @@ export class BufferManager extends Dispatcher {
       bufferPlayer.buffered.end(0) > this.SECONDS_TO_BUFFER - 1
     ) {
       setTimeout(() => {
-        callback(bufferPlayer._config.sources.id);
+        if (
+          bufferPlayer._config &&
+          bufferPlayer._config.sources &&
+          bufferPlayer._config.sources.id
+        )
+          callback(bufferPlayer._config.sources.id); // optimize later
       }, this.BUFFER_DONE_TIMEOUT);
     } else {
       // not buffered yet - check again

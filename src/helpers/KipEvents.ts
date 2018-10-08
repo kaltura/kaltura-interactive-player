@@ -10,6 +10,7 @@ export const BufferEvent = {
   DESTROYING: "destroying", // about to destroy a specific player
   DESTROYED: "destroyed", // done with destroying a specific player
   DONE: "done", // Done buffering all relevant entries of this node
+  CATCHUP: "catchup", // When an unbuffered video was requested to play - once played dispatch this event
   ALL_BUFFERED: "allBuffered" // Done buffering all relevant entries of this node
 };
 

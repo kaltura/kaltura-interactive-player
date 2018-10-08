@@ -1,7 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
-import {BufferManager, BufferState, CachingPlayer} from "./BufferManager";
+import { BufferManager, BufferState, CachingPlayer } from "./BufferManager";
 
 export interface RaptNode {
   id: string;
@@ -12,8 +12,8 @@ export interface RaptNode {
 }
 
 export const PlaybackState = {
-    PLAYING: "playing",
-    PAUSED: "paused"
+  PLAYING: "playing",
+  PAUSED: "paused"
 };
 
 /**
@@ -27,7 +27,7 @@ export class PlayersManager extends Dispatcher {
   bufferManager: BufferManager;
   currentPlayer: any;
   currentNode: any;
-  element: any; // must be called 'element' because rapt delegate implementation
+  element: HTMLElement; // must be called 'element' because rapt delegate implementation
   playbackState: string;
   raptProjectId: string;
   mainDiv: HTMLElement; // the parent id that holds all layers
@@ -49,6 +49,8 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine = raptEngine;
     this.mainDiv = mainDiv;
 
+    console.log(">>>>>", this.mainDiv);
+
     // create a container to all players
     // set id that contains the rapt playlist-id to support multiple KIV on the same player
     const playerContainer: HTMLElement = CreateElement(
@@ -56,11 +58,9 @@ export class PlayersManager extends Dispatcher {
       this.raptProjectId + "-kiv-players-container",
       "kiv-players-container"
     );
-
-    // adding the rapt layer to the main-app div
     this.mainDiv.appendChild(playerContainer);
 
-    // create the rapt-engine layer
+    // create the rapt-engine layer. We must use this.element because of rapt delegate names
     this.element = CreateElement(
       "div",
       this.raptProjectId + "-rapt-engine",
@@ -81,6 +81,17 @@ export class PlayersManager extends Dispatcher {
     // listen to all BufferEvent types
     for (let o of Object.values(BufferEvent)) {
       this.bufferManager.addListener(o, (event: any) => {
+        // in case of catchup - re-show the rapt layer
+        if (event.type === BufferEvent.CATCHUP) {
+          console.log(
+            ">>>>> BufferEvent.CATCHUP - show Rapt layer",
+            event.data
+          );
+          this.element.classList.remove("kiv-hidden");
+          this.currentNode = event.data.node;
+          this.currentPlayer = event.data.player;
+          this.bufferManager.cacheNodes(event.data.node);
+        }
         this.dispatch(event);
       });
     }
@@ -150,7 +161,7 @@ export class PlayersManager extends Dispatcher {
     }
     // load the 1st media
     this.currentNode = firstNode;
-    this.currentPlayer = this.bufferManager.loadPlayer(firstNode, () => {
+    this.currentPlayer = this.bufferManager.init(firstNode, () => {
       this.initRapt();
     });
   }
@@ -175,7 +186,12 @@ export class PlayersManager extends Dispatcher {
     } else {
       // switch players according to the player BufferState
       switch (nextPlayer.status) {
-        // the next player is already buffered
+        case BufferState.init:
+          // the next player was not created yet, hide the rapt layer and tell the bufferManager to create and 'autoplay'
+          // that next player. Once played - re-show Rapt layer (via event)
+          this.element.classList.add("kiv-hidden");
+          this.bufferManager.playImmediate(nextPlayer);
+          break;
         case BufferState.ready:
           nextPlayer.player.play();
           this.currentNode = nextPlayer.node;
