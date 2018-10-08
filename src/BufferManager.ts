@@ -1,5 +1,5 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { BufferEvent, KipFullscreen } from "./helpers/KipEvents";
+import { KipFullscreen } from "./helpers/KipEvents";
 import { PlaybackPreset } from "./ui/PlaybackPreset";
 import { RaptConfig } from "./Kip";
 import { RaptNode } from "./PlayersManager";
@@ -24,40 +24,46 @@ export const enum BufferState {
   "error"
 }
 
+export const BufferEvent = {
+  BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
+  DESTROYING: "destroying", // about to destroy a specific player
+  DESTROYED: "destroyed", // done with destroying a specific player
+  DONE: "done", // Done buffering all relevant entries of this node
+  CATCHUP: "catchup", // When an unbuffered video was requested to play - once played dispatch this event
+  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of this node
+  ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
+};
+
 /**
  * This class is in charge of the creation of all players, and to handle their statuses (init,caching,ready)
  */
 export class BufferManager extends Dispatcher {
-  players: CachingPlayer[];
-  playerLibrary: any;
-  playersContainer: HTMLElement;
-  raptProjectId: string;
-  raptData: any;
-  currentNode: RaptNode;
-  conf: any;
-  playbackPreset: any;
-
-  SECONDS_TO_BUFFER: number = 6;
-  BUFFER_CHECK_INTERVAL: number = 100;
-  BUFFER_DONE_TIMEOUT: number = 100;
+  private players: CachingPlayer[];
+  readonly bufferVideos: boolean;
+  private currentNode: RaptNode;
+  readonly playbackPreset: any;
+  readonly SECONDS_TO_BUFFER: number = 6;
+  private BUFFER_CHECK_INTERVAL: number = 100;
+  private BUFFER_DONE_TIMEOUT: number = 100;
 
   constructor(
-    playerLibrary: any,
-    playersContainer: HTMLElement,
-    raptProjectId: string,
-    conf: any,
-    raptData: any
+    private playerLibrary: any,
+    private playersContainer: HTMLElement,
+    private raptProjectId: string,
+    private conf: any,
+    private raptData: any
   ) {
     super();
-    this.playerLibrary = playerLibrary;
-    this.playersContainer = playersContainer;
-    this.raptProjectId = raptProjectId;
-    this.conf = conf;
+
+    this.bufferVideos = conf.rapt.bufferNextNodes
+      ? conf.rapt.bufferNextNodes
+      : true;
+
     if (conf.rapt.bufferTime) {
       this.SECONDS_TO_BUFFER = conf.rapt.bufferTime;
     }
-    this.raptData = raptData;
     this.players = [];
+    // UI intervention: remove the original fullscreen and replace with a local FS // TODO - function, no need for class
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
@@ -73,12 +79,11 @@ export class BufferManager extends Dispatcher {
     let nodeConf: any = this.getPlayerConf(node, nodeDiv.id);
     // autoplay !
     nodeConf.playback.autoplay = true;
-
     const player = this.playerLibrary.setup(nodeConf);
     player.loadMedia({ entryId: node.entryId });
     cachingPlayer.status = BufferState.caching;
     cachingPlayer.player = player;
-    // when buffered and played - notify and cache next videos
+    // when buffered and played - notify
     this.checkIfBuffered(player, (entryId: string) => {
       this.dispatch({ type: BufferEvent.CATCHUP, data: cachingPlayer });
     });
@@ -141,22 +146,28 @@ export class BufferManager extends Dispatcher {
     }
   }
 
+  /**
+   * Create relevant players from a given rapt node, order them by importance/appearance-time and
+   * start cache them one-by-one according to the order.
+   * @param currentNode
+   */
   cacheNodes(currentNode: RaptNode) {
     // in case there is a caching player - stop caching it.
     this.stopCurrentCachedPlayer(currentNode);
     this.currentNode = currentNode;
     let nodes: RaptNode[] = this.getNextNodes(currentNode);
-    // optimize 1 - find items that are cached/created but not relevant for this current node
+
+    // optimization 1 - find items that are cached/created but not relevant for this current node and destroy them
 
     // helper - extract the nodes from the currentPlayers
     const currentPlayersNodes: RaptNode[] = this.players.map(
       (cachePlayer: CachingPlayer) => cachePlayer.node
     );
-    // find which nodes we want to destroy
+    // find which nodes we want to destroy (nodes that do not belong to this node options)
     let nodesToDestroy = currentPlayersNodes.filter(
       (node: RaptNode) => !nodes.find((tmp: RaptNode) => node.id === tmp.id)
     );
-    // ignore the given node
+    // ignore the current node if it is in the 'to-destroy' array
     nodesToDestroy = nodesToDestroy.filter(
       (node: RaptNode) => node.id !== currentNode.id
     );
@@ -165,10 +176,11 @@ export class BufferManager extends Dispatcher {
       this.destroyPlayer(nodeToDestroy);
     }
 
+    // TODO - do we need this?
     // remove the current node from the next nodes to cache - it is playing and no need to cache it
     // nodes = nodes.filter((node: Node) => node.id === currentNode.id);
 
-    // Optimization! re-order nodes, depending appearance time
+    // Optimization 2 - re-order nodes, depending appearance time
     nodes = this.sortByApearenceTime(nodes, currentNode);
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
@@ -233,7 +245,14 @@ export class BufferManager extends Dispatcher {
    * From current session - find if there is an unbuffered node, if so - create it and start caching it
    */
   cacheNextPlayer() {
-    // TODO add order logic later (or not?)
+    // in case of a non-caching use-case, just notify of 'all-unbuffered'
+    if (!this.bufferVideos) {
+      this.dispatch({
+        type: BufferEvent.ALL_BUFFERED,
+        data: this.currentNode.name
+      });
+    }
+
     // find first un-cached
     let unbufferedPlayer: CachingPlayer = this.players.find(
       (item: any) => item.status === BufferState.init

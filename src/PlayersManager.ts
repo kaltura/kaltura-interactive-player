@@ -1,7 +1,12 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { BufferEvent, KipEvent, KipFullscreen } from "./helpers/KipEvents";
+import { KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
-import { BufferManager, BufferState, CachingPlayer } from "./BufferManager";
+import {
+  BufferEvent,
+  BufferManager,
+  BufferState,
+  CachingPlayer
+} from "./BufferManager";
 
 export interface RaptNode {
   id: string;
@@ -21,36 +26,22 @@ export const PlaybackState = {
  * This class creates and manages BufferManager
  */
 export class PlayersManager extends Dispatcher {
-  playerLibrary: any; // playkit-js library ref'
-  raptData: any;
-  raptEngine: any; // rapt engine library ref'
   bufferManager: BufferManager;
   currentPlayer: any;
   currentNode: any;
   element: HTMLElement; // must be called 'element' because rapt delegate implementation
   playbackState: string;
-  raptProjectId: string;
-  mainDiv: HTMLElement; // the parent id that holds all layers
   PLAYER_TICK_INTERVAL: number = 250;
 
   constructor(
-    conf: any,
-    playerLibrary: any,
-    raptProjectId: string,
-    raptData: any,
-    mainDiv: HTMLElement,
-    raptEngine: any
+    private conf: any,
+    private playerLibrary: any,
+    private raptProjectId: string,
+    private raptData: any,
+    private mainDiv: HTMLElement,
+    private raptEngine: any
   ) {
     super();
-    // set data to class
-    this.raptData = raptData;
-    this.playerLibrary = playerLibrary;
-    this.raptProjectId = raptProjectId;
-    this.raptEngine = raptEngine;
-    this.mainDiv = mainDiv;
-
-    console.log(">>>>>", this.mainDiv);
-
     // create a container to all players
     // set id that contains the rapt playlist-id to support multiple KIV on the same player
     const playerContainer: HTMLElement = CreateElement(
@@ -81,17 +72,17 @@ export class PlayersManager extends Dispatcher {
     // listen to all BufferEvent types
     for (let o of Object.values(BufferEvent)) {
       this.bufferManager.addListener(o, (event: any) => {
-        // in case of catchup - re-show the rapt layer
-        if (event.type === BufferEvent.CATCHUP) {
-          console.log(
-            ">>>>> BufferEvent.CATCHUP - show Rapt layer",
-            event.data
-          );
-          this.element.classList.remove("kiv-hidden");
-          this.currentNode = event.data.node;
-          this.currentPlayer = event.data.player;
-          this.bufferManager.cacheNodes(event.data.node);
+        switch (event.type) {
+          case BufferEvent.CATCHUP:
+            this.element.classList.remove("kiv-hidden");
+            this.currentNode = event.data.node;
+            this.currentPlayer = event.data.player;
+            this.bufferManager.cacheNodes(event.data.node);
+            break;
+          case BufferEvent.ALL_UNBUFFERED:
+            break;
         }
+
         this.dispatch(event);
       });
     }

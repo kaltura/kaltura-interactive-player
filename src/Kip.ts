@@ -60,13 +60,38 @@ class Kip {
         position: relative;
       }
       .kiv-container,
-      .kiv-rapt-engine,
       .kiv-player,
       .kiv-players-container
       {
         width: 100%;
         height: 100%;
       }
+
+      .kiv-container .playkit-player .playkit-control-button,
+      .kiv-container .playkit-player .playkit-control-button i
+      {
+          width: 24px;
+          height: 24px;
+      }
+      .kiv-container .playkit-player .playkit-seek-bar{
+        padding: 8px 0 2px 0;
+        margin: -2px 0;
+      }
+      .kiv-container .playkit-bottom-bar{
+          height: 40px;
+      }
+      .kiv-container .playkit-player .playkit-seek-bar.playkit-hover .playkit-frame-preview,
+      .kiv-container .playkit-player .playkit-seek-bar:hover .playkit-frame-preview
+      {
+          display: none;
+      }
+      .kiv-container .playkit-player .playkit-time-display{
+          font-size: 12px;
+          line-height: 24px;
+      }
+      
+      
+      
     `;
     document.head.appendChild(css);
     this.cssInjected = true;
@@ -83,6 +108,5 @@ class Kip {
   ): KalturaInteractiveVideo {
     return new KalturaInteractiveVideo(config, playerLibrary, rapt);
   }
-
 }
 export default new Kip();
