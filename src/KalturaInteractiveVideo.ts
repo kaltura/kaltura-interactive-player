@@ -1,4 +1,3 @@
-import { RaptConfig } from "./Kip";
 import { PlayersManager } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
@@ -35,7 +34,6 @@ export const enum KipState {
 }
 
 class KalturaInteractiveVideo extends Dispatcher {
-
   private playerManager: PlayersManager;
   private mainDiv: HTMLElement;
   private playlistId: string = "";
@@ -95,7 +93,7 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param raptGraphData
    */
   dataLoaded(raptGraphData: object): void {
-    this.playerManager = new PlayersManager(
+     this.playerManager = new PlayersManager(
       Object.assign({}, this.config),
       this.playerLibrary,
       this.playlistId,

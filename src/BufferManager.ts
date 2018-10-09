@@ -39,7 +39,7 @@ export const BufferEvent = {
  */
 export class BufferManager extends Dispatcher {
   private players: CachingPlayer[];
-  readonly bufferVideos: boolean;
+  readonly shouldBufferVideos: boolean;
   private currentNode: RaptNode;
   readonly playbackPreset: any;
   readonly SECONDS_TO_BUFFER: number = 6;
@@ -50,17 +50,16 @@ export class BufferManager extends Dispatcher {
     private playerLibrary: any,
     private playersContainer: HTMLElement,
     private raptProjectId: string,
-    private conf: any,
+    private config: any,
     private raptData: any
   ) {
     super();
-
-    this.bufferVideos = conf.rapt.bufferNextNodes
-      ? conf.rapt.bufferNextNodes
+    this.shouldBufferVideos = config.rapt.hasOwnProperty("bufferNextNodes")
+      ? config.rapt.bufferNextNodes
       : true;
 
-    if (conf.rapt.bufferTime) {
-      this.SECONDS_TO_BUFFER = conf.rapt.bufferTime;
+    if (config.rapt.bufferTime) {
+      this.SECONDS_TO_BUFFER = config.rapt.bufferTime;
     }
     this.players = [];
     // UI intervention: remove the original fullscreen and replace with a local FS // TODO - function, no need for class
@@ -206,6 +205,14 @@ export class BufferManager extends Dispatcher {
         }
       }
     }
+    // in case of a non-caching use-case, just notify of 'all-unbuffered'
+    if (!this.shouldBufferVideos) {
+      this.dispatch({
+        type: BufferEvent.ALL_UNBUFFERED,
+        data: this.currentNode.name
+      });
+      return;
+    }
     this.cacheNextPlayer();
   }
 
@@ -245,15 +252,6 @@ export class BufferManager extends Dispatcher {
    * From current session - find if there is an unbuffered node, if so - create it and start caching it
    */
   cacheNextPlayer() {
-    // in case of a non-caching use-case, just notify of 'all-unbuffered'
-    if (!this.bufferVideos) {
-      this.dispatch({
-        type: BufferEvent.ALL_BUFFERED,
-        data: this.currentNode.name
-      });
-      return;
-    }
-
     // find first un-cached
     let unbufferedPlayer: CachingPlayer = this.players.find(
       (item: any) => item.status === BufferState.init
@@ -366,7 +364,7 @@ export class BufferManager extends Dispatcher {
     targetName: string,
     isCache: boolean = false
   ): object {
-    let newConf: RaptConfig = Object.assign(this.conf);
+    let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = targetName;
     if (isCache) {
       newConf.playback = {

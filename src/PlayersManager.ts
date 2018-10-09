@@ -34,7 +34,7 @@ export class PlayersManager extends Dispatcher {
   PLAYER_TICK_INTERVAL: number = 250;
 
   constructor(
-    private conf: any,
+    private config: any,
     private playerLibrary: any,
     private raptProjectId: string,
     private raptData: any,
@@ -65,7 +65,7 @@ export class PlayersManager extends Dispatcher {
       this.playerLibrary,
       playerContainer,
       raptProjectId,
-      conf,
+      config,
       this.raptData
     );
 
@@ -73,6 +73,7 @@ export class PlayersManager extends Dispatcher {
     for (let o of Object.values(BufferEvent)) {
       this.bufferManager.addListener(o, (event: any) => {
         switch (event.type) {
+          // when a player was created but was not cached - this is its 'first play' event
           case BufferEvent.CATCHUP:
             this.element.classList.remove("kiv-hidden");
             this.currentNode = event.data.node;
@@ -80,9 +81,10 @@ export class PlayersManager extends Dispatcher {
             this.bufferManager.cacheNodes(event.data.node);
             break;
           case BufferEvent.ALL_UNBUFFERED:
+            this.element.classList.remove("kiv-hidden");
             break;
         }
-
+        // bubble up all events
         this.dispatch(event);
       });
     }
@@ -139,7 +141,7 @@ export class PlayersManager extends Dispatcher {
    * Assuming we have all the data, find the 1st node and load it. Once loaded, start cache relevant entries of that
    * specific node.
    */
-  init(mainDiv: HTMLElement): void {
+  init(mainDiv: HTMLElement) {
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
@@ -161,7 +163,7 @@ export class PlayersManager extends Dispatcher {
    * Switch to a new player, by the Kaltura Entry id
    * @param id
    */
-  switchPlayer(id: string) {
+  switchPlayer(id: string): void {
     this.currentPlayer.pause();
     const nextPlayer: CachingPlayer = this.bufferManager.getPlayerByKalturaId(
       id
