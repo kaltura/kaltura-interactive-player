@@ -43,7 +43,7 @@ class Kip {
           position: relative;
            z-index: 500;
       }
-      
+
       .kiv-player{
         position: absolute
       }
@@ -88,6 +88,10 @@ class Kip {
       .kiv-container .playkit-player .playkit-time-display{
           font-size: 12px;
           line-height: 24px;
+      }
+      
+      .kiv-container .playkit-hover .playkit-volume-control-bar .playkit-bar {
+        background-color: #FF9900;
       }
       
       

@@ -20,7 +20,7 @@
 <script>
 	var config = {
 		session:{
-			ks: "MWRlOGM0ZDI4NDJiZTZiMTE0OTc3M2QxN2EyNzkwYTJiZmJmNTNkNnwyNzAxNzsyNzAxNzsxNTM5MDY3MTIwOzI7MTA0ODQ7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
+			// ks: "MWRlOGM0ZDI4NDJiZTZiMTE0OTc3M2QxN2EyNzkwYTJiZmJmNTNkNnwyNzAxNzsyNzAxNzsxNTM5MDY3MTIwOzI7MTA0ODQ7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ="
 		},
 		targetId: 'player',
 		playback:{
@@ -34,17 +34,17 @@
 
         rapt:{
 			debug:false,
-            bufferNextNodes: false,
+            bufferNextNodes: true,
             bufferTime: 8
         }
 
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
-	var kip2 = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
-    kip.loadMedia({entryId: '1_sxcxb5e2'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
+
+    kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
 
     // for debug purposes - these are the buffering events
-    var bufferingEvents = ["buffering","destroying","destroyed","done","allBuffered","catchup"];
+    var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup"];
     var apiEvents = [
 		"browser:hidden",
 		"browser:open",
@@ -82,11 +82,20 @@
         if( bufferingEvents.some( a => a ===logObject.type) ){
         	// this is a buffering event
             oneLine.style.cssText = "color: green";
-            if(logObject.type === "allBuffered"){
-            	// mark allBuffered uniquely
-                printStr+='<span style="color: purple"> ['+logObject.data.data+']</span> ☚ ';
-            }else{
-                printStr+='<span style="color: purple"> ['+logObject.data.data+']</span>';
+            switch (logObject.type) {
+                case "allBuffered":
+                    printStr+='<span style="color: purple"> ['+logObject.data.data+'] ✿</span> ';
+
+                break;
+                case "buffering":
+                    printStr+='<span style="color: gray"> ['+logObject.data.data+'] ⬇︎ </span>';
+                break;
+                case "doneBuffering":
+                    printStr+='<span style="color: brown"> ['+logObject.data.data+'] ✔︎︎</span>';
+                break;
+                default:
+                    printStr+='<span style="color: mediumvioletred"> ['+logObject.data.data+']</span>' ;
+
             }
         }else{
         	// this is a Rapt event

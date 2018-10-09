@@ -26,11 +26,11 @@ export const enum BufferState {
 
 export const BufferEvent = {
   BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
-  DESTROYING: "destroying", // about to destroy a specific player
-  DESTROYED: "destroyed", // done with destroying a specific player
-  DONE: "done", // Done buffering all relevant entries of this node
-  CATCHUP: "catchup", // When an unbuffered video was requested to play - once played dispatch this event
-  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of this node
+  DESTROYING: "destroying", // about to destroy a specific player - argument will be the entry id
+  DESTROYED: "destroyed", // done with destroying a specific player - argument will be the entry id
+  DONE_BUFFERING: "doneBuffering", // Done buffering a specific entry - argument will be the entry id
+  CATCHUP: "catchup", // When an unbuffered video was requested to play is loaded and first played
+  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
   ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
 };
 
@@ -251,6 +251,7 @@ export class BufferManager extends Dispatcher {
         type: BufferEvent.ALL_BUFFERED,
         data: this.currentNode.name
       });
+      return;
     }
 
     // find first un-cached
@@ -291,7 +292,7 @@ export class BufferManager extends Dispatcher {
       );
       finished.status = BufferState.ready;
       this.dispatch({
-        type: BufferEvent.DONE,
+        type: BufferEvent.DONE_BUFFERING,
         data: finished.node.name
       });
       this.cacheNextPlayer();
