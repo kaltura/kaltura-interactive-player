@@ -93,7 +93,7 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param raptGraphData
    */
   dataLoaded(raptGraphData: object): void {
-     this.playerManager = new PlayersManager(
+    this.playerManager = new PlayersManager(
       Object.assign({}, this.config),
       this.playerLibrary,
       this.playlistId,
@@ -105,6 +105,7 @@ class KalturaInteractiveVideo extends Dispatcher {
     // reflect all buffering evnets to the API
     for (let o of Object.values(BufferEvent)) {
       this.playerManager.addListener(o, (data?: any) => {
+        // translate to
         this.dispatchApi(o, data);
       });
     }
@@ -130,7 +131,7 @@ class KalturaInteractiveVideo extends Dispatcher {
     // expose API, add the current node and
     this.dispatch({
       type: event,
-      data: data
+      payload: data
     });
   }
 
@@ -148,6 +149,44 @@ class KalturaInteractiveVideo extends Dispatcher {
     messageDiv.appendChild(titleDiv);
     messageDiv.appendChild(bodeDiv);
     this.mainDiv.appendChild(messageDiv);
+  }
+
+  /**
+   * Legacy API support
+   */
+  public pause() {
+    this.playerManager.currentPlayer.pause();
+  }
+
+  public play() {
+    this.playerManager.currentPlayer.play();
+  }
+
+  public seek(n: number) {
+    this.playerManager.currentPlayer.currentTime = n;
+  }
+
+  public replay(n: number) {
+    // Implement project replay here
+  }
+
+  public jump(destination: any, autoplay: boolean) {
+    if (destination.id) {
+      // locate by id
+      console.log(">>>>> id", destination);
+    }
+    if (destination.name) {
+      console.log(">>>>> name", destination);
+      // locate by name
+    }
+    if (destination.ref) {
+      console.log(">>>>> ref", destination);
+      // locate by ref
+    }
+    if (destination.xref) {
+      console.log(">>>>> xref (entryId) ", destination);
+      // locate by xref
+    }
   }
 }
 

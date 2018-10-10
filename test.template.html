@@ -33,18 +33,18 @@
 		},
 
         rapt:{
-			debug:false,
-            bufferNextNodes: true,
+			debug:true,
+            bufferNextNodes: false,
             bufferTime: 8
         }
 
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
 
-    kip.loadMedia({entryId: '1_51tet0hy'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
+    kip.loadMedia({entryId: '1_sxcxb5e2'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
 
     // for debug purposes - these are the buffering events
-    var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup"];
+    var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup","allUnbuffered"];
     var apiEvents = [
 		"browser:hidden",
 		"browser:open",
@@ -69,16 +69,19 @@
     var allEvents = apiEvents.concat(bufferingEvents);
 
     for (var i = 0 ; i< allEvents.length; i++){
-		kip.addListener(allEvents[i] , function (a) {
-			logDebugMsg(a);
+		kip.addListener(allEvents[i] , function (event) {
+			logDebugMsg(event);
 		});
     }
 
 	// logger - debug mode !
-	function logDebugMsg(logObject){
+	function logDebugMsg(event){
+		console.log(">>>>> !",event);
+    	return
+
         const oneLine = document.createElement("div");
         // mark buffering event in green
-        var printStr = logObject.data.type;
+        var printStr = event.type;
         if( bufferingEvents.some( a => a ===logObject.type) ){
         	// this is a buffering event
             oneLine.style.cssText = "color: green";
@@ -105,6 +108,34 @@
         document.getElementById("logDiv").appendChild(oneLine);
     }
 
+    var  playKip = function(){
+		kip.play();
+    }
+    function pauseKip(){
+		kip.pause();
+
+    }
+    function replayKip(){
+		kip.replay();
+    }
+    function jumpToNodeKip(o){
+		kip.jump(o);
+    }
+    function seekKip(n){
+		kip.seek(n)
+    }
+
 </script>
+
+<div>
+<button onclick="playKip()">play</button>
+<button onclick="pauseKip()">pause</button>
+<button onclick="replayKip()">replay</button>
+<button onclick="jumpToNodeKip({name:'22'})">JumpToNode by ref</button>
+<button onclick="jumpToNodeKip({name:'22'})">JumpToNode by name</button>
+<button onclick="seekKip(10)">Seek to 10</button>
+<button onclick="seekKip(5)">Seek to 5</button>
+
+</div>
 </body>
 </html>
