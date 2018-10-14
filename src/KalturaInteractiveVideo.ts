@@ -126,9 +126,7 @@ class KalturaInteractiveVideo extends Dispatcher {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
       // debug mode - print to console
       console.warn(
-        // "Rapt: > " + event.type + event.payload ? event.payload : ""
-        "Rapt: > ",
-        event
+        "KIP debug info: > " + event.type + event.payload ? event.payload : ""
       );
     }
     // expose API, add the current node and

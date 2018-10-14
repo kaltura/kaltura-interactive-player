@@ -1,12 +1,8 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent, KipFullscreen } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
-import {
-  BufferEvent,
-  BufferManager,
-  BufferState,
-  CachingPlayer
-} from "./BufferManager";
+import { BufferEvent, BufferManager } from "./BufferManager";
+import { BufferState, CachePlayer } from "./CachePlayer";
 
 export interface RaptNode {
   id: string;
@@ -22,8 +18,8 @@ export const PlaybackState = {
 };
 
 /**
- * This class manages players, and places and interact with the Rapt engine layer
- * This class creates and manages BufferManager
+ * This class creates the HTML foundation of the interactive player. It creates the containers, places the rapt-engine
+ * and handles fullscreen. This class is also the delegate object being passed to the rapt-engine
  */
 export class PlayersManager extends Dispatcher {
   bufferManager: BufferManager;
@@ -44,12 +40,12 @@ export class PlayersManager extends Dispatcher {
     super();
     // create a container to all players
     // set id that contains the rapt playlist-id to support multiple KIV on the same player
-    const playerContainer: HTMLElement = CreateElement(
+    const playersContainer: HTMLElement = CreateElement(
       "div",
       this.raptProjectId + "-kiv-players-container",
       "kiv-players-container"
     );
-    this.mainDiv.appendChild(playerContainer);
+    this.mainDiv.appendChild(playersContainer);
 
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
     this.element = CreateElement(
@@ -58,12 +54,12 @@ export class PlayersManager extends Dispatcher {
       "kiv-rapt-engine"
     );
     // adding the rapt layer to the main-app div
-    playerContainer.appendChild(this.element);
+    playersContainer.appendChild(this.element);
 
     // init bufferManager
     this.bufferManager = new BufferManager(
       this.playerLibrary,
-      playerContainer,
+      playersContainer,
       raptProjectId,
       config,
       this.raptData
@@ -76,8 +72,8 @@ export class PlayersManager extends Dispatcher {
           // when a player was created but was not cached - this is its 'first play' event
           case BufferEvent.CATCHUP:
             this.element.classList.remove("kiv-hidden");
-            this.currentNode = event.data.node;
-            this.currentPlayer = event.data.player;
+            this.currentNode = event.payload.node;
+            this.currentPlayer = event.payload.player;
             this.bufferManager.cacheNodes(event.data.node);
             break;
           case BufferEvent.ALL_UNBUFFERED:
@@ -165,19 +161,18 @@ export class PlayersManager extends Dispatcher {
    */
   switchPlayer(id: string): void {
     this.currentPlayer.pause();
-    const nextPlayer: CachingPlayer = this.bufferManager.getPlayerByKalturaId(
-      id
-    );
-
+    const nextPlayer: CachePlayer = this.bufferManager.getPlayerByKalturaId(id);
     // remove current player from top z-index stack
     const currentPlayingDiv = this.mainDiv.querySelector(
       "[id='" + this.raptProjectId + "__" + this.currentNode.entryId + "']"
     );
     // currentPlayingDiv.classList.remove("current-playing");
     if (!nextPlayer) {
+      alert("next player was not created");
       // TODO next player was not created. handle new node
     } else {
       // switch players according to the player BufferState
+      console.log(">>>>> nextPlayer.status", nextPlayer.status);
       switch (nextPlayer.status) {
         case BufferState.init:
           // the next player was not created yet, hide the rapt layer and tell the bufferManager to create and 'autoplay'
@@ -186,6 +181,7 @@ export class PlayersManager extends Dispatcher {
           this.bufferManager.playImmediate(nextPlayer);
           break;
         case BufferState.ready:
+          // next player is cached and ready to play
           nextPlayer.player.play();
           this.currentNode = nextPlayer.node;
           this.currentPlayer = nextPlayer.player;

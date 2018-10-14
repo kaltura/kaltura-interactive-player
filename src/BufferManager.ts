@@ -3,26 +3,7 @@ import { KipFullscreen } from "./helpers/KipEvents";
 import { PlaybackPreset } from "./ui/PlaybackPreset";
 import { RaptConfig } from "./Kip";
 import { RaptNode } from "./PlayersManager";
-
-/**
- * id: rapt id
- * node: rapt node raw data
- * status: init,caching,ready,error
- * player: the actual player instance
- */
-export interface CachingPlayer {
-  id: string; // rapt id
-  node: RaptNode; // rapt node raw data
-  status: BufferState; // init,caching,ready,error
-  player?: any; // the actual player
-}
-
-export const enum BufferState {
-  "init",
-  "caching",
-  "ready",
-  "error"
-}
+import { BufferState, CachePlayer } from "./CachePlayer";
 
 export const BufferEvent = {
   BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
@@ -37,8 +18,9 @@ export const BufferEvent = {
 /**
  * This class is in charge of the creation of all players, and to handle their statuses (init,caching,ready)
  */
+
 export class BufferManager extends Dispatcher {
-  private players: CachingPlayer[];
+  private players: CachePlayer[];
   readonly shouldBufferVideos: boolean;
   private currentNode: RaptNode;
   readonly playbackPreset: any;
@@ -72,7 +54,7 @@ export class BufferManager extends Dispatcher {
 
   // User had clicked on a player that was not cached yet. Make this player load its content immediately and notify
   // the player manager when it is played
-  playImmediate(cachingPlayer: CachingPlayer): void {
+  playImmediate(cachingPlayer: CachePlayer): void {
     const node: RaptNode = cachingPlayer.node;
     const nodeDiv: HTMLElement = this.createNodesDiv(node);
     let nodeConf: any = this.getPlayerConf(node, nodeDiv.id);
@@ -107,19 +89,16 @@ export class BufferManager extends Dispatcher {
     player.loadMedia({ entryId: node.entryId });
 
     // store the player
-    this.players.push({
-      status: BufferState.caching,
-      id: node.id,
-      node: node,
-      player: player
-    });
+    this.players.push(
+      new CachePlayer(node.id, node, BufferState.caching, player)
+    );
 
     this.checkIfBuffered(player, (entryId: string) => {
       // cache next entries;
       if (callback) {
         callback();
       }
-      const firstPlayer: CachingPlayer | false = this.getPlayerByKalturaId(
+      const firstPlayer: CachePlayer | false = this.getPlayerByKalturaId(
         node.entryId
       );
       if (firstPlayer) {
@@ -135,8 +114,8 @@ export class BufferManager extends Dispatcher {
    * @param nodeToPlay
    */
   stopCurrentCachedPlayer(nodeToPlay: RaptNode) {
-    const cachingNow: CachingPlayer = this.players.find(
-      (player: CachingPlayer) => player.status === BufferState.caching
+    const cachingNow: CachePlayer = this.players.find(
+      (player: CachePlayer) => player.status === BufferState.caching
     );
     if (cachingNow && cachingNow.player && cachingNow.id !== nodeToPlay.id) {
       cachingNow.player.destroy();
@@ -160,7 +139,7 @@ export class BufferManager extends Dispatcher {
 
     // helper - extract the nodes from the currentPlayers
     const currentPlayersNodes: RaptNode[] = this.players.map(
-      (cachePlayer: CachingPlayer) => cachePlayer.node
+      (cachePlayer: CachePlayer) => cachePlayer.node
     );
     // find which nodes we want to destroy (nodes that do not belong to this node options)
     let nodesToDestroy = currentPlayersNodes.filter(
@@ -184,16 +163,13 @@ export class BufferManager extends Dispatcher {
     // store the nodes in case they are not stored yet
     for (const node of nodes) {
       // cache new players only
-      if (!this.players.find((item: CachingPlayer) => item.id === node.id)) {
+      if (!this.players.find((item: CachePlayer) => item.id === node.id)) {
         // use Rapt id as a key since we might have kaltura-entry in different rapt nodes
-        this.players.push({
-          status: BufferState.init,
-          id: node.id,
-          node: node
-        });
+
+        this.players.push(new CachePlayer(node.id, node, BufferState.init));
       } else {
         // if we got here - the player for this node was already created
-        const existingPlayer: CachingPlayer | null = this.getPlayerByKalturaId(
+        const existingPlayer: CachePlayer | null = this.getPlayerByKalturaId(
           node.entryId
         );
         if (
@@ -253,19 +229,19 @@ export class BufferManager extends Dispatcher {
    */
   cacheNextPlayer() {
     // find first un-cached
-    let unbufferedPlayer: CachingPlayer = this.players.find(
-      (item: any) => item.status === BufferState.init
+    let nextUnbufferedPlayer: CachePlayer = this.players.find(
+      (item: CachePlayer) => item.status === BufferState.init
     );
-    if (unbufferedPlayer) {
+    if (nextUnbufferedPlayer) {
       // found one - add it and start caching it. Notify PlayerManager of this
       this.dispatch({
         type: BufferEvent.BUFFERING,
-        payload: unbufferedPlayer.node.name
+        payload: nextUnbufferedPlayer.node.name
       });
       // update status of current player
-      unbufferedPlayer.status = BufferState.caching;
+      nextUnbufferedPlayer.status = BufferState.caching;
       // create player and cache it
-      this.cachePlayer(unbufferedPlayer);
+      this.cachePlayer(nextUnbufferedPlayer);
     } else {
       // no more unbuffered players - we must be done
       this.dispatch({
@@ -279,14 +255,14 @@ export class BufferManager extends Dispatcher {
    * Load a specific player per-node in "cache" mode
    * @param node
    */
-  cachePlayer(player: CachingPlayer): void {
+  cachePlayer(player: CachePlayer): void {
     const nodesDiv: HTMLElement = this.createNodesDiv(player.node, true);
     const conf: object = this.getPlayerConf(player.node, nodesDiv.id, true);
     const newPlayer = this.playerLibrary.setup(conf);
     player.player = newPlayer; // save so we have reference later
     this.checkIfBuffered(newPlayer, (entryId: string) => {
-      const finished: CachingPlayer = this.players.find(
-        (item: CachingPlayer) => item.node.entryId === entryId
+      const finished: CachePlayer = this.players.find(
+        (item: CachePlayer) => item.node.entryId === entryId
       );
       finished.status = BufferState.ready;
       this.dispatch({
@@ -397,13 +373,13 @@ export class BufferManager extends Dispatcher {
    * Retreive a player by its Kaltura entry id
    * @param entryId
    */
-  getPlayerByKalturaId(entryId: string): CachingPlayer | null {
-    const cachePlayer: CachingPlayer = this.players.find(
-      (item: CachingPlayer) => item.node.entryId === entryId
+  getPlayerByKalturaId(entryId: string): CachePlayer | null {
+    const cachePlayer: CachePlayer = this.players.find(
+      (item: CachePlayer) => item.node.entryId === entryId
     );
     if (!cachePlayer) {
       return null;
-      // player was not created yet, or was created but was not initiated - force it now!
+      // couldn't find a player by this entryId - return null
     }
     return cachePlayer;
   }
@@ -437,9 +413,7 @@ export class BufferManager extends Dispatcher {
    */
   destroyPlayer(node: RaptNode): void {
     this.dispatch({ type: BufferEvent.DESTROYING, payload: node.name });
-    const cachingPlayer: CachingPlayer = this.getPlayerByKalturaId(
-      node.entryId
-    );
+    const cachingPlayer: CachePlayer = this.getPlayerByKalturaId(node.entryId);
     if (!cachingPlayer) {
       return;
     }
@@ -454,7 +428,7 @@ export class BufferManager extends Dispatcher {
         .remove();
     }
     this.players = this.players.filter(
-      (item: CachingPlayer) => item.id !== node.id
+      (item: CachePlayer) => item.id !== node.id
     );
     this.dispatch({ type: BufferEvent.DESTROYED, payload: node.name });
   }
