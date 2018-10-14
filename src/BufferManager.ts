@@ -84,7 +84,7 @@ export class BufferManager extends Dispatcher {
     cachingPlayer.player = player;
     // when buffered and played - notify
     this.checkIfBuffered(player, (entryId: string) => {
-      this.dispatch({ type: BufferEvent.CATCHUP, data: cachingPlayer });
+      this.dispatch({ type: BufferEvent.CATCHUP, payload: cachingPlayer });
     });
   }
 
@@ -209,7 +209,7 @@ export class BufferManager extends Dispatcher {
     if (!this.shouldBufferVideos) {
       this.dispatch({
         type: BufferEvent.ALL_UNBUFFERED,
-        data: this.currentNode.name
+        payload: this.currentNode.name
       });
       return;
     }
@@ -260,7 +260,7 @@ export class BufferManager extends Dispatcher {
       // found one - add it and start caching it. Notify PlayerManager of this
       this.dispatch({
         type: BufferEvent.BUFFERING,
-        data: unbufferedPlayer.node.name
+        payload: unbufferedPlayer.node.name
       });
       // update status of current player
       unbufferedPlayer.status = BufferState.caching;
@@ -270,7 +270,7 @@ export class BufferManager extends Dispatcher {
       // no more unbuffered players - we must be done
       this.dispatch({
         type: BufferEvent.ALL_BUFFERED,
-        data: this.currentNode.name
+        payload: this.currentNode.name
       });
     }
   }
@@ -291,7 +291,7 @@ export class BufferManager extends Dispatcher {
       finished.status = BufferState.ready;
       this.dispatch({
         type: BufferEvent.DONE_BUFFERING,
-        data: finished.node.name
+        payload: finished.node.name
       });
       this.cacheNextPlayer();
     });
@@ -436,7 +436,7 @@ export class BufferManager extends Dispatcher {
    * @param node
    */
   destroyPlayer(node: RaptNode): void {
-    this.dispatch({ type: BufferEvent.DESTROYING, data: node.name });
+    this.dispatch({ type: BufferEvent.DESTROYING, payload: node.name });
     const cachingPlayer: CachingPlayer = this.getPlayerByKalturaId(
       node.entryId
     );
@@ -456,6 +456,6 @@ export class BufferManager extends Dispatcher {
     this.players = this.players.filter(
       (item: CachingPlayer) => item.id !== node.id
     );
-    this.dispatch({ type: BufferEvent.DESTROYED, data: node.name });
+    this.dispatch({ type: BufferEvent.DESTROYED, payload: node.name });
   }
 }

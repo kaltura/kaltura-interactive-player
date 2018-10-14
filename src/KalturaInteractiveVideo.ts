@@ -1,7 +1,7 @@
 import { PlayersManager } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
-import { Dispatcher } from "./helpers/Dispatcher";
+import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./BufferManager";
 
 const API_EVENTS = [
@@ -84,7 +84,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       })
       .catch((err: string) => {
         this.printMessage("API Error", err);
-        this.dispatchApi(err);
+        this.dispatchApi({ type: "Error" });
       });
   }
 
@@ -104,35 +104,35 @@ class KalturaInteractiveVideo extends Dispatcher {
 
     // reflect all buffering evnets to the API
     for (let o of Object.values(BufferEvent)) {
-      this.playerManager.addListener(o, (data?: any) => {
+      this.playerManager.addListener(o, (event: KivEvent) => {
         // translate to
-        this.dispatchApi(o, data);
+        this.dispatchApi(event);
       });
     }
 
     for (let eventName of API_EVENTS) {
-      this.playerManager.addListener(eventName, (event: any) => {
-        this.dispatchApi(eventName, event);
+      this.playerManager.addListener(eventName, (event: KivEvent) => {
+        this.dispatchApi(event);
       });
     }
     this.playerManager.init(this.mainDiv);
   }
-
   /**
    * Expose API to the wrapping page/app
    * @param event
    * @param data
    */
-  dispatchApi(event: string, data?: any) {
+  dispatchApi(event: KivEvent) {
     if (this.config && this.config.rapt && this.config.rapt.debug) {
       // debug mode - print to console
-      console.warn("Rapt: > " + event + data ? data : "");
+      console.warn(
+        // "Rapt: > " + event.type + event.payload ? event.payload : ""
+        "Rapt: > ",
+        event
+      );
     }
     // expose API, add the current node and
-    this.dispatch({
-      type: event,
-      payload: data
-    });
+    this.dispatch(event);
   }
 
   /**

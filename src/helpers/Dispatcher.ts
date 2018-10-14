@@ -2,8 +2,11 @@
  * Simple (Event)Dispatcher class
  * Inspiered by https://medium.com/@LeoAref/simple-event-dispatcher-implementation-using-javascript-36d0eadf5a11
  */
-import { KipEvent } from "./KipEvents";
 
+export interface KivEvent {
+  type: string;
+  payload?: any;
+}
 export class Dispatcher {
   events: any;
 
@@ -33,14 +36,14 @@ export class Dispatcher {
     );
   }
 
-  dispatch(event: any) { // todo - resolve 'any' type later
+  dispatch(event: KivEvent) {
     // If event doesn't have a listener - don't do anything
     if (this.events[event.type] === undefined) {
       return false;
     }
     this.events[event.type].listeners.forEach((listener: any) => {
-      if (event.data) {
-        listener({ type: event.type, data: event.data });
+      if (event.payload) {
+        listener({ type: event.type, payload: event.payload });
       } else {
         listener({ type: event.type });
       }

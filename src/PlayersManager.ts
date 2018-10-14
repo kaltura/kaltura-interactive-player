@@ -234,7 +234,7 @@ export class PlayersManager extends Dispatcher {
     //window.mainPlayer.currentTime = time;
   }
 
-  event(event: any, o?: any) {
+  event(event: any) {
     if (event.type != "player:timeupdate") {
       this.dispatch(event);
     }
