@@ -15,6 +15,7 @@
             height:281px;
         }
     </style>
+<h3>test.template.html</h3>
 <div id="player"></div>
 <div id="logDiv" style="width: 450px;height: 100%;position: absolute;left:650px;top:0"></div>
 <script>
@@ -34,14 +35,14 @@
 
         rapt:{
 			debug:true,
-            bufferNextNodes: false,
+            bufferNextNodes: true,
             bufferTime: 8
         }
 
 	};
     var kip = Kip.setup(config , KalturaPlayer , Rapt); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
 
-    kip.loadMedia({entryId: '1_sxcxb5e2'}); // 1_4377j2jl   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
+    kip.loadMedia({entryId: '1_60y5a49y'}); // 1_60y5a49y (animals)   // 1_51tet0hy (complex ! many edge cases )  // 1_sxcxb5e2 (empty - FS and layout )
 
     // for debug purposes - these are the buffering events
     var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup","allUnbuffered"];
@@ -76,28 +77,26 @@
 
 	// logger - debug mode !
 	function logDebugMsg(event){
-		console.log(">>>>> !",event);
-    	return
-
         const oneLine = document.createElement("div");
         // mark buffering event in green
         var printStr = event.type;
-        if( bufferingEvents.some( a => a ===logObject.type) ){
+		var payload = event.payload;
+        if( bufferingEvents.some( a => a ===event.type) ){
         	// this is a buffering event
             oneLine.style.cssText = "color: green";
-            switch (logObject.type) {
+            switch (event.type) {
                 case "allBuffered":
-                    printStr+='<span style="color: purple"> ['+logObject.data.data+'] ✿</span> ';
+                    printStr+='<span style="color: purple"> ['+payload+'] ✿</span>';
 
                 break;
                 case "buffering":
-                    printStr+='<span style="color: gray"> ['+logObject.data.data+'] ⬇︎ </span>';
+                    printStr+='<span style="color: gray"> ['+payload+'] ⬇︎ </span>';
                 break;
                 case "doneBuffering":
-                    printStr+='<span style="color: brown"> ['+logObject.data.data+'] ✔︎︎</span>';
+                    printStr+='<span style="color: brown"> ['+payload+'] ✔︎︎</span>';
                 break;
                 default:
-                    printStr+='<span style="color: mediumvioletred"> ['+logObject.data.data+']</span>' ;
+                    printStr+='<span style="color: mediumvioletred"> ['+payload+']</span>' ;
 
             }
         }else{
