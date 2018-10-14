@@ -54,7 +54,10 @@ export class BufferManager extends Dispatcher {
     private raptData: any
   ) {
     super();
-    this.shouldBufferVideos = config.rapt.hasOwnProperty("bufferNextNodes")
+    // handle safari - prevent cache
+    const isSafari:boolean = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    this.shouldBufferVideos = isSafari && config.rapt.hasOwnProperty("bufferNextNodes")
       ? config.rapt.bufferNextNodes
       : true;
 
