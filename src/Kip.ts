@@ -1,3 +1,4 @@
+// import Rapt from "../libs/engine.min.js";
 import KalturaInteractiveVideo from "./KalturaInteractiveVideo";
 
 export interface RaptConfig {
@@ -7,6 +8,7 @@ export interface RaptConfig {
   playback?: object;
   provider?: object;
 }
+
 /**
  * This class creates an instance of KalturaInteractiveVideo when called 'setup' function,
  * it also handles CSS creation (once)
@@ -125,10 +127,15 @@ class Kip {
 
   public setup(
     config: RaptConfig,
-    playerLibrary: any,
+    // playerLibrary: any,
     rapt: any
   ): KalturaInteractiveVideo {
-    return new KalturaInteractiveVideo(config, playerLibrary, rapt);
+    // console.log(">>>>>", Rapt);
+    return new KalturaInteractiveVideo(config, KalturaPlayer, rapt);
   }
 }
 export default new Kip();
+
+// inject KIP into player library so that KalturaPlayer.kip.setup will be available and return a new kip instance
+declare var KalturaPlayer: any;
+KalturaPlayer.kip = KalturaPlayer.kip || new Kip();

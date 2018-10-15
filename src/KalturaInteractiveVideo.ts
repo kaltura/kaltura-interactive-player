@@ -1,4 +1,4 @@
-import { PlayersManager } from "./PlayersManager";
+import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
@@ -16,12 +16,13 @@ const API_EVENTS = [
   "project:load",
   "project:ready",
   "project:start",
+  "project:ended",
   "project:unload",
   "player:play",
   "player:pause",
   "player:progress",
   "player:ratechange",
-  "player:timeupdate",
+  // "player:timeupdate", // this junks the log - removing
   "player:volumechange"
 ];
 
@@ -39,6 +40,7 @@ class KalturaInteractiveVideo extends Dispatcher {
   private playlistId: string = "";
   private client: KipClient; // Backend Client
   public state: KipState = KipState.preinit;
+  private _data: any; // container to data API
 
   constructor(
     private config: any,
@@ -93,6 +95,7 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param raptGraphData
    */
   dataLoaded(raptGraphData: object): void {
+    this._data = raptGraphData;
     this.playerManager = new PlayersManager(
       Object.assign({}, this.config),
       this.playerLibrary,
@@ -168,6 +171,49 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   public replay(n: number) {
     // Implement project replay here
+  }
+
+  public get data(): any {
+    return this._data;
+  }
+
+  // public get metadata(): any {
+  //   debugger;
+  //   if (
+  //     this.playerManager &&
+  //     this.playerManager.raptEngine &&
+  //     this.playerManager.raptEngine.metadata
+  //   ) {
+  //     return this.playerManager.raptEngine.metadata;
+  //   }
+  //   return {};
+  // }
+
+  public get currentTime(): number {
+    return this.playerManager.currentPlayer.currentTime;
+  }
+
+  public get duration(): number {
+    return this.playerManager.currentPlayer.duration;
+  }
+
+  public get currentNode(): RaptNode {
+    return this.playerManager.currentNode;
+  }
+
+  public get volume(): number {
+    return this.playerManager.currentPlayer.volume;
+  }
+
+  public set volume(n: number) {
+    this.playerManager.currentPlayer.volume = n;
+  }
+
+  public get muted(): number {
+    return this.playerManager.currentPlayer.muted;
+  }
+  public get playbackRate(): number {
+    return this.playerManager.currentPlayer.playbackRate;
   }
 
   public jump(destination: any, autoplay: boolean) {

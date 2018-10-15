@@ -39,7 +39,7 @@ export class PlayersManager extends Dispatcher {
     private raptProjectId: string,
     private raptData: any,
     private mainDiv: HTMLElement,
-    private raptEngine: any
+    public raptEngine: any
   ) {
     super();
     // create a container to all players
@@ -173,7 +173,8 @@ export class PlayersManager extends Dispatcher {
     const currentPlayingDiv = this.mainDiv.querySelector(
       "[id='" + this.raptProjectId + "__" + this.currentNode.entryId + "']"
     );
-    // currentPlayingDiv.classList.remove("current-playing");
+    currentPlayingDiv.classList.remove("current-playing");
+    // TODO - fix flow later
     if (!nextPlayer) {
       // TODO next player was not created. handle new node
     } else {
@@ -192,14 +193,18 @@ export class PlayersManager extends Dispatcher {
           const node: RaptNode = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
           // todo - make function "getPlayerDivById"
-          const newPlayerDiv = this.mainDiv.querySelector(
+            const newPlayerDiv = this.mainDiv.querySelector(
             "[id='" + this.raptProjectId + "__" + id + "']"
           );
           newPlayerDiv.classList.add("current-playing");
           break;
         // the next player is created but still buffering
         case BufferState.caching:
-          nextPlayer.player.play();
+            const newPlayerDiv1 = this.mainDiv.querySelector(
+                "[id='" + this.raptProjectId + "__" + id + "']"
+            );
+            newPlayerDiv1.classList.add("current-playing");
+            nextPlayer.player.play();
           break;
       }
     }
@@ -235,9 +240,10 @@ export class PlayersManager extends Dispatcher {
   }
 
   event(event: any) {
-    if (event.type != "player:timeupdate") {
-      this.dispatch(event);
+    if (event.type === "project:ready") {
+      this.raptEngine.metadata.account = this.config.partnetId;
     }
+    this.dispatch(event);
   }
 
   tick(currentPlayer: any, raptEngine: any) {
