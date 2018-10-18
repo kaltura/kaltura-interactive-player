@@ -218,22 +218,27 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   public jump(destination: any, autoplay: boolean) {
     if (destination.id) {
-      // locate by id
+      // locate the node by id
       console.log(">>>>> id", destination);
     }
     if (destination.name) {
-      console.log(">>>>> name", destination);
-      // locate by name
+      console.log(">>>>> name", this.getNodeByProperty("name" , destination.name));
+      // locate the node by name
     }
     if (destination.ref) {
       console.log(">>>>> ref", destination);
-      // locate by ref
+      // locate the node by ref
     }
     if (destination.xref) {
       console.log(">>>>> xref (entryId) ", destination);
-      // locate by xref
+      // locate the node by xref
     }
   }
+  // helper function
+  getNodeByProperty(propName:string,value:string):RaptNode{
+    return this._data.nodes.find( node => node[propName] === value)
+  }
+
 }
 
 export default KalturaInteractiveVideo;

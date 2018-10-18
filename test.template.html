@@ -21,7 +21,7 @@
 <script>
 	var config = {
 		session:{
-			ks: "MjE4ZjZhMTY5NzAyMTFmYWE5YjdjYzIwOTZlM2NhODFhY2I1YTNiNnwyNzAxNzsyNzAxNzsxNTM5Njg2ODM5OzI7MTc3O19fQURNSU5fXzI2Njg3OyosZGlzYWJsZWVudGl0bGVtZW50"
+			// ks: "MjE4ZjZhMTY5NzAyMTFmYWE5YjdjYzIwOTZlM2NhODFhY2I1YTNiNnwyNzAxNzsyNzAxNzsxNTM5Njg2ODM5OzI7MTc3O19fQURNSU5fXzI2Njg3OyosZGlzYWJsZWVudGl0bGVtZW50"
 		},
 		targetId: 'player',
 		playback:{
@@ -30,7 +30,7 @@
 		},
 
 		provider: {
-			partnerId: 27017
+			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
 		},
 
         rapt:{
@@ -193,8 +193,10 @@
 <button onclick="playKip()">play</button>
 <button onclick="pauseKip()">pause</button>
 <button onclick="replayKip()">replay</button>
-<button onclick="jumpToNodeKip({name:'22'})">JumpToNode by ref</button>
-<button onclick="jumpToNodeKip({name:'22'})">JumpToNode by name</button>
+<br>
+<button onclick="jumpToNodeKip({name:'Start'})">JumpToNode {name:'Start'}</button>
+<button onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})">JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}</button>
+<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {ref:'1_4f9mue48'}</button>
 <br>
 <button onclick="seekKip(5)">Seek to 5</button>
 <button onclick="seekKip(10)">Seek to 10</button>
