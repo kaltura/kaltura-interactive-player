@@ -9,6 +9,7 @@ import {
 } from "./BufferManager";
 
 export interface RaptNode {
+  onEnded?: [];
   id: string;
   entryId: string;
   name: string;

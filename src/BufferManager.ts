@@ -55,11 +55,14 @@ export class BufferManager extends Dispatcher {
   ) {
     super();
     // handle safari - prevent cache
-    const isSafari:boolean = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
+      navigator.userAgent
+    );
 
-    this.shouldBufferVideos = !isSafari && config.rapt.hasOwnProperty("bufferNextNodes")
-      ? config.rapt.bufferNextNodes
-      : true;
+    this.shouldBufferVideos =
+      !isSafari && config.rapt.hasOwnProperty("bufferNextNodes")
+        ? config.rapt.bufferNextNodes
+        : true;
 
     if (config.rapt.bufferTime) {
       this.SECONDS_TO_BUFFER = config.rapt.bufferTime;
@@ -248,6 +251,17 @@ export class BufferManager extends Dispatcher {
         })
       );
     }
+    // if there was a default-path on the current node - make sure it is returned as well
+    const defaultPath: any = givenNode.onEnded.find(
+      (itm: any) => itm.type === "project:jump"
+    );
+    if (defaultPath) {
+      const defaultPathNodeId: string = defaultPath.payload.destination;
+      const defaultPathNode: RaptNode = this.raptData.nodes.find(
+        n => n.id === defaultPathNodeId
+      );
+      arrayToCache.push(defaultPathNode);
+    }
     return arrayToCache;
   }
 
@@ -421,6 +435,7 @@ export class BufferManager extends Dispatcher {
           this.getNodeByRaptId(nodeId)
         )
       : [];
+
     // remove duplicities in case of defaultPath
     return [...new Set(nodes)];
   }
