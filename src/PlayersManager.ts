@@ -76,9 +76,9 @@ export class PlayersManager extends Dispatcher {
           // when a player was created but was not cached - this is its 'first play' event
           case BufferEvent.CATCHUP:
             this.element.classList.remove("kiv-hidden");
-            this.currentNode = event.data.node;
-            this.currentPlayer = event.data.player;
-            this.bufferManager.cacheNodes(event.data.node);
+            this.currentNode = event.payload.node;
+            this.currentPlayer = event.payload.player;
+            this.bufferManager.cacheNodes(event.payload.node);
             break;
           case BufferEvent.ALL_UNBUFFERED:
             this.element.classList.remove("kiv-hidden");
@@ -193,18 +193,18 @@ export class PlayersManager extends Dispatcher {
           const node: RaptNode = nextPlayer.node;
           this.bufferManager.cacheNodes(node);
           // todo - make function "getPlayerDivById"
-            const newPlayerDiv = this.mainDiv.querySelector(
+          const newPlayerDiv = this.mainDiv.querySelector(
             "[id='" + this.raptProjectId + "__" + id + "']"
           );
           newPlayerDiv.classList.add("current-playing");
           break;
         // the next player is created but still buffering
         case BufferState.caching:
-            const newPlayerDiv1 = this.mainDiv.querySelector(
-                "[id='" + this.raptProjectId + "__" + id + "']"
-            );
-            newPlayerDiv1.classList.add("current-playing");
-            nextPlayer.player.play();
+          const newPlayerDiv1 = this.mainDiv.querySelector(
+            "[id='" + this.raptProjectId + "__" + id + "']"
+          );
+          newPlayerDiv1.classList.add("current-playing");
+          nextPlayer.player.play();
           break;
       }
     }
