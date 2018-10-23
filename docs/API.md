@@ -109,50 +109,102 @@ The project has been reset to the beginning.
 #####node:enter
 A new node has been loaded.
 ######payload
+kind - only on the 1st node will be start. All other will be "jump"
 ```
 {
- kind: THE_NODE_NAME,
- node: THE_NODE_OBJECT,
- prevNode: THE_PREVIOUS_NODE / undefine in case of first node  
+ kind: "jump" || "start" ,
+ node: [THE_NODE_OBJECT],
+ prevNode: [THE_PREVIOUS_NODE] / undefine in case of first node  
 }
 ```
-
 
 #####node:exit
 The current node will be unloaded.
 ######payload
-payload.node - The node object
+```
+{
+ kind:  "jump",
+ node: [THE_NODE_OBJECT],
+ nextNode: [THE_NEXT_NODE]  
+}
+```
 
 #####node:ended
 The current node has ended.
 ######payload
-payload.node - The node object
+```
+{
+ kind: [THE_NODE_NAME],
+ node: [THE_NODE_OBJECT],
+ prevNode: [THE_PREVIOUS_NODE] / undefine in case of first node  
+}
+```
 
 #####hotspot:click
 The user has clicked on a hotspot.
 ######payload
-payload.hotspot - The hotspot object
+```
+{
+ hotspot: [THE_HOTSPOT_OBJECT] 
+}
+```
 
 #####browser:open
 The project has opened a new window.
 ######payload
-payload.href
+```
+{
+ href: [URL_TO_OPEN],
+ target: "_blank" 
+}
+```
 
 #####browser:hidden
 The browser window has been hidden. The interactive video will be paused.
+######payload
+None
 
 #####cue:forward
 Playback has crossed over a cue point. Cue points are custom api events that can be added using the Rapt Media composer by entering the node editor and turning on the api event timeline. Custom data can be added to each cue point and is passed through in the payloadproperty.
+######payload
+```
+{
+ cue: {
+        customData : [THE_CUEPOINT_STRING],
+        id : [THE_CUEPOINT_ID]
+      }
+}
+```
 
 #####cue:reverse
 Playback has reversed passed a cue point. Cue points are custom api events that can be added using the Rapt Media composer by entering the node editor and turning on the api event timeline. Custom data can be added to each cue point and is passed through in the payload property.
+######payload
+```
+{
+ cue: {
+        customData : [THE_CUEPOINT_STRING],
+        id : [THE_CUEPOINT_ID]
+      }
+}
+```
 
 #####player:play
 The current video has started playing.
+######payload
+None
 
 #####player:pause
 The current video has been paused.
+######payload
+None
 
 #####player:progress
 The playhead has crossed a predefined progress point. Event fires at 25%, 50%, 75% and 98% of every node.
+######payload
+```
+{
+    progress: [PERCENTAGE]
+}
+```
+
 
