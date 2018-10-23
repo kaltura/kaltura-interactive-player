@@ -322,13 +322,13 @@ export class BufferManager extends Dispatcher {
    */
   checkIfBuffered(bufferPlayer: any, callback: (entryId: string) => void) {
     // todo - remove once optomize buffer
-    if (
-      bufferPlayer.buffered &&
-      bufferPlayer.buffered.length &&
-      bufferPlayer.buffered.end
-    ) {
-      //console.log(">>>>>", bufferPlayer.buffered.end(0));
-    }
+    // if (
+    //   bufferPlayer.buffered &&
+    //   bufferPlayer.buffered.length &&
+    //   bufferPlayer.buffered.end
+    // ) {
+    //   console.log(">>>>>", bufferPlayer.buffered.end(0));
+    // }
 
     if (
       bufferPlayer.buffered &&
@@ -338,11 +338,11 @@ export class BufferManager extends Dispatcher {
     ) {
       setTimeout(() => {
         if (
-          bufferPlayer._config &&
-          bufferPlayer._config.sources &&
-          bufferPlayer._config.sources.id
+          bufferPlayer.config &&
+          bufferPlayer.config.sources &&
+          bufferPlayer.config.sources.id
         )
-          callback(bufferPlayer._config.sources.id); // optimize later
+          callback(bufferPlayer.config.sources.id); // optimize later
       }, this.BUFFER_DONE_TIMEOUT);
     } else {
       // not buffered yet - check again
