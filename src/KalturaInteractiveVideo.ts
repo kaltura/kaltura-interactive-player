@@ -22,7 +22,7 @@ const API_EVENTS = [
   "player:pause",
   "player:progress",
   "player:ratechange",
-  // "player:timeupdate", // this junks the log - removing
+  "player:timeupdate",
   "player:volumechange"
 ];
 
@@ -126,8 +126,11 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param data
    */
   dispatchApi(event: KivEvent) {
-    if (this.config && this.config.rapt && this.config.rapt.debug) {
+    if (this.config.rapt.debug) {
       // debug mode - print to console
+        if(event.type === "player:timeupdate"){
+          return;
+        }
       console.warn(
         // "Rapt: > " + event.type + event.payload ? event.payload : ""
         "Rapt: > ",
