@@ -31,7 +31,6 @@
     	{
     		name: "Complex" ,
             id: "1_51tet0hy",
-            selected: true
         } ,
     	{
     		name: "Empty" ,
@@ -44,6 +43,7 @@
     	{
     		name: "defaultPath" ,
             id: "1_r33krd2s",
+            selected: true
         } ,
     	{
     		name: "self-loop" ,
@@ -158,10 +158,6 @@
                 case "node:exit":
 					printStr+='<span style="color: darkcyan"> ['+payload.node.name+']</span>' ;
                     break;
-                case "project:load":
-					printStr+='<span style="color: darkcyan"> ['+payload+']</span>' ;
-
-                    break;
                 case "player:progress":
 					printStr+='<span style="color: darkcyan"> ['+payload.progress+']</span>' ;
                     break;
@@ -232,10 +228,6 @@
 		}
 		return true;
 	}
-
-
-
-
 
 </script>
 <br/>
