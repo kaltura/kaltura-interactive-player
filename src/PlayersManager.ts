@@ -115,19 +115,113 @@ export class PlayersManager extends Dispatcher {
   }
 
   switchPlayer(id: string): void {
-    if (this.PlayersBufferManager.getPlayer(id)) {
+    const nextPlayer = this.PlayersBufferManager.getPlayer(id);
+    if (nextPlayer) {
       // found a player !
+      const nextPlayersDivId = this.PlayersBufferManager.getPlayerDivId(id);
+      const prevPlayerDivId = this.PlayersBufferManager.getPlayerDivId(
+        this.currentNode.entryId
+      );
+      this.currentPlayer.pause();
+      this.currentPlayer = nextPlayer;
+      this.currentPlayer.play();
+      this.playersFactory.mainDiv
+        .querySelector("[id='" + nextPlayersDivId + "']")
+        .classList.add("current-playing");
+      this.playersFactory.mainDiv
+        .querySelector("[id='" + prevPlayerDivId + "']")
+        .classList.remove("current-playing");
+      // this player was immediate played - we can instantly load the next items
+      this.loadNextByNode(this.currentNode);
     } else {
       // player does not exist - create it
       this.currentPlayer = this.PlayersBufferManager.createPlayer(
         this.currentNode.entryId,
         true,
-        () => {
-          debugger;
+        (entryId: string) => {
+          this.loadNextByNode(this.currentNode);
         }
       );
     }
-    console.log(">>>>> switchPlayer");
+  }
+
+  /**
+   * Start the sequence of caching next entries
+   * @param node
+   */
+  loadNextByNode(node: RaptNode) {
+    const nextNodes: RaptNode[] = this.getNextNodes(node);
+    // convert to a list of entryIds
+    let nextEntries: string[] = nextNodes.map((node: RaptNode) => node.entryId);
+    this.PlayersBufferManager.purgePlayers(node.entryId);
+    this.PlayersBufferManager.prepareNext(nextEntries);
+  }
+
+  /**
+   * Get a list of optional nodes for the given node
+   *  @param node
+   */
+  getNextNodes(node: RaptNode): RaptNode[] {
+    let nodes: RaptNode[] = node.prefetchNodeIds.length
+      ? node.prefetchNodeIds.map((nodeId: string) =>
+          this.getNodeByRaptId(nodeId)
+        )
+      : [];
+    // at this point we have a list of next nodes without default-path and without order according to appearance time
+    nodes = this.sortByApearenceTime(nodes, node);
+    return nodes;
+  }
+
+  /**
+   * Return a rapt node
+   * @param id
+   */
+  getNodeByRaptId(id: string): RaptNode {
+    const nodes: RaptNode[] = this.raptData.nodes;
+    return nodes.find((item: RaptNode) => item.id === id);
+  }
+
+  /**
+   * Sort a given nodes-array by the appearance-order of the hotspots in that node
+   * @param arr of Nodes
+   * @param givenNode
+   */
+  sortByApearenceTime(arr: RaptNode[], givenNode: RaptNode): RaptNode[] {
+    // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
+    const hotspots: any[] = this.raptData.hotspots
+      .filter((hotSpot: any) => {
+        return (
+          hotSpot.nodeId === givenNode.id &&
+          hotSpot.onClick &&
+          hotSpot.onClick.find((itm: any) => itm.type === "project:jump") // filter out only-URL clicks
+        );
+      })
+      .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
+
+    const arrayToCache: RaptNode[] = [];
+    for (const hotSpot of hotspots) {
+      arrayToCache.push(
+        arr.find((itm: RaptNode) => {
+          // extract the onClick element with type 'project:jump'
+          const clickItem: any = hotSpot.onClick.find(
+            (itm: any) => itm.type === "project:jump"
+          );
+          return clickItem.payload.destination === itm.id;
+        })
+      );
+    }
+    // if there was a default-path on the current node - make sure it is returned as well
+    const defaultPath: any = givenNode.onEnded.find(
+      (itm: any) => itm.type === "project:jump"
+    );
+    if (defaultPath) {
+      const defaultPathNodeId: string = defaultPath.payload.destination;
+      const defaultPathNode: RaptNode = this.raptData.nodes.find(
+        n => n.id === defaultPathNodeId
+      );
+      arrayToCache.push(defaultPathNode);
+    }
+    return arrayToCache;
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////
@@ -156,6 +250,9 @@ export class PlayersManager extends Dispatcher {
   }
 
   tick(currentPlayer: any, raptEngine: any) {
+    if (!currentPlayer) {
+      return;
+    }
     const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
     if (currentPlayingVideoElement) {
       raptEngine.update({

@@ -9,8 +9,8 @@ export class PlayersFactory extends Dispatcher {
   readonly playbackPreset: any;
 
   constructor(
-    private mainDiv: HTMLElement,
-    private raptProjectId: string,
+    readonly mainDiv: HTMLElement,
+    readonly raptProjectId: string,
     private playerLibrary: any,
     private config: any
   ) {
@@ -29,11 +29,11 @@ export class PlayersFactory extends Dispatcher {
    */
   public createPlayer(entryId: string, playImmediate: boolean = false): any {
     const divName: string = this.raptProjectId + "__" + entryId;
-    const playerDiv = CreateElement(
-      "div",
-      divName,
-      "kiv-player kiv-cache-player"
-    );
+    let playerClass = "kiv-player kiv-cache-player";
+    if(playImmediate){
+        playerClass+=" current-playing"
+    }
+    const playerDiv = CreateElement("div", divName, playerClass);
     const conf: object = this.getPlayerConf(divName, playImmediate);
     this.mainDiv.appendChild(playerDiv);
     const newPlayer = this.playerLibrary.setup(conf);

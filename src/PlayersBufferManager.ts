@@ -2,9 +2,9 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { PlayersFactory } from "./PlayersFactory";
 
 export interface PlayerElement {
-  id: string;
+  entryId: string;
   player: any;
-  readyFunc?: () => string;
+  readyFunc?: (entryId: string) => string;
 }
 
 export const BufferEvent = {
@@ -16,12 +16,13 @@ export const BufferEvent = {
   ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
   ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
 };
-
+function getPlayerDivId() {}
 export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
   private BUFFER_DONE_TIMEOUT: number = 100;
   private players: any[] = [];
+  private cachingPlayers: string[] = [];
 
   constructor(private playersFactory: PlayersFactory) {
     super();
@@ -33,9 +34,16 @@ export class PlayersBufferManager extends Dispatcher {
    */
   getPlayer(entryId: string): any | null {
     // look if there is a player with this entry-id
+    const currentPlayerEl = this.getPlayerByEntryId(entryId);
+    if (currentPlayerEl) {
+      return currentPlayerEl.player;
+    }
     return null;
   }
 
+  public getPlayerDivId(entryId: string): string {
+    return this.playersFactory.raptProjectId + "__" + entryId;
+  }
   /**
    * Create a player by the entryId. If playImmediate is set to true play it, if not - this is a cache player
    * @param entryId
@@ -49,17 +57,16 @@ export class PlayersBufferManager extends Dispatcher {
     const newPlayer = this.playersFactory.createPlayer(entryId, playImmediate);
     // store locally
     const playerElement: PlayerElement = {
-      id: entryId,
+      entryId: entryId,
       player: newPlayer,
       readyFunc
     };
     this.players.push(playerElement);
     this.checkIfBuffered(newPlayer, entryId => {
       // call the function
-      debugger;
       const playerEl = this.getPlayerByEntryId(entryId);
       if (playerEl && playerEl.readyFunc) {
-        playerEl.readyFunc();
+        playerEl.readyFunc(entryId);
       }
       this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
     });
@@ -70,7 +77,10 @@ export class PlayersBufferManager extends Dispatcher {
    * @param callback
    * @param bufferPlayer
    */
-  checkIfBuffered(bufferPlayer: any, callback: (entryId: string) => void) {
+  private checkIfBuffered(
+    bufferPlayer: any,
+    callback: (entryId: string) => void
+  ) {
     if (
       bufferPlayer.buffered &&
       bufferPlayer.buffered.length &&
@@ -97,15 +107,51 @@ export class PlayersBufferManager extends Dispatcher {
    * Clear all current players
    * @param entryId
    */
-  purgePlayers(entryId: string) {}
+  purgePlayers(entryId: string) {
+    this.cachingPlayers = [];
+  }
 
-  prepareNext() {}
+  /**
+   * The function starts to load the next players in cache-mode by the order of the array
+   * @param entries
+   */
+  prepareNext(entries: string[]) {
+    this.cachingPlayers = entries;
+    this.cacheNextPlayer();
+  }
+
+  cacheNextPlayer() {
+    if (this.cachingPlayers.length) {
+      const entryToCache = this.cachingPlayers.shift();
+      this.createPlayer(entryToCache, false, () => {
+        this.cacheNextPlayer();
+      });
+    } else {
+      // done caching ! notify
+      console.log(">>>>> DONE CACHING ALL");
+      this.dispatch({ type: BufferEvent.ALL_BUFFERED });
+    }
+  }
 
   getPlayerByEntryId(entryId: string): PlayerElement | null {
-    const player: PlayerElement = this.players.find(id => id === entryId);
+    const player: PlayerElement = this.players.find(
+      (pl: PlayerElement) => pl.entryId === entryId
+    );
     if (player) {
       return player;
     }
     return null;
+  }
+
+  destroyPlayer(entryId: string) {
+    const playerEl: PlayerElement = this.getPlayerByEntryId(entryId);
+    if (playerEl) {
+      // destroy the player
+      playerEl.player.destroy();
+      // remove from DOM
+      this.playersFactory.mainDiv
+        .querySelector("[id='" + this.getPlayerDivId(entryId) + "']")
+        .remove();
+    }
   }
 }
