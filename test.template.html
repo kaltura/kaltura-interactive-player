@@ -6,7 +6,6 @@
 </head>
 <body>
     <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43327771"></script>
-    <!--<script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/42897631"></script>-->
     <script src="./libs/engine.min.js" type="text/javascript"></script>
     <script src="bundle.js" type="text/javascript"></script>
     <!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
@@ -37,17 +36,21 @@
             id: "1_sxcxb5e2",
         } ,
     	{
+    		name: "Start 2 Start" ,
+            id: "1_guuku0l9",
+        } ,
+    	{
     		name: "Same-node" ,
             id: "1_4weuna20",
         } ,
     	{
     		name: "defaultPath" ,
             id: "1_r33krd2s",
-            selected: true
         } ,
     	{
     		name: "self-loop" ,
             id: "1_s0d8kump",
+            selected: true
         } ,
     	{
     		name: "split same" ,
@@ -105,9 +108,10 @@
 		"player:volumechange"
 	];
 
-    var allEvents
-	// allEvents  = apiEvents;//apiEvents.concat(bufferingEvents);
-    allEvents = apiEvents.concat(bufferingEvents);
+    var allEvents;
+	allEvents  = bufferingEvents ;
+    // apiEvents.concat(bufferingEvents);
+    // allEvents = apiEvents.concat(bufferingEvents);
 
     for (var i = 0 ; i< allEvents.length; i++){
 		kip.addListener(allEvents[i] , function (event) {
@@ -126,9 +130,10 @@
             oneLine.style.cssText = "color: green";
             switch (event.type) {
                 case "allBuffered":
-                    printStr+='<span style="color: purple"> ['+payload+'] ✿</span>';
+                    printStr+='<span style="color: purple"> ['+payload+'] ✿ ✿ ✿</span>';
                 break;
                 case "catchup":
+                	debugger;
                     printStr+='<span style="color: #227a15"> ['+payload.toString()+'] ➥</span>';
                 break;
                 case "buffering":

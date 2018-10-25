@@ -2,7 +2,7 @@ import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
-import { BufferEvent } from "./BufferManager";
+import { BufferEvent } from "./PlayersBufferManager";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -118,7 +118,7 @@ class KalturaInteractiveVideo extends Dispatcher {
         this.dispatchApi(event);
       });
     }
-    this.playerManager.init(this.mainDiv);
+    this.playerManager.init();
   }
   /**
    * Expose API to the wrapping page/app
@@ -128,9 +128,9 @@ class KalturaInteractiveVideo extends Dispatcher {
   dispatchApi(event: KivEvent) {
     if (this.config.rapt.debug) {
       // debug mode - print to console
-        if(event.type === "player:timeupdate"){
-          return;
-        }
+      if (event.type === "player:timeupdate") {
+        return;
+      }
       console.warn(
         // "Rapt: > " + event.type + event.payload ? event.payload : ""
         "Rapt: > ",
@@ -156,7 +156,6 @@ class KalturaInteractiveVideo extends Dispatcher {
     messageDiv.appendChild(bodeDiv);
     this.mainDiv.appendChild(messageDiv);
   }
-
   /**
    * Legacy API support
    */
