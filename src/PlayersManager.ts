@@ -30,7 +30,7 @@ export const PlaybackState = {
  */
 export class PlayersManager extends Dispatcher {
   private PlayersBufferManager: PlayersBufferManager;
-  private playersFactory: PlayersFactory;
+  readonly playersFactory: PlayersFactory;
   public currentPlayer: any;
   public currentNode: RaptNode;
   public element: HTMLElement; // must be called 'element' because rapt delegate implementation
@@ -47,7 +47,6 @@ export class PlayersManager extends Dispatcher {
     public raptEngine: any
   ) {
     super();
-
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
     this.element = CreateElement(
       "div",
@@ -114,7 +113,7 @@ export class PlayersManager extends Dispatcher {
     this.initRapt();
   }
 
-  toggleFullscreenState() {
+  private toggleFullscreenState() {
     let element: HTMLElement;
     const doc: any = document; // todo handle more elegantly
     if (doc.fullscreenElement || doc.webkitFullscreenElement) {
@@ -134,8 +133,7 @@ export class PlayersManager extends Dispatcher {
     }, 100); // todo - optimize / dom-event
   }
 
-  // TODO - move to fullscreenManager?
-  exitHandler() {
+  private exitHandler() {
     const doc: any = document;
     if (!doc.fullscreenElement && !doc.webkitIsFullScreen) {
       this.toggleFullscreenState();
@@ -159,7 +157,7 @@ export class PlayersManager extends Dispatcher {
     });
   }
 
-  private switchPlayer(id: string): void {
+  public switchPlayer(id: string): void {
     const nextPlayer = this.PlayersBufferManager.getPlayer(id);
     if (nextPlayer) {
       // found a player !
@@ -292,6 +290,16 @@ export class PlayersManager extends Dispatcher {
       arrayToCache.push(defaultPathNode);
     }
     return arrayToCache;
+  }
+
+  public execute(command) {
+    if (!this.raptEngine) {
+      console.log(
+        "WARNING: Rapt Media commands received before initialization is complete"
+      );
+      return;
+    }
+    this.raptEngine.execute(command);
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////
