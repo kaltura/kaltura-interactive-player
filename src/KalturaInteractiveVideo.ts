@@ -171,12 +171,12 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.playerManager.currentPlayer.currentTime = n;
   }
 
-  public replay(n: number) {
+  public replay() {
     this.playerManager.execute({
       type: "project:replay"
     });
   }
-  public reset(n: number) {
+  public reset() {
     this.playerManager.execute({
       type: "project:reset"
     });
