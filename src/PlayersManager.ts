@@ -1,8 +1,14 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { KipEvent, KipFullscreen } from "./helpers/KipEvents";
+import { KipEvent } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
 import { PlayersFactory } from "./PlayersFactory";
 import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
+
+export const KipFullscreen = {
+  FULL_SCREEN_CLICKED: "fullScreenClicked",
+  ENTER_FULL_SCREEN: "enterFullScreen",
+  EXIT_FULL_SCREEN: "exitFullScreen"
+};
 
 export interface RaptNode {
   onEnded?: [];
@@ -80,6 +86,16 @@ export class PlayersManager extends Dispatcher {
         this.dispatch(event);
       });
     }
+
+    document.addEventListener("fullscreenchange", () => this.exitHandler());
+    document.addEventListener("webkitfullscreenchange", () =>
+      this.exitHandler()
+    );
+
+    // listen to fullscreen events from the players
+    this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
+      this.toggleFullscreenState();
+    });
   }
 
   public init() {
@@ -96,6 +112,34 @@ export class PlayersManager extends Dispatcher {
     // load the 1st media
     this.currentNode = firstNode;
     this.initRapt();
+  }
+
+  toggleFullscreenState() {
+    let element: HTMLElement;
+    const doc: any = document; // todo handle more elegantly
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+      if (document.exitFullscreen) {
+        doc.exitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      }
+    } else {
+      element = this.mainDiv;
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      }
+    }
+    setTimeout(() => {
+      this.resizeEngine();
+    }, 100); // todo - optimize / dom-event
+  }
+
+  // TODO - move to fullscreenManager?
+  exitHandler() {
+    const doc: any = document;
+    if (!doc.fullscreenElement && !doc.webkitIsFullScreen) {
+      this.toggleFullscreenState();
+    }
   }
 
   // initiate Rapt-engine layer

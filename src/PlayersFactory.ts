@@ -1,8 +1,8 @@
 import { CreateElement } from "./helpers/CreateElement";
 import { RaptConfig } from "./Kip";
 import { PlaybackPreset } from "./ui/PlaybackPreset";
-import { KipFullscreen } from "./helpers/KipEvents";
 import { Dispatcher } from "./helpers/Dispatcher";
+import { KipFullscreen } from "./PlayersManager";
 
 export class PlayersFactory extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
@@ -30,8 +30,8 @@ export class PlayersFactory extends Dispatcher {
   public createPlayer(entryId: string, playImmediate: boolean = false): any {
     const divName: string = this.raptProjectId + "__" + entryId;
     let playerClass = "kiv-player kiv-cache-player";
-    if(playImmediate){
-        playerClass+=" current-playing"
+    if (playImmediate) {
+      playerClass += " current-playing";
     }
     const playerDiv = CreateElement("div", divName, playerClass);
     const conf: object = this.getPlayerConf(divName, playImmediate);

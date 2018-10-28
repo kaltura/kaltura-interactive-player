@@ -109,8 +109,7 @@ export class PlayersBufferManager extends Dispatcher {
    */
   public purgePlayers(nextEntryId: string, entriesToCache: string[]) {
     // find which players we want to destroy and which to keep
-    let entriseToDestroy: string[] = [];
-    entriseToDestroy = this.players
+    let entriseToDestroy: string[] = this.players
       .filter((ple: PlayerElement) => {
         if (
           ple.entryId === nextEntryId ||
