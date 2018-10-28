@@ -82,7 +82,7 @@ export class PlayersManager extends Dispatcher {
     }
   }
 
-  init() {
+  public init() {
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
@@ -99,7 +99,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   // initiate Rapt-engine layer
-  initRapt() {
+  private initRapt() {
     this.raptEngine = new this.raptEngine.Engine(this);
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
@@ -108,30 +108,32 @@ export class PlayersManager extends Dispatcher {
       PlayersManager.PLAYER_TICK_INTERVAL
     );
   }
-  resizeEngine() {
+  private resizeEngine() {
     this.raptEngine.resize({
       width: this.mainDiv.offsetWidth,
       height: this.mainDiv.offsetHeight
     });
   }
 
-  switchPlayer(id: string): void {
+  private switchPlayer(id: string): void {
     const nextPlayer = this.PlayersBufferManager.getPlayer(id);
     if (nextPlayer) {
-      // in case the next player is using the same entryId that the current one is playing - just rewind to 0
-      if (id === this.currentNode.entryId) {
-        nextPlayer.currentTime = 0;
-        return;
-      }
       // found a player !
       const nextPlayersDivId = this.PlayersBufferManager.getPlayerDivId(id);
       const prevPlayerDivId = this.PlayersBufferManager.getPlayerDivId(
         this.currentNode.entryId
       );
+
       // pause current player and play next player
       this.currentPlayer.pause();
+
+      // in case the next player was already played - seek to 0, else play it
+      if (nextPlayer.currentTime > 0) {
+        nextPlayer.currentTime = 0;
+      }
+      nextPlayer.play();
       this.currentPlayer = nextPlayer;
-      this.currentPlayer.play();
+
       // pop it to the front of the stack and move back the current
       this.mainDiv
         .querySelector("[id='" + nextPlayersDivId + "']")
@@ -159,14 +161,14 @@ export class PlayersManager extends Dispatcher {
   }
 
   /**
-   * Start the sequence of caching next entries
+   * Start the sequence of caching next entries from a given node
    * @param node
    */
-  loadNextByNode(node: RaptNode) {
+  private loadNextByNode(node: RaptNode) {
     const nextNodes: RaptNode[] = this.getNextNodes(node);
     // convert to a list of entryIds
     let nextEntries: string[] = nextNodes.map((node: RaptNode) => node.entryId);
-    this.PlayersBufferManager.purgePlayers(node.entryId);
+    this.PlayersBufferManager.purgePlayers(node.entryId, nextEntries);
     this.PlayersBufferManager.prepareNext(nextEntries);
   }
 
@@ -174,7 +176,7 @@ export class PlayersManager extends Dispatcher {
    * Get a list of optional nodes for the given node
    *  @param node
    */
-  getNextNodes(node: RaptNode): RaptNode[] {
+  private getNextNodes(node: RaptNode): RaptNode[] {
     let nodes: RaptNode[] = node.prefetchNodeIds.length
       ? node.prefetchNodeIds.map((nodeId: string) =>
           this.getNodeByRaptId(nodeId)
@@ -185,7 +187,7 @@ export class PlayersManager extends Dispatcher {
     return nodes;
   }
 
-  getNodeByEntryId(entryId: string): RaptNode {
+  private getNodeByEntryId(entryId: string): RaptNode {
     // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
     const newNode: RaptNode = this.raptData.nodes.find(
       (node: RaptNode) => node.entryId === entryId
@@ -197,7 +199,7 @@ export class PlayersManager extends Dispatcher {
    * Return a rapt node
    * @param id
    */
-  getNodeByRaptId(id: string): RaptNode {
+  private getNodeByRaptId(id: string): RaptNode {
     const nodes: RaptNode[] = this.raptData.nodes;
     return nodes.find((item: RaptNode) => item.id === id);
   }
@@ -207,7 +209,10 @@ export class PlayersManager extends Dispatcher {
    * @param arr of Nodes
    * @param givenNode
    */
-  sortByApearenceTime(arr: RaptNode[], givenNode: RaptNode): RaptNode[] {
+  private sortByApearenceTime(
+    arr: RaptNode[],
+    givenNode: RaptNode
+  ): RaptNode[] {
     // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
     const hotspots: any[] = this.raptData.hotspots
       .filter((hotSpot: any) => {

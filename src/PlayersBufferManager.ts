@@ -21,7 +21,7 @@ export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
   private BUFFER_DONE_TIMEOUT: number = 100;
-  private players: any[] = [];
+  private players: PlayerElement[] = [];
   private cachingPlayers: string[] = [];
 
   constructor(private playersFactory: PlayersFactory) {
@@ -32,7 +32,7 @@ export class PlayersBufferManager extends Dispatcher {
    * Look if there is a relevant player that was created already
    * @param entryId
    */
-  getPlayer(entryId: string): any | null {
+  public getPlayer(entryId: string): any | null {
     // look if there is a player with this entry-id
     const currentPlayerEl = this.getPlayerByEntryId(entryId);
     if (currentPlayerEl) {
@@ -49,7 +49,7 @@ export class PlayersBufferManager extends Dispatcher {
    * @param entryId
    * @param playImmediate
    */
-  createPlayer(
+  public createPlayer(
     entryId: string,
     playImmediate: boolean = false,
     readyFunc?: (data?: any) => any
@@ -107,7 +107,23 @@ export class PlayersBufferManager extends Dispatcher {
    * Clear all current players
    * @param entryId
    */
-  purgePlayers(entryId: string) {
+  public purgePlayers(nextEntryId: string, entriesToCache: string[]) {
+    // find which players we want to destroy and which to keep
+    let entriseToDestroy: string[] = [];
+    entriseToDestroy = this.players
+      .filter((ple: PlayerElement) => {
+        if (
+          ple.entryId === nextEntryId ||
+          entriesToCache.some(entryId => entryId === ple.entryId)
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .map(itm => itm.entryId);
+    for (let playerId of entriseToDestroy) {
+      this.destroyPlayer(playerId);
+    }
     this.cachingPlayers = [];
   }
 
@@ -115,12 +131,25 @@ export class PlayersBufferManager extends Dispatcher {
    * The function starts to load the next players in cache-mode by the order of the array
    * @param entries
    */
-  prepareNext(entries: string[]) {
+  public prepareNext(entries: string[]) {
+    // optimize - no-point of caching a player if it is already cached.
+    entries = entries
+      .filter(entry => {
+        if (this.players.some(playerEl => playerEl.entryId === entry)) {
+          return false;
+        }
+        return true;
+      })
+      .filter((entry, i, all) => i === all.indexOf(entry)); // remove duplicates
+
     this.cachingPlayers = entries;
     this.cacheNextPlayer();
   }
 
-  cacheNextPlayer() {
+  /**
+   * Grab the next player from this.cachingPlayers and cache it. if this.cachingPlayers is empty we are done caching
+   */
+  private cacheNextPlayer() {
     if (this.cachingPlayers.length) {
       const entryToCache = this.cachingPlayers.shift();
       this.createPlayer(entryToCache, false, () => {
@@ -132,7 +161,7 @@ export class PlayersBufferManager extends Dispatcher {
     }
   }
 
-  getPlayerByEntryId(entryId: string): PlayerElement | null {
+  private getPlayerByEntryId(entryId: string): PlayerElement | null {
     const player: PlayerElement = this.players.find(
       (pl: PlayerElement) => pl.entryId === entryId
     );
@@ -142,7 +171,7 @@ export class PlayersBufferManager extends Dispatcher {
     return null;
   }
 
-  destroyPlayer(entryId: string) {
+  private destroyPlayer(entryId: string) {
     const playerEl: PlayerElement = this.getPlayerByEntryId(entryId);
     if (playerEl) {
       // destroy the player
@@ -151,6 +180,7 @@ export class PlayersBufferManager extends Dispatcher {
       this.playersFactory.mainDiv
         .querySelector("[id='" + this.getPlayerDivId(entryId) + "']")
         .remove();
+      this.dispatch({ type: BufferEvent.DESTROYED, payload: entryId });
     }
   }
 }
