@@ -121,6 +121,7 @@ export class PlayersBufferManager extends Dispatcher {
         return true;
       })
       .map(itm => itm.entryId);
+
     for (let playerId of entriseToDestroy) {
       this.destroyPlayer(playerId);
     }
@@ -180,6 +181,10 @@ export class PlayersBufferManager extends Dispatcher {
       this.playersFactory.mainDiv
         .querySelector("[id='" + this.getPlayerDivId(entryId) + "']")
         .remove();
+      // remove from this.players array
+      this.players = this.players.filter(
+        (player: PlayerElement) => player.entryId !== entryId
+      );
       this.dispatch({ type: BufferEvent.DESTROYED, payload: entryId });
     }
   }
