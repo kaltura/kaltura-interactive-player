@@ -16,7 +16,7 @@ export const BufferEvent = {
   ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
   ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
 };
-function getPlayerDivId() {}
+
 export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
@@ -63,12 +63,12 @@ export class PlayersBufferManager extends Dispatcher {
     };
     this.players.push(playerElement);
     this.checkIfBuffered(newPlayer, entryId => {
+      this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
       // call the function
       const playerEl = this.getPlayerByEntryId(entryId);
       if (playerEl && playerEl.readyFunc) {
         playerEl.readyFunc(entryId);
       }
-      this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
     });
     return newPlayer;
   }
@@ -128,7 +128,6 @@ export class PlayersBufferManager extends Dispatcher {
       });
     } else {
       // done caching ! notify
-      console.log(">>>>> DONE CACHING ALL");
       this.dispatch({ type: BufferEvent.ALL_BUFFERED });
     }
   }

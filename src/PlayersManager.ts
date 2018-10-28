@@ -30,6 +30,7 @@ export class PlayersManager extends Dispatcher {
   public element: HTMLElement; // must be called 'element' because rapt delegate implementation
   private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
+  private clickedHotspotId: String = undefined;
 
   constructor(
     private config: any,
@@ -117,26 +118,38 @@ export class PlayersManager extends Dispatcher {
   switchPlayer(id: string): void {
     const nextPlayer = this.PlayersBufferManager.getPlayer(id);
     if (nextPlayer) {
+      // in case the next player is using the same entryId that the current one is playing - just rewind to 0
+      if (id === this.currentNode.entryId) {
+        nextPlayer.currentTime = 0;
+        return;
+      }
       // found a player !
       const nextPlayersDivId = this.PlayersBufferManager.getPlayerDivId(id);
       const prevPlayerDivId = this.PlayersBufferManager.getPlayerDivId(
         this.currentNode.entryId
       );
+      // pause current player and play next player
       this.currentPlayer.pause();
       this.currentPlayer = nextPlayer;
       this.currentPlayer.play();
-      this.playersFactory.mainDiv
+      // pop it to the front of the stack and move back the current
+      this.mainDiv
         .querySelector("[id='" + nextPlayersDivId + "']")
         .classList.add("current-playing");
-      this.playersFactory.mainDiv
+      this.mainDiv
         .querySelector("[id='" + prevPlayerDivId + "']")
         .classList.remove("current-playing");
-      // this player was immediate played - we can instantly load the next items
+      // now we can start buffer the next items
+      this.currentNode = this.getNodeByEntryId(id);
       this.loadNextByNode(this.currentNode);
     } else {
-      // player does not exist - create it
+      // player does not exist - create it in autoplay mode
+      if (this.currentPlayer) {
+        this.currentPlayer.pause();
+      }
+      this.currentNode = this.getNodeByEntryId(id);
       this.currentPlayer = this.PlayersBufferManager.createPlayer(
-        this.currentNode.entryId,
+        id,
         true,
         (entryId: string) => {
           this.loadNextByNode(this.currentNode);
@@ -170,6 +183,14 @@ export class PlayersManager extends Dispatcher {
     // at this point we have a list of next nodes without default-path and without order according to appearance time
     nodes = this.sortByApearenceTime(nodes, node);
     return nodes;
+  }
+
+  getNodeByEntryId(entryId: string): RaptNode {
+    // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
+    const newNode: RaptNode = this.raptData.nodes.find(
+      (node: RaptNode) => node.entryId === entryId
+    );
+    return newNode;
   }
 
   /**
@@ -243,6 +264,9 @@ export class PlayersManager extends Dispatcher {
   }
 
   event(event: any) {
+    if (event.type === "hotspot:click") {
+      this.clickedHotspotId = event.payload.hotspot.id;
+    }
     if (event.type === "project:ready") {
       this.raptEngine.metadata.account = this.config.partnetId;
     }
