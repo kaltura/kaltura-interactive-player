@@ -195,6 +195,9 @@
     function replayKip(){
 		kip.replay();
     }
+    function resetKip(){
+		kip.reset();
+    }
     function jumpToNodeKip(o){
 		kip.jump(o);
     }
@@ -244,6 +247,7 @@
 <button onclick="playKip()">play</button>
 <button onclick="pauseKip()">pause</button>
 <button onclick="replayKip()">replay</button>
+<button onclick="resetKip()">reset</button>
 <button onclick="seekKip(5)">Seek to 5</button>
 <button onclick="seekKip(15)">Seek to 15</button>
 <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">Seek to -3sec</button>

@@ -176,6 +176,11 @@ class KalturaInteractiveVideo extends Dispatcher {
       type: "project:replay"
     });
   }
+  public reset(n: number) {
+    this.playerManager.execute({
+      type: "project:reset"
+    });
+  }
 
   public get data(): any {
     return this._data;
