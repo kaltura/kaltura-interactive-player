@@ -172,7 +172,9 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public replay(n: number) {
-    // Implement project replay here
+    this.playerManager.execute({
+      type: "project:replay"
+    });
   }
 
   public get data(): any {
