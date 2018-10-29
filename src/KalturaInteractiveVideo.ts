@@ -44,8 +44,7 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   constructor(
     private config: any,
-    private playerLibrary: any,
-    private rapt: any
+    private playerLibrary: any
   ) {
     super();
     this.state = KipState.init;
@@ -101,8 +100,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
-      this.mainDiv,
-      this.rapt
+      this.mainDiv
     );
 
     // reflect all buffering evnets to the API

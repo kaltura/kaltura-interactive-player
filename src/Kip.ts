@@ -1,5 +1,8 @@
 import KalturaInteractiveVideo from "./KalturaInteractiveVideo";
 import "./Kip.scss";
+import "script-loader!../libs/engine.min.js"
+
+declare var KalturaPlayer: any;
 
 export interface RaptConfig {
   ui?: any;
@@ -8,22 +11,7 @@ export interface RaptConfig {
   playback?: object;
   provider?: object;
 }
-/**
- * This class creates an instance of KalturaInteractiveVideo when called 'setup' function,
- * it also handles CSS creation (once)
- */
-class Kip {
-  // flag to enforce single CSS injection to page
-  private cssInjected: boolean = false;
-
-  constructor() {}
-
-  public setup(config: RaptConfig, rapt: any): KalturaInteractiveVideo {
-    return new KalturaInteractiveVideo(config, KalturaPlayer, rapt);
-  }
+function setup(config: RaptConfig): KalturaInteractiveVideo {
+    return new KalturaInteractiveVideo(config, KalturaPlayer);
 }
-export default new Kip();
-
-// inject KIP into player library so that KalturaPlayer.kip.setup will be available and return a new kip instance
-declare var KalturaPlayer: any;
-KalturaPlayer.kip = KalturaPlayer.kip || new Kip();
+export { setup }

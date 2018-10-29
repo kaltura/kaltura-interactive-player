@@ -4,6 +4,8 @@ import { CreateElement } from "./helpers/CreateElement";
 import { PlayersFactory } from "./PlayersFactory";
 import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
 
+declare var Rapt: any;
+
 export const KipFullscreen = {
   FULL_SCREEN_CLICKED: "fullScreenClicked",
   ENTER_FULL_SCREEN: "enterFullScreen",
@@ -37,6 +39,7 @@ export class PlayersManager extends Dispatcher {
   private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
+  private raptEngine: any;
 
   constructor(
     private config: any,
@@ -44,7 +47,7 @@ export class PlayersManager extends Dispatcher {
     private raptProjectId: string,
     private raptData: any,
     private mainDiv: HTMLElement,
-    public raptEngine: any
+
   ) {
     super();
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
@@ -142,7 +145,7 @@ export class PlayersManager extends Dispatcher {
 
   // initiate Rapt-engine layer
   private initRapt() {
-    this.raptEngine = new this.raptEngine.Engine(this);
+    this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
     setInterval(
