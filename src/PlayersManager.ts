@@ -46,8 +46,7 @@ export class PlayersManager extends Dispatcher {
     private playerLibrary: any,
     private raptProjectId: string,
     private raptData: any,
-    private mainDiv: HTMLElement,
-
+    private mainDiv: HTMLElement
   ) {
     super();
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
@@ -161,7 +160,13 @@ export class PlayersManager extends Dispatcher {
   }
 
   public switchPlayer(id: string): void {
+    if (id === this.currentNode.entryId && this.currentPlayer !== undefined) {
+      this.currentPlayer.currentTime = 0;
+      this.currentPlayer.play();
+      return;
+    }
     const nextPlayer = this.PlayersBufferManager.getPlayer(id);
+    // edge case where node is "switching" to itself
     if (nextPlayer) {
       // found a player !
       const nextPlayersDivId = this.PlayersBufferManager.getPlayerDivId(id);
