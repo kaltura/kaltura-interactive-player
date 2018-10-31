@@ -46,6 +46,38 @@ export class PlaybackPreset {
           h(
             c.BottomBar,
             null,
+            h(
+              "div",
+              { className: "playkit-left-controls" },
+              h(c.PlayPauseControl, { player: props.player }),
+              h(c.RewindControl, { player: props.player, step: 10 })
+            ),
+            h(
+              "div",
+              { className: "playkit-right-controls" },
+              h(c.VolumeControl, { player: props.player }),
+              h(c.LanguageControl, { player: props.player }),
+              h(c.SettingsControl, { player: props.player }),
+              h(customFullScreenButton)
+            )
+          )
+        )
+      );
+    };
+    this.presetWithScrubber = function(props: any) {
+      return h(
+        "div",
+        h(c.KeyboardControl, { player: props.player, config: props.config }),
+        h(c.Loading, { player: props.player }),
+        h(
+          "div",
+          { className: "playkit-player-gui", id: "player-gui" },
+          h(c.OverlayPortal, null),
+          h(c.UnmuteIndication, { player: props.player }),
+          h(c.OverlayAction, { player: props.player }),
+          h(
+            c.BottomBar,
+            null,
             h(c.SeekBarPlaybackContainer, {
               showFramePreview: true,
               showTimeBubble: true,

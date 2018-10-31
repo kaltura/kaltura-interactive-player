@@ -19,6 +19,9 @@
         width:500px;
         height:281px;
     }
+    .kiv-rapt-engine div{
+             background: #00800033 !important;
+    }
 </style>
 <h3>test.template.html</h3>
 <h4 id="projDetails"></h4>
@@ -28,14 +31,26 @@
 
 	var optionalPlaylists = [
 		{
+			name: "CL1" ,
+			id: "0_ugurmytu" ,
+			selected: true
+		},
+		{
+			name: "CL2" ,
+			id: "0_5huki1y3" ,
+		},
+		{
 			name: "Animals" ,
 			id: "1_60y5a49y" ,
-		}
-		,
+		},
+		{
+			name: "Animals" ,
+			id: "1_60y5a49y" ,
+		},
 		{
 			name: "Complex" ,
 			id: "1_51tet0hy",
-		} ,
+		},
 		{
 			name: "Empty" ,
 			id: "1_sxcxb5e2",
@@ -47,7 +62,6 @@
 		{
 			name: "1 to 2,3,4" ,
 			id: "1_4sjm8veb",
-			selected: true,
 		} ,
 		{
 			name: "Same-node" ,
@@ -71,9 +85,6 @@
 	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
 
 	var config = {
-		session:{
-			// ks: "MjE4ZjZhMTY5NzAyMTFmYWE5YjdjYzIwOTZlM2NhODFhY2I1YTNiNnwyNzAxNzsyNzAxNzsxNTM5Njg2ODM5OzI7MTc3O19fQURNSU5fXzI2Njg3OyosZGlzYWJsZWVudGl0bGVtZW50"
-		},
 		targetId: 'player',
 		playback:{
 			autoplay:true,
@@ -81,6 +92,7 @@
 		},
 
 		provider: {
+			ks : "NWZjZGRiOTQyOWJkNTMxODQ3NzIyZjllMjJlNjcyNTEwZWM0NTRiMHwyNzAxNzsyNzAxNzsxNTQxMDY3NjgwOzI7MTMzMzU7X19BRE1JTl9fMjY2ODc7KixkaXNhYmxlZW50aXRsZW1lbnQ=" ,
 			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
 		},
 
