@@ -174,6 +174,7 @@ export class PlayersBufferManager extends Dispatcher {
   private destroyPlayer(entryId: string) {
     const playerEl: PlayerElement = this.getPlayerByEntryId(entryId);
     if (playerEl) {
+      this.dispatch({ type: BufferEvent.DESTROYING, payload: entryId });
       // destroy the player
       playerEl.player.destroy();
       // remove from DOM

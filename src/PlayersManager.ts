@@ -195,11 +195,20 @@ export class PlayersManager extends Dispatcher {
       this.currentNode = this.getNodeByEntryId(id);
       this.loadNextByNode(this.currentNode);
     } else {
-      // player does not exist - create it in autoplay mode
       if (this.currentPlayer) {
         this.currentPlayer.pause();
       }
       this.currentNode = this.getNodeByEntryId(id);
+
+      // in case we are in the middle of cache - purge it and only then ask for player creation
+      const nextNodes: RaptNode[] = this.getNextNodes(this.currentNode);
+      // convert to a list of entryIds
+      let nextEntries: string[] = nextNodes.map(
+        (node: RaptNode) => node.entryId
+      );
+      this.PlayersBufferManager.purgePlayers(id, nextEntries);
+
+      // player does not exist - create it in autoplay mode
       this.currentPlayer = this.PlayersBufferManager.createPlayer(
         id,
         true,

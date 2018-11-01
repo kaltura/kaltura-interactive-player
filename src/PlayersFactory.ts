@@ -37,6 +37,10 @@ export class PlayersFactory extends Dispatcher {
     const conf: object = this.getPlayerConf(divName, playImmediate);
     this.mainDiv.appendChild(playerDiv);
     const newPlayer = this.playerLibrary.setup(conf);
+    newPlayer._uiWrapper._uiManager.store.dispatch({
+      type: "shell/UPDATE_PRE_PLAYBACK",
+      prePlayback: false
+    });
     newPlayer.loadMedia({ entryId: entryId });
     return newPlayer;
   }
@@ -77,7 +81,8 @@ export class PlayersFactory extends Dispatcher {
           template: props => this.playbackPreset(props)
         }
       ];
-      newConf.ui = { customPreset: uis };
+      newConf.ui = newConf.ui || {};
+      newConf.ui.customPreset = uis;
     } catch (e) {
       console.log("error in applying V3 custom preset");
     }

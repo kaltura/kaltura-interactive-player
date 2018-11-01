@@ -10,17 +10,15 @@
 <script src="dist/path-kaltura-player.js" type="text/javascript"></script>
 <script src="http://localhost:35729/livereload.js"></script>
 <!-- end of relevant for development only! -->
-
-
-
 <!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
 <style>
     #player {
         width:500px;
         height:281px;
     }
+    <!-- Showing the hotspots -->
     .kiv-rapt-engine div{
-             background: #00800033 !important;
+        background: #00800033 !important;
     }
 </style>
 <h3>test.template.html</h3>
@@ -33,7 +31,6 @@
 		{
 			name: "CL1" ,
 			id: "0_ugurmytu" ,
-			selected: true
 		},
 		{
 			name: "CL2" ,
@@ -54,6 +51,7 @@
 		{
 			name: "Empty" ,
 			id: "1_sxcxb5e2",
+			selected: true
 		} ,
 		{
 			name: "Start 2 Start" ,
@@ -99,7 +97,7 @@
 		rapt:{
 			debug:true,
 			bufferNextNodes: true,
-			bufferTime: 4
+			bufferTime: 8
 		}
 
 	};
@@ -131,7 +129,7 @@
 
 	var allEvents;
 	allEvents  = bufferingEvents ;
-	// apiEvents.concat(bufferingEvents);
+	// allEvents = apiEvents;
 	// allEvents = apiEvents.concat(bufferingEvents);
 
 	for (var i = 0 ; i< allEvents.length; i++){
@@ -192,7 +190,6 @@
 					break;
 				default:
 					if(!isEmpty(payload)){
-						console.log(">>>>> ** !! ",printStr,payload);
 						printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
 					}
 
@@ -268,11 +265,13 @@
     <button onclick="seekKip(5)">Seek to 5</button>
     <button onclick="seekKip(15)">Seek to 15</button>
     <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">Seek to -3sec</button>
+    <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">Seek to -7sec</button>
     <br/>
+    <br/>
+    <button onclick="jumpToNodeKip({name:'Start'})">JumpToNode {name:'Start'}</button>
+    <button onclick="jumpToNodeKip({name:'Introduction'})">JumpToNode {name:'Introduction'}</button>
     <br/>
     <button onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})">JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}</button>
-    <button onclick="jumpToNodeKip({name:'Start'})">JumpToNode {name:'Start'}</button>
-    <br/>
     <button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {ref:'1_4f9mue48'}</button>
     <!--<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {xref:'1_4f9mue48'}</button>-->
     <br/>
