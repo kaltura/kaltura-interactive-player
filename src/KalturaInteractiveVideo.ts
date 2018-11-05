@@ -2,7 +2,7 @@ import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
-import { BufferEvent } from "./BufferManager";
+import { BufferEvent } from "./PlayersBufferManager";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -44,8 +44,7 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   constructor(
     private config: any,
-    private playerLibrary: any,
-    private rapt: any
+    private playerLibrary: any
   ) {
     super();
     this.state = KipState.init;
@@ -101,8 +100,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
-      this.mainDiv,
-      this.rapt
+      this.mainDiv
     );
 
     // reflect all buffering evnets to the API
@@ -118,7 +116,7 @@ class KalturaInteractiveVideo extends Dispatcher {
         this.dispatchApi(event);
       });
     }
-    this.playerManager.init(this.mainDiv);
+    this.playerManager.init();
   }
   /**
    * Expose API to the wrapping page/app
@@ -128,9 +126,9 @@ class KalturaInteractiveVideo extends Dispatcher {
   dispatchApi(event: KivEvent) {
     if (this.config.rapt.debug) {
       // debug mode - print to console
-        if(event.type === "player:timeupdate"){
-          return;
-        }
+      if (event.type === "player:timeupdate") {
+        return;
+      }
       console.warn(
         // "Rapt: > " + event.type + event.payload ? event.payload : ""
         "Rapt: > ",
@@ -156,7 +154,6 @@ class KalturaInteractiveVideo extends Dispatcher {
     messageDiv.appendChild(bodeDiv);
     this.mainDiv.appendChild(messageDiv);
   }
-
   /**
    * Legacy API support
    */
@@ -172,8 +169,15 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.playerManager.currentPlayer.currentTime = n;
   }
 
-  public replay(n: number) {
-    // Implement project replay here
+  public replay() {
+    this.playerManager.execute({
+      type: "project:replay"
+    });
+  }
+  public reset() {
+    this.playerManager.execute({
+      type: "project:reset"
+    });
   }
 
   public get data(): any {
@@ -219,29 +223,11 @@ class KalturaInteractiveVideo extends Dispatcher {
     return this.playerManager.currentPlayer.playbackRate;
   }
 
-  public jump(destination: any, autoplay: boolean) {
-    let node: RaptNode;
-    if (destination.id) {
-      // locate the node by id
-      node = this.getNodeByProperty("id", destination.id);
-    }
-    if (destination.name) {
-      node = this.getNodeByProperty("name", destination.name);
-      // locate the node by name
-    }
-    if (destination.ref) {
-      node = this.getNodeByProperty("entryId", destination.ref);
-      // locate the node by ref
-    }
-    if (destination.xref) {
-      node = this.getNodeByProperty("xref", destination.xref);
-      // locate the node by xref
-    }
-    console.log(">>>>> jump - node", node);
-  }
-  // helper function
-  getNodeByProperty(propName: string, value: string): RaptNode {
-    return this._data.nodes.find(node => node[propName] === value);
+  public jump(locator: any, autoplay: boolean) {
+    this.playerManager.execute({
+      type: "project:jump",
+      payload: { destination: locator }
+    });
   }
 }
 

@@ -1,21 +1,49 @@
+"use strict";
+var LiveReloadPlugin = require('webpack-livereload-plugin');
+
 const webpack = require("webpack");
+const PROD = process.env.NODE_ENV === "production";
+const packageData = require("./package.json");
+
+let plugins = [
+  new webpack.DefinePlugin({
+    __VERSION__: JSON.stringify(packageData.version),
+    __NAME__: JSON.stringify(packageData.name)
+  })
+];
+
+if (!PROD) {
+	plugins.push(new LiveReloadPlugin());
+}
 
 module.exports = {
-  mode: "development",
-  entry: "./src/Kip.ts",
-  output: {
-    filename: "bundle.js",
-    path: __dirname,
-    library: "Kip",
-    libraryTarget: "window",
-    libraryExport: "default"
+  mode: PROD ? "production" : "development",
+  devServer: {
+    port: 9000
   },
+  entry: {
+    PathKalturaPlayer: ["./src/Kip.ts"]
+  },
+  output: {
+    path: __dirname + "/dist",
+    filename: `path-kaltura-player${PROD ? `-v${packageData.version}` : ''}.js`,
+    libraryTarget: 'umd',
+    // `library` determines the name of the global variable
+    library: '[name]',
+      umdNamedDefine: true
+  },
+  devtool: "source-map",
+  plugins: plugins,
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        loader: "ts-loader",
-        exclude: /node_modules/
+        use: [
+          {
+            loader: "ts-loader"
+          }
+        ],
+        exclude: [/node_modules/]
       },
       {
         test: /\.scss$/,
@@ -27,7 +55,6 @@ module.exports = {
       }
     ]
   },
-
   resolve: {
     extensions: [".tsx", ".ts", ".js"]
   }

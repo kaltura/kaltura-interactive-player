@@ -28,8 +28,13 @@
     }
   ],
   "scripts": {
-    "start": "webpack-dev-server --open ",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "webpack --watch & webpack-dev-server --dev",
+    "clean": "rm -rf ./dist",
+    "prebuild": "npm run clean",
+    "prebuild:dev": "npm run clean",
+    "prestart": "npm run clean",
+    "build": "NODE_ENV=production webpack",
+    "build:dev": "webpack"
   },
   "dependencies": {
     "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
@@ -45,8 +50,11 @@
     "style-loader": "^0.23.1",
     "ts-loader": "^4.4.2",
     "typescript": "^3.0.1",
+    "uglifyjs-webpack-plugin": "^2.0.1",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.5"
+    "webpack-concat-plugin": "^3.0.0",
+    "webpack-dev-server": "^3.1.5",
+    "webpack-livereload-plugin": "^2.1.1"
   }
 }

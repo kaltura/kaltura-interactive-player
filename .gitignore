@@ -6,3 +6,6 @@
 .idea
 bundle.js
 npm-debug.log*
+
+dist
+index.html
