@@ -2,7 +2,11 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
 import { PlayersFactory } from "./PlayersFactory";
-import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
+import {
+  BufferEvent,
+  PersistencyType,
+  PlayersBufferManager
+} from "./PlayersBufferManager";
 
 declare var Rapt: any;
 
@@ -31,7 +35,7 @@ export const PlaybackState = {
  * This class creates and manages BufferManager
  */
 export class PlayersManager extends Dispatcher {
-  private PlayersBufferManager: PlayersBufferManager;
+  private playersBufferManager: PlayersBufferManager;
   readonly playersFactory: PlayersFactory;
   public currentPlayer: any;
   public currentNode: RaptNode;
@@ -67,10 +71,10 @@ export class PlayersManager extends Dispatcher {
     );
 
     // create the PlayersBufferManager
-    this.PlayersBufferManager = new PlayersBufferManager(this.playersFactory);
+    this.playersBufferManager = new PlayersBufferManager(this.playersFactory);
     // listen to all BufferEvent types from PlayersBufferManager
     for (let o of Object.values(BufferEvent)) {
-      this.PlayersBufferManager.addListener(o, (event: any) => {
+      this.playersBufferManager.addListener(o, (event: any) => {
         switch (event.type) {
           // when a player was created but was not cached - this is its 'first play' event
           case BufferEvent.CATCHUP:
@@ -165,12 +169,14 @@ export class PlayersManager extends Dispatcher {
       this.currentPlayer.play();
       return;
     }
-    const nextPlayer = this.PlayersBufferManager.getPlayer(id);
+    const nextPlayer = this.playersBufferManager.getPlayer(id);
     // edge case where node is "switching" to itself
     if (nextPlayer) {
+      this.removeListeners();
+      this.addListenersToPlayer(nextPlayer);
       // found a player !
-      const nextPlayersDivId = this.PlayersBufferManager.getPlayerDivId(id);
-      const prevPlayerDivId = this.PlayersBufferManager.getPlayerDivId(
+      const nextPlayersDivId = this.playersBufferManager.getPlayerDivId(id);
+      const prevPlayerDivId = this.playersBufferManager.getPlayerDivId(
         this.currentNode.entryId
       );
 
@@ -206,16 +212,18 @@ export class PlayersManager extends Dispatcher {
       let nextEntries: string[] = nextNodes.map(
         (node: RaptNode) => node.entryId
       );
-      this.PlayersBufferManager.purgePlayers(id, nextEntries);
+      this.playersBufferManager.purgePlayers(id, nextEntries);
 
       // player does not exist - create it in autoplay mode
-      this.currentPlayer = this.PlayersBufferManager.createPlayer(
+      this.currentPlayer = this.playersBufferManager.createPlayer(
         id,
         true,
         (entryId: string) => {
           this.loadNextByNode(this.currentNode);
         }
       );
+      this.removeListeners();
+      this.addListenersToPlayer(this.currentPlayer);
     }
   }
 
@@ -227,8 +235,8 @@ export class PlayersManager extends Dispatcher {
     const nextNodes: RaptNode[] = this.getNextNodes(node);
     // convert to a list of entryIds
     let nextEntries: string[] = nextNodes.map((node: RaptNode) => node.entryId);
-    this.PlayersBufferManager.purgePlayers(node.entryId, nextEntries);
-    this.PlayersBufferManager.prepareNext(nextEntries);
+    this.playersBufferManager.purgePlayers(node.entryId, nextEntries);
+    this.playersBufferManager.prepareNext(nextEntries);
   }
 
   /**
@@ -317,6 +325,51 @@ export class PlayersManager extends Dispatcher {
       return;
     }
     this.raptEngine.execute(command);
+  }
+
+  removeListeners() {
+    // todo - implement removeEventsListeners
+  }
+
+  addListenersToPlayer(player: any) {
+    if (player) {
+      player.addEventListener(player.Event.Core.TEXT_TRACK_CHANGED, event => {
+        this.playersBufferManager.applyToPlayers(
+          PersistencyType.captions,
+          event.payload.selectedTextTrack._language,
+          player
+        );
+      });
+      player.addEventListener(player.Event.Core.AUDIO_TRACK_CHANGED, event => {
+        this.playersBufferManager.applyToPlayers(
+          PersistencyType.audioTrack,
+          event.payload.selectedAudioTrack._language,
+          player
+        );
+      });
+      player.addEventListener(player.Event.Core.RATE_CHANGE, () => {
+        this.playersBufferManager.applyToPlayers(
+          PersistencyType.rate,
+          this.currentPlayer.playbackRate,
+          player
+        );
+      });
+      player.addEventListener(player.Event.Core.VOLUME_CHANGE, () => {
+        this.playersBufferManager.applyToPlayers(
+          PersistencyType.volume,
+          this.currentPlayer.volume,
+          player
+        );
+      });
+      player.addEventListener(player.Event.Core.VIDEO_TRACK_CHANGED, event => {
+        // TODO handle quality later
+        // this.playersBufferManager.applyToPlayers(
+        //   PersistencyType.quality,
+        //   event.payload
+        //     ,player
+        // );
+      });
+    }
   }
 
   //////////////////////  Rapt delegate functions  ////////////////////////

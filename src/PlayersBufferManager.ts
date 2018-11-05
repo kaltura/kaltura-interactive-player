@@ -1,5 +1,5 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { PlayersFactory } from "./PlayersFactory";
+import { persistancy, PlayersFactory } from "./PlayersFactory";
 
 export interface PlayerElement {
   entryId: string;
@@ -17,12 +17,27 @@ export const BufferEvent = {
   ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
 };
 
+export const enum PersistencyType {
+  // todo - post debug - remove values
+  captions = "captions",
+  audioTrack = "audioTrack",
+  rate = "rate",
+  volume = "volume",
+  quality = "quality"
+}
+
 export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
   private BUFFER_DONE_TIMEOUT: number = 100;
-  private players: PlayerElement[] = [];
-  private cachingPlayers: string[] = [];
+  private players: PlayerElement[] = []; // array of players instances that were created
+  private entriesToCache: string[] = []; // array of entry-ids to cache
+
+  // playback persistency
+  private currentAudioLanguage: string = undefined;
+  private currentCaptionsLanguage: string = undefined;
+  private currentPlaybackRate: number = 1;
+  private currentVolume: number = undefined;
 
   constructor(private playersFactory: PlayersFactory) {
     super();
@@ -54,7 +69,21 @@ export class PlayersBufferManager extends Dispatcher {
     playImmediate: boolean = false,
     readyFunc?: (data?: any) => any
   ): any {
-    const newPlayer = this.playersFactory.createPlayer(entryId, playImmediate);
+    let persistence: persistancy = {};
+    if (this.currentPlaybackRate) {
+      persistence.rate = this.currentPlaybackRate;
+    }
+    if (this.currentCaptionsLanguage) {
+      persistence.captions = this.currentCaptionsLanguage;
+    }
+    if (this.currentAudioLanguage) {
+      persistence.audio = this.currentAudioLanguage;
+    }
+    const newPlayer = this.playersFactory.createPlayer(
+      entryId,
+      playImmediate,
+      persistence
+    );
     // store locally
     const playerElement: PlayerElement = {
       entryId: entryId,
@@ -124,7 +153,7 @@ export class PlayersBufferManager extends Dispatcher {
     for (let playerId of entriseToDestroy) {
       this.destroyPlayer(playerId);
     }
-    this.cachingPlayers = [];
+    this.entriesToCache = [];
   }
 
   /**
@@ -142,16 +171,86 @@ export class PlayersBufferManager extends Dispatcher {
       })
       .filter((entry, i, all) => i === all.indexOf(entry)); // remove duplicates
 
-    this.cachingPlayers = entries;
+    this.entriesToCache = entries;
     this.cacheNextPlayer();
+  }
+
+  applyToPlayers(
+    attribute: PersistencyType,
+    value: number | string,
+    currentPlayer: any
+  ) {
+    switch (attribute) {
+      case PersistencyType.captions:
+        // iterate all buffered players
+        this.currentCaptionsLanguage = value.toString();
+        for (const playerElement of this.players) {
+          if (playerElement.player === currentPlayer) {
+            // no need to apply to the current player - if we do we get to infinity loop
+            continue;
+          }
+          const textTracks = playerElement.player.getTracks(
+            this.playersFactory.playerLibrary.core.TrackType.TEXT
+          );
+          const textTrack = textTracks.find(
+            track => track.language === this.currentCaptionsLanguage
+          );
+          if (textTrack) {
+            playerElement.player.selectTrack(textTrack);
+          }
+        }
+        break;
+      case PersistencyType.audioTrack:
+        // iterate all buffered players
+        this.currentAudioLanguage = value.toString();
+        for (const playerElement of this.players) {
+          if (playerElement.player === currentPlayer) {
+            // no need to apply to the current player - if we do we get to infinity loop
+            continue;
+          }
+          const audioTracks = playerElement.player.getTracks(
+            this.playersFactory.playerLibrary.core.TrackType.AUDIO
+          );
+          const audioTrack = audioTracks.find(
+            track => track.language === this.currentCaptionsLanguage
+          );
+          if (audioTrack) {
+            playerElement.player.selectTrack(audioTrack);
+          }
+        }
+        break;
+      case PersistencyType.rate:
+        this.currentPlaybackRate = Number(value);
+        for (const playerElement of this.players) {
+          if (playerElement.player === currentPlayer) {
+            // no need to apply to the current player - if we do we get to infinity loop
+            continue;
+          }
+          playerElement.player.playbackRate = this.currentPlaybackRate;
+        }
+        break;
+      case PersistencyType.volume:
+          this.currentVolume = currentPlayer.volume;
+          for (const playerElement of this.players) {
+              if (playerElement.player === currentPlayer) {
+                  // no need to apply to the current player - if we do we get to infinity loop
+                  continue;
+              }
+              playerElement.player.volume = this.currentVolume;
+          }
+        break;
+      case PersistencyType.quality:
+        // todo - consult product if we want to implement this
+        break;
+    }
   }
 
   /**
    * Grab the next player from this.cachingPlayers and cache it. if this.cachingPlayers is empty we are done caching
    */
   private cacheNextPlayer() {
-    if (this.cachingPlayers.length) {
-      const entryToCache = this.cachingPlayers.shift();
+    if (this.entriesToCache.length) {
+      const entryToCache = this.entriesToCache.shift();
       this.createPlayer(entryToCache, false, () => {
         this.cacheNextPlayer();
       });
