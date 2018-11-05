@@ -106,7 +106,7 @@
 
 	};
 
-	var kip = PathKalturaPlayer.setup(config); // todo - maybe we can save kalturaPlayer param? // Itay\Oren
+	var kip = PathKalturaPlayer.setup(config);
 	kip.loadMedia({entryId: selectedItem.id});
 	var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup","allUnbuffered"];
 	var apiEvents = [
