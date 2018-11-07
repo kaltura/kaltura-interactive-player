@@ -18,6 +18,7 @@ export class PlayersFactory extends Dispatcher {
     readonly mainDiv: HTMLElement,
     readonly raptProjectId: string,
     readonly playerLibrary: any,
+    private analyticsInterruptFunc: any,
     private config: any
   ) {
     super();
@@ -82,6 +83,11 @@ export class PlayersFactory extends Dispatcher {
     // clone the base config
     let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = divName;
+    // > v 0.35
+    newConf.plugins = {};
+    newConf.plugins.kava = {};
+    newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
+    newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
     if (!playImmediate) {
       newConf.playback = {
         autoplay: false,
@@ -106,8 +112,8 @@ export class PlayersFactory extends Dispatcher {
           template: props => this.playbackPreset(props)
         }
       ];
-      // newConf.ui = newConf.ui || {};
-      // newConf.ui.customPreset = uis;
+      newConf.ui = newConf.ui || {};
+      newConf.ui.customPreset = uis;
     } catch (e) {
       console.log("error in applying V3 custom preset");
     }

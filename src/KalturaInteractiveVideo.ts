@@ -231,4 +231,5 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 }
 
+
 export default KalturaInteractiveVideo;

@@ -44,6 +44,7 @@ export class PlayersManager extends Dispatcher {
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
   private raptEngine: any;
+  private model: any = undefined;
 
   constructor(
     private config: any,
@@ -62,11 +63,37 @@ export class PlayersManager extends Dispatcher {
     // adding the rapt layer to the main-app div
     this.mainDiv.appendChild(this.element);
 
+    /**
+     * This function interrupts the player kava beacons, alter some attributes (in case of need) and prevents some
+     * of the events.
+     * @param model
+     */
+    const analyticsInterruptFunc = (model: any): boolean => {
+      //TODO - fix
+      if (!this.model) {
+        this.model = model; // store model data for future use of Rapt sending data
+      }
+      model.rootEntryId = this.raptProjectId;
+      switch (model.eventType) {
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+          return false; // don't send quartiles events
+        case 1:
+        case 2:
+        case 3:
+          model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
+      }
+      return true;
+    };
+
     // create a PlayersFactory instance
     this.playersFactory = new PlayersFactory(
       this.mainDiv,
       this.raptProjectId,
       this.playerLibrary,
+      analyticsInterruptFunc,
       this.config
     );
 
@@ -392,6 +419,9 @@ export class PlayersManager extends Dispatcher {
 
   event(event: any) {
     if (event.type === "hotspot:click") {
+      let tmpModel = Object.assign({}, this.model);
+      tmpModel.eventType = 44;
+      this.currentPlayer.plugins.kava.sendAnalytics(tmpModel);
       this.clickedHotspotId = event.payload.hotspot.id;
     }
     if (event.type === "project:ready") {
