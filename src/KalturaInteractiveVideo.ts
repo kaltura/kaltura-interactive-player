@@ -92,6 +92,7 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param raptGraphData
    */
   dataLoaded(raptGraphData: object): void {
+    raptGraphData["account"] = { id: this.config.provider.partnerId };
     this._data = raptGraphData;
     this.playerManager = new PlayersManager(
       Object.assign({}, this.config),
@@ -127,11 +128,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       if (event.type === "player:timeupdate") {
         return;
       }
-      console.warn(
-        // "Rapt: > " + event.type + event.payload ? event.payload : ""
-        "Rapt: > ",
-        event
-      );
+      console.warn("Rapt: > ", event);
     }
 
     //this is a legacy API
@@ -193,18 +190,6 @@ class KalturaInteractiveVideo extends Dispatcher {
     return this._data;
   }
 
-  // public get metadata(): any {
-  //   debugger;
-  //   if (
-  //     this.playerManager &&
-  //     this.playerManager.raptEngine &&
-  //     this.playerManager.raptEngine.metadata
-  //   ) {
-  //     return this.playerManager.raptEngine.metadata;
-  //   }
-  //   return {};
-  // }
-
   public get currentTime(): number {
     return this.playerManager.currentPlayer.currentTime;
   }
@@ -228,6 +213,7 @@ class KalturaInteractiveVideo extends Dispatcher {
   public get muted(): number {
     return this.playerManager.currentPlayer.muted;
   }
+
   public get playbackRate(): number {
     return this.playerManager.currentPlayer.playbackRate;
   }
@@ -245,6 +231,41 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.legacyCallback = callback;
     } else {
       this.addListener(eventName, callback);
+    }
+  }
+  // legacy API - sendNotification with rapt command data
+  public sendNotification(doCommand: string, commandObject: any) {
+    this.playerManager.execute(commandObject);
+  }
+  // direct execute
+  public execute(commandObject: any) {
+    this.playerManager.execute(commandObject);
+  }
+
+  public evaluate(key: string): any {
+    if (key === "{raptMedia.info}") {
+      let dataCopy = Object.assign({}, this._data);
+      dataCopy.player = {
+        currentPlayer: this.playerManager.currentPlayer,
+        currentNode: this.playerManager.currentNode,
+        currentVideo: this.playerManager.currentNode.entryId
+      };
+      dataCopy.project = {
+        projectId: this.playerManager.raptProjectId
+      };
+      dataCopy.videos = this._data.nodes.map((item: RaptNode) => {
+        let o: any = {};
+        o.entryId = item.entryId;
+        o.id = item.id;
+        o.name = item.name;
+        if (o.customData) {
+          o.customData = item.customData;
+        }
+        return o;
+      });
+      return dataCopy;
+    } else if (this.data[key]) {
+      return this.data[key];
     }
   }
 }

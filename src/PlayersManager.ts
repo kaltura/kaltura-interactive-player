@@ -43,13 +43,13 @@ export class PlayersManager extends Dispatcher {
   private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
-  private raptEngine: any;
+  public raptEngine: any;
   private model: any = undefined;
 
   constructor(
     private config: any,
     private playerLibrary: any,
-    private raptProjectId: string,
+    readonly raptProjectId: string,
     private raptData: any,
     private mainDiv: HTMLElement
   ) {
@@ -344,13 +344,14 @@ export class PlayersManager extends Dispatcher {
     return arrayToCache;
   }
 
-  public execute(command) {
+  public execute(command: any) {
     if (!this.raptEngine) {
       console.log(
         "WARNING: Rapt Media commands received before initialization is complete"
       );
       return;
     }
+    debugger;
     this.raptEngine.execute(command);
   }
 
