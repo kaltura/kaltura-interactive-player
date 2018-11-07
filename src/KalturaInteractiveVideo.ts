@@ -41,11 +41,9 @@ class KalturaInteractiveVideo extends Dispatcher {
   private client: KipClient; // Backend Client
   public state: KipState = KipState.preinit;
   private _data: any; // container to data API
+  private legacyCallback: (event: any) => void; // legacy API generic callback func
 
-  constructor(
-    private config: any,
-    private playerLibrary: any
-  ) {
+  constructor(private config: any, private playerLibrary: any) {
     super();
     this.state = KipState.init;
   }
@@ -135,6 +133,17 @@ class KalturaInteractiveVideo extends Dispatcher {
         event
       );
     }
+
+    //this is a legacy API
+    if (this.legacyCallback) {
+      let legacyEvent: any = { type: event.type };
+      // send the payload only if it exist
+      if (Object.getOwnPropertyNames(event.payload).length) {
+        legacyEvent.payload = event.payload;
+      }
+      this.legacyCallback(legacyEvent);
+    }
+
     // expose API, add the current node and
     this.dispatch(event);
   }
@@ -229,7 +238,15 @@ class KalturaInteractiveVideo extends Dispatcher {
       payload: { destination: locator }
     });
   }
-}
 
+  // Legacy API - kBind support
+  public kBind(eventName: string, callback: (event: any) => void) {
+    if (eventName === "raptMedia_event") {
+      this.legacyCallback = callback;
+    } else {
+      this.addListener(eventName, callback);
+    }
+  }
+}
 
 export default KalturaInteractiveVideo;
