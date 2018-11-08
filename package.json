@@ -1,6 +1,6 @@
 {
   "name": "kaltura-interactive-player",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "license": "AGPL-3.0",
@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "start": "webpack --watch & webpack-dev-server --dev",
-    "clean": "rm -rf ./dist",
+    "clean": "rm -rf ./dist && node scripts/setversion.js",
     "prebuild": "npm run clean",
     "prebuild:dev": "npm run clean",
     "prestart": "npm run clean",
