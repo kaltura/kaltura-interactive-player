@@ -9,3 +9,4 @@ npm-debug.log*
 
 dist
 index.html
+version.ts
