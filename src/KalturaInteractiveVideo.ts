@@ -39,15 +39,16 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   loadMedia(obj: any): void {
-    if (!obj || !obj.entryId) {
-      // todo - handle errors API
+    if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
       return;
     }
+    // support both entryId and playlistId
+    const entryPoint: string = obj.playlistId ? obj.playlistId : obj.entryId;
     // create a top-level container
     this.mainDiv = CreateElement(
       "div",
-      "kiv-container__" + obj.entryId,
+      "kiv-container__" + entryPoint,
       "kiv-container"
     );
     document.getElementById(this.config.targetId).appendChild(this.mainDiv);
@@ -60,7 +61,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       ks: ks,
       partnerId: this.config.provider.partnerId
     }); //TODO add serviceUrl
-    this.playlistId = obj.entryId;
+    this.playlistId = entryPoint;
     this.client
       .loadRaptData(this.playlistId)
       .then(graphData => {
