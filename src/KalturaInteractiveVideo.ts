@@ -135,7 +135,7 @@ class KalturaInteractiveVideo extends Dispatcher {
     if (this.legacyCallback) {
       let legacyEvent: any = { type: event.type };
       // send the payload only if it exist
-      if (Object.getOwnPropertyNames(event.payload).length) {
+      if (event.payload && Object.getOwnPropertyNames(event.payload).length) {
         legacyEvent.payload = event.payload;
       }
       this.legacyCallback(legacyEvent);
