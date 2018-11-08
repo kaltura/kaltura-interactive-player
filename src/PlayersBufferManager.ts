@@ -230,14 +230,14 @@ export class PlayersBufferManager extends Dispatcher {
         }
         break;
       case PersistencyType.volume:
-          this.currentVolume = currentPlayer.volume;
-          for (const playerElement of this.players) {
-              if (playerElement.player === currentPlayer) {
-                  // no need to apply to the current player - if we do we get to infinity loop
-                  continue;
-              }
-              playerElement.player.volume = this.currentVolume;
+        this.currentVolume = currentPlayer.volume;
+        for (const playerElement of this.players) {
+          if (playerElement.player === currentPlayer) {
+            // no need to apply to the current player - if we do we get to infinity loop
+            continue;
           }
+          playerElement.player.volume = this.currentVolume;
+        }
         break;
       case PersistencyType.quality:
         // todo - consult product if we want to implement this

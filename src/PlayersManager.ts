@@ -260,6 +260,19 @@ export class PlayersManager extends Dispatcher {
    * @param node
    */
   private loadNextByNode(node: RaptNode) {
+    // prevent caching on Safari and if config set to no-cache
+    const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
+      navigator.userAgent
+    );
+    if (
+      isSafari ||
+      (this.config.rapt &&
+        this.config.rapt.hasOwnProperty("bufferNextNodes") &&
+        this.config.rapt.bufferNextNodes === false)
+    ) {
+      return;
+    }
+
     const nextNodes: RaptNode[] = this.getNextNodes(node);
     // convert to a list of entryIds
     let nextEntries: string[] = nextNodes.map((node: RaptNode) => node.entryId);
