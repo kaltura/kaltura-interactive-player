@@ -26,34 +26,19 @@ const API_EVENTS = [
   "player:volumechange"
 ];
 
-export const enum KipState {
-  "preinit",
-  "init",
-  "loading",
-  "playing",
-  "error"
-}
-
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
   private mainDiv: HTMLElement;
   private playlistId: string = "";
   private client: KipClient; // Backend Client
-  public state: KipState = KipState.preinit;
   private _data: any; // container to data API
   private legacyCallback: (event: any) => void; // legacy API generic callback func
 
   constructor(private config: any, private playerLibrary: any) {
     super();
-    this.state = KipState.init;
   }
 
   loadMedia(obj: any): void {
-    // if (this.state !== KipState.init) {
-    //   // todo - handle errors API
-    //   this.printMessage("Error", "loadMedia should be called after setup");
-    //   return;
-    // }
     if (!obj || !obj.entryId) {
       // todo - handle errors API
       this.printMessage("Error", "missing rapt project id");

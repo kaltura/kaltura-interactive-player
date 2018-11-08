@@ -74,6 +74,7 @@ export class PlayersManager extends Dispatcher {
         this.model = model; // store model data for future use of Rapt sending data
       }
       model.rootEntryId = this.raptProjectId;
+      model.nodeId = this.currentNode.id;
       switch (model.eventType) {
         case 11:
         case 12:
@@ -351,7 +352,6 @@ export class PlayersManager extends Dispatcher {
       );
       return;
     }
-    debugger;
     this.raptEngine.execute(command);
   }
 
@@ -422,7 +422,7 @@ export class PlayersManager extends Dispatcher {
     if (event.type === "hotspot:click") {
       let tmpModel = Object.assign({}, this.model);
       tmpModel.eventType = 44;
-      this.currentPlayer.plugins.kava.sendAnalytics(tmpModel);
+      // this.currentPlayer.plugins.kava.sendAnalytics(tmpModel);
       this.clickedHotspotId = event.payload.hotspot.id;
     }
     if (event.type === "project:ready") {
