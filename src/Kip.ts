@@ -1,7 +1,7 @@
 import KalturaInteractiveVideo from "./KalturaInteractiveVideo";
 import "./Kip.scss";
 import "script-loader!../libs/engine.min.js";
-import { VERSION } from "./version";
+import { VERSION } from "../version";
 
 declare var KalturaPlayer: any;
 

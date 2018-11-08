@@ -1,5 +1,5 @@
 const fs = require("fs");
-const versionFile = "./src/version.ts";
+const versionFile = "./version.ts";
 const cyan = "\x1b[36m%s\x1b[0m";
 const { version: version } = require("../package.json");
 
