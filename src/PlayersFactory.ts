@@ -10,6 +10,11 @@ export interface persistancy {
   rate?: number;
 }
 
+export interface playerTuple {
+  player: any;
+  playerContainer: HTMLElement;
+}
+
 export class PlayersFactory extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   readonly playbackPreset: any;
@@ -35,15 +40,12 @@ export class PlayersFactory extends Dispatcher {
    * @param cachePlayer - whether this player is a cache-player or not. If not - it will set autoplay to true
    */
   public createPlayer(
-    entryId: string,
-    playImmediate: boolean = false,
-    persistencyObject?: persistancy
-  ): any {
+          entryId: string,
+          playImmediate: boolean = false,
+          persistencyObject?: persistancy
+  ): playerTuple {
     const divName: string = this.raptProjectId + "__" + entryId;
     let playerClass = "kiv-player kiv-cache-player";
-    if (playImmediate) {
-      playerClass += " current-playing";
-    }
     const playerDiv = CreateElement("div", divName, playerClass);
     let conf: any = this.getPlayerConf(divName, playImmediate);
 
@@ -68,7 +70,7 @@ export class PlayersFactory extends Dispatcher {
       prePlayback: false
     });
     newPlayer.loadMedia({ entryId: entryId });
-    return newPlayer;
+    return { player: newPlayer, playerContainer: playerDiv };
   }
 
   /**

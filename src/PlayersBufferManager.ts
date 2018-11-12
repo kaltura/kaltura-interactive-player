@@ -2,6 +2,7 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { persistancy, PlayersFactory } from "./PlayersFactory";
 
 export interface PlayerElement {
+  playerContainer: HTMLElement;
   entryId: string;
   player: any;
   readyFunc?: (entryId: string) => string;
@@ -47,12 +48,15 @@ export class PlayersBufferManager extends Dispatcher {
    * Look if there is a relevant player that was created already
    * @param entryId
    */
-  public getPlayer(entryId: string): any | null {
+  public popPlayerById(entryId: string): any | null {
     // look if there is a player with this entry-id
-    const currentPlayerEl = this.getPlayerByEntryId(entryId);
-    if (currentPlayerEl) {
-      return currentPlayerEl.player;
+    const currentPlayer = this.getPlayerByEntryId(entryId);
+
+    if (currentPlayer) {
+      return currentPlayer.player;
     }
+
+    this.players = this.players.filter(player => player !== currentPlayer);
     return null;
   }
 
@@ -79,19 +83,21 @@ export class PlayersBufferManager extends Dispatcher {
     if (this.currentAudioLanguage) {
       persistence.audio = this.currentAudioLanguage;
     }
-    const newPlayer = this.playersFactory.createPlayer(
+    const { player, playerContainer } = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
       persistence
     );
     // store locally
     const playerElement: PlayerElement = {
+      playerContainer: playerContainer,
       entryId: entryId,
-      player: newPlayer,
+      player: player,
       readyFunc
     };
     this.players.push(playerElement);
-    this.checkIfBuffered(newPlayer, entryId => {
+
+    this.checkIfBuffered(player, entryId => {
       this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
       // call the function
       const playerEl = this.getPlayerByEntryId(entryId);
@@ -99,14 +105,14 @@ export class PlayersBufferManager extends Dispatcher {
         playerEl.readyFunc(entryId);
       }
     });
-    return newPlayer;
+    return player;
   }
   /**
    * Check if the current content of bufferPlayer was loaded;
    * @param callback
    * @param bufferPlayer
    */
-  private checkIfBuffered(
+  public checkIfBuffered(
     bufferPlayer: any,
     callback: (entryId: string) => void
   ) {
@@ -138,7 +144,7 @@ export class PlayersBufferManager extends Dispatcher {
           bufferPlayer.config.sources &&
           bufferPlayer.config.sources.id
         )
-        callback(bufferPlayer.getMediaInfo().entryId);
+          callback(bufferPlayer.getMediaInfo().entryId);
       }, this.BUFFER_DONE_TIMEOUT);
     } else {
       // not buffered yet - check again
@@ -152,23 +158,18 @@ export class PlayersBufferManager extends Dispatcher {
    * Clear all current players
    * @param entryId
    */
-  public purgePlayers(nextEntryId: string, entriesToCache: string[]) {
+  public purgePlayers(exceptList: string[] = []) {
+    const newPlayersList: PlayerElement[] = [];
     // find which players we want to destroy and which to keep
-    let entriseToDestroy: string[] = this.players
-      .filter((ple: PlayerElement) => {
-        if (
-          ple.entryId === nextEntryId ||
-          entriesToCache.some(entryId => entryId === ple.entryId)
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .map(itm => itm.entryId);
+    this.players.forEach(player => {
+      if (exceptList.some(entryId => entryId === player.entryId)) {
+        newPlayersList.push(player);
+      } else {
+        this.destroyPlayer(player);
+      }
+    });
 
-    for (let playerId of entriseToDestroy) {
-      this.destroyPlayer(playerId);
-    }
+    this.players = newPlayersList;
     this.entriesToCache = [];
   }
 
@@ -286,21 +287,16 @@ export class PlayersBufferManager extends Dispatcher {
     return null;
   }
 
-  private destroyPlayer(entryId: string) {
-    const playerEl: PlayerElement = this.getPlayerByEntryId(entryId);
-    if (playerEl) {
-      this.dispatch({ type: BufferEvent.DESTROYING, payload: entryId });
+  private destroyPlayer(player: PlayerElement) {
+    if (player) {
+      this.dispatch({ type: BufferEvent.DESTROYING, payload: player.entryId });
       // destroy the player
-      playerEl.player.destroy();
+      player.player.destroy();
       // remove from DOM
       this.playersFactory.mainDiv
-        .querySelector("[id='" + this.getPlayerDivId(entryId) + "']")
+        .querySelector("[id='" + player.playerContainer.id + "']")
         .remove();
-      // remove from this.players array
-      this.players = this.players.filter(
-        (player: PlayerElement) => player.entryId !== entryId
-      );
-      this.dispatch({ type: BufferEvent.DESTROYED, payload: entryId });
+      this.dispatch({ type: BufferEvent.DESTROYED, payload: player.entryId });
     }
   }
 }
