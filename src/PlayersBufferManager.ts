@@ -111,6 +111,22 @@ export class PlayersBufferManager extends Dispatcher {
     callback: (entryId: string) => void
   ) {
     if (
+      bufferPlayer.duration &&
+      bufferPlayer.duration !== NaN &&
+      bufferPlayer.duration < 7
+    ) {
+      // short entry - mark it as buffered
+      setTimeout(() => {
+        if (
+          bufferPlayer.config &&
+          bufferPlayer.config.sources &&
+          bufferPlayer.config.sources.id
+        )
+          callback(bufferPlayer.getMediaInfo().entryId);
+      }, this.BUFFER_DONE_TIMEOUT);
+      return;
+    }
+    if (
       bufferPlayer.buffered &&
       bufferPlayer.buffered.length &&
       bufferPlayer.buffered.end &&
@@ -122,7 +138,7 @@ export class PlayersBufferManager extends Dispatcher {
           bufferPlayer.config.sources &&
           bufferPlayer.config.sources.id
         )
-          callback(bufferPlayer.config.sources.id); // optimize later
+        callback(bufferPlayer.getMediaInfo().entryId);
       }, this.BUFFER_DONE_TIMEOUT);
     } else {
       // not buffered yet - check again
