@@ -3,6 +3,7 @@ import { KipClient } from "./KipClient";
 import { CreateElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
+import {PlayersDomManager} from "./PlayersDomManager";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -28,30 +29,32 @@ const API_EVENTS = [
 
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
-  private mainDiv: HTMLElement;
+  private mainDiv: HTMLElement; // TODO should move all executions to use the playerDomManager and remove this property
   private playlistId: string = "";
   private client: KipClient; // Backend Client
   private _data: any; // container to data API
   private legacyCallback: (event: any) => void; // legacy API generic callback func
+  private playerDomManager: PlayersDomManager;
 
   constructor(private config: any, private playerLibrary: any) {
     super();
   }
+
+  private isInitialized = false;
 
   loadMedia(obj: any): void {
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
       return;
     }
-    // support both entryId and playlistId
-    const entryPoint: string = obj.playlistId ? obj.playlistId : obj.entryId;
-    // create a top-level container
-    this.mainDiv = CreateElement(
-      "div",
-      "kiv-container__" + entryPoint,
-      "kiv-container"
-    );
-    document.getElementById(this.config.targetId).appendChild(this.mainDiv);
+
+    if (this.isInitialized) {
+      throw new Error('currently cannot load media twice to the same instance. Please use "setup" method again');
+    }
+    this.isInitialized = true;
+
+    this.playerDomManager = new PlayersDomManager(this.config.targetId);
+    this.mainDiv = this.playerDomManager.tempGetElement();
 
     let ks: string =
       this.config.session && this.config.session.ks
@@ -61,7 +64,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       ks: ks,
       partnerId: this.config.provider.partnerId
     }); //TODO add serviceUrl
-    this.playlistId = entryPoint;
+    this.playlistId = obj.playlistId || obj.entryId;
     this.client
       .loadRaptData(this.playlistId)
       .then(graphData => {
@@ -85,7 +88,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
-      this.mainDiv
+      this.playerDomManager
     );
 
     // reflect all buffering evnets to the API

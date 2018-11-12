@@ -1,12 +1,6 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { persistancy, PlayersFactory } from "./PlayersFactory";
+import { persistancy, PlayersFactory, RaptPlayer } from "./PlayersFactory";
 
-export interface PlayerElement {
-  playerContainer: HTMLElement;
-  entryId: string;
-  player: any;
-  readyFunc?: (entryId: string) => string;
-}
 
 export const BufferEvent = {
   BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
@@ -31,7 +25,7 @@ export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
   private BUFFER_DONE_TIMEOUT: number = 100;
-  private players: PlayerElement[] = []; // array of players instances that were created
+  private players: { [id: string]: RaptPlayer } = {};
   private entriesToCache: string[] = []; // array of entry-ids to cache
 
   // playback persistency
@@ -46,18 +40,10 @@ export class PlayersBufferManager extends Dispatcher {
 
   /**
    * Look if there is a relevant player that was created already
-   * @param entryId
+   * @param playerId
    */
-  public popPlayerById(entryId: string): any | null {
-    // look if there is a player with this entry-id
-    const currentPlayer = this.getPlayerByEntryId(entryId);
-
-    if (currentPlayer) {
-      return currentPlayer.player;
-    }
-
-    this.players = this.players.filter(player => player !== currentPlayer);
-    return null;
+  public getPlayer(playerId: string): RaptPlayer | null {
+    return this.players[playerId] || null;
   }
 
   public getPlayerDivId(entryId: string): string {
@@ -69,10 +55,10 @@ export class PlayersBufferManager extends Dispatcher {
    * @param playImmediate
    */
   public createPlayer(
-    entryId: string,
-    playImmediate: boolean = false,
-    readyFunc?: (data?: any) => any
-  ): any {
+    entryId: string
+  ): RaptPlayer {
+
+    // TODO move persistence to PM
     let persistence: persistancy = {};
     if (this.currentPlaybackRate) {
       persistence.rate = this.currentPlaybackRate;
@@ -83,29 +69,27 @@ export class PlayersBufferManager extends Dispatcher {
     if (this.currentAudioLanguage) {
       persistence.audio = this.currentAudioLanguage;
     }
-    const { player, playerContainer } = this.playersFactory.createPlayer(
+
+    const raptPlayer = this.playersFactory.createPlayer(
       entryId,
-      playImmediate,
+      false,
       persistence
     );
-    // store locally
-    const playerElement: PlayerElement = {
-      playerContainer: playerContainer,
-      entryId: entryId,
-      player: player,
-      readyFunc
-    };
-    this.players.push(playerElement);
 
-    this.checkIfBuffered(player, entryId => {
-      this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
-      // call the function
-      const playerEl = this.getPlayerByEntryId(entryId);
-      if (playerEl && playerEl.readyFunc) {
-        playerEl.readyFunc(entryId);
-      }
-    });
-    return player;
+    // store locally
+    this.players[raptPlayer.id] = raptPlayer;
+
+    // TODO move to dedicated service
+    // this.checkIfBuffered(player, entryId => {
+    //   this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
+    //   // call the function
+    //   const playerEl = this.getPlayerByEntryId(entryId);
+    //   if (playerEl && playerEl.readyFunc) {
+    //     playerEl.readyFunc(entryId);
+    //   }
+    // });
+
+    return raptPlayer;
   }
   /**
    * Check if the current content of bufferPlayer was loaded;
@@ -159,18 +143,21 @@ export class PlayersBufferManager extends Dispatcher {
    * @param entryId
    */
   public purgePlayers(exceptList: string[] = []) {
-    const newPlayersList: PlayerElement[] = [];
-    // find which players we want to destroy and which to keep
-    this.players.forEach(player => {
-      if (exceptList.some(entryId => entryId === player.entryId)) {
-        newPlayersList.push(player);
-      } else {
-        this.destroyPlayer(player);
+      const existingPlayerIds = Object.keys(this.players);
+      for (let playerId of existingPlayerIds) {
+          const player = this.players[playerId];
+          if (exceptList.indexOf(playerId) === -1) {
+              this.dispatch({type: BufferEvent.DESTROYING, payload: player.id});
+              player.player.destroy();
+              // remove from DOM
+              this.playersFactory.mainDiv
+                  .querySelector("[id='" + player.id + "']")
+                  .remove();
+              this.dispatch({type: BufferEvent.DESTROYED, payload: player.id});
+              delete this.players[playerId];
+          }
       }
-    });
-
-    this.players = newPlayersList;
-    this.entriesToCache = [];
+      this.entriesToCache = [];
   }
 
   /**
@@ -285,18 +272,5 @@ export class PlayersBufferManager extends Dispatcher {
       return player;
     }
     return null;
-  }
-
-  private destroyPlayer(player: PlayerElement) {
-    if (player) {
-      this.dispatch({ type: BufferEvent.DESTROYING, payload: player.entryId });
-      // destroy the player
-      player.player.destroy();
-      // remove from DOM
-      this.playersFactory.mainDiv
-        .querySelector("[id='" + player.playerContainer.id + "']")
-        .remove();
-      this.dispatch({ type: BufferEvent.DESTROYED, payload: player.entryId });
-    }
   }
 }

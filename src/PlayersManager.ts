@@ -8,6 +8,7 @@ import {
   PlayerElement,
   PlayersBufferManager
 } from "./PlayersBufferManager";
+import {PlayersDomManager} from "./PlayersDomManager";
 
 declare var Rapt: any;
 
@@ -60,7 +61,7 @@ export class PlayersManager extends Dispatcher {
     private playerLibrary: any,
     readonly raptProjectId: string,
     private raptData: any,
-    private mainDiv: HTMLElement
+    private domManager: PlayersDomManager
   ) {
     super();
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
@@ -100,7 +101,7 @@ export class PlayersManager extends Dispatcher {
 
     // create a PlayersFactory instance
     this.playersFactory = new PlayersFactory(
-      this.mainDiv,
+      this.domManager,
       this.raptProjectId,
       this.playerLibrary,
       analyticsInterruptFunc,
@@ -257,7 +258,7 @@ export class PlayersManager extends Dispatcher {
       return;
     }
     // check if bufferManager has a ready-to-play player
-    const nextPlayer = this.playersBufferManager.popPlayerById(newEntryId);
+    const nextPlayer = this.playersBufferManager.getPlayer(newEntryId);
     if (nextPlayer) {
       this.removeListeners();
       // found a player !
