@@ -1,5 +1,5 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { persistancy, PlayersFactory, RaptPlayer } from "./PlayersFactory";
+import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
 
 
 export const BufferEvent = {
@@ -25,7 +25,7 @@ export class PlayersBufferManager extends Dispatcher {
   readonly SECONDS_TO_BUFFER: number = 6;
   private BUFFER_CHECK_INTERVAL: number = 100;
   private BUFFER_DONE_TIMEOUT: number = 100;
-  private players: { [id: string]: RaptPlayer } = {};
+  private players: { [id: string]: KalturaPlayer } = {};
   private entriesToCache: string[] = []; // array of entry-ids to cache
 
   // playback persistency
@@ -33,16 +33,26 @@ export class PlayersBufferManager extends Dispatcher {
   private currentCaptionsLanguage: string = undefined;
   private currentPlaybackRate: number = 1;
   private currentVolume: number = undefined;
+  private _isAvailable: boolean;
 
   constructor(private playersFactory: PlayersFactory) {
     super();
+    this.initializeAvailablity();
   }
 
+  private initializeAvailablity(): void {
+      // prevent caching on Safari and if config set to no-cache
+      const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
+          navigator.userAgent
+      );
+
+      this._isAvailable = !isSafari;
+  }
   /**
    * Look if there is a relevant player that was created already
    * @param playerId
    */
-  public getPlayer(playerId: string): RaptPlayer | null {
+  public getPlayer(playerId: string): KalturaPlayer | null {
     const result = this.players[playerId] || null;
 
     if (result && result.player.currentTime > 0) {
@@ -52,21 +62,17 @@ export class PlayersBufferManager extends Dispatcher {
     return result;
   }
 
-  public getPlayerDivId(entryId: string): string {
-    return this.playersFactory.raptProjectId + "__" + entryId;
-  }
-
   public isAvailable(): boolean {
-
+    return this._isAvailable;
   }
-  /**
-   * Create a player by the entryId. If playImmediate is set to true play it, if not - this is a cache player
-   * @param entryId
-   * @param playImmediate
-   */
-  public createPlayer(
+
+  public disable(): void {
+    this._isAvailable = false;
+  }
+
+  private createPlayer(
     entryId: string
-  ): RaptPlayer {
+  ): KalturaPlayer {
 
     // TODO move persistence to PM
     let persistence: persistancy = {};
@@ -80,14 +86,14 @@ export class PlayersBufferManager extends Dispatcher {
       persistence.audio = this.currentAudioLanguage;
     }
 
-    const raptPlayer = this.playersFactory.createPlayer(
+    const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       false,
       persistence
     );
 
     // store locally
-    this.players[raptPlayer.id] = raptPlayer;
+    this.players[kalturaPlayer.id] = kalturaPlayer;
 
     // TODO move to dedicated service
     // this.checkIfBuffered(player, entryId => {
@@ -99,7 +105,7 @@ export class PlayersBufferManager extends Dispatcher {
     //   }
     // });
 
-    return raptPlayer;
+    return kalturaPlayer;
   }
   /**
    * Check if the current content of bufferPlayer was loaded;
@@ -158,15 +164,12 @@ export class PlayersBufferManager extends Dispatcher {
           const player = this.players[playerId];
           if (exceptList.indexOf(playerId) === -1) {
               this.dispatch({type: BufferEvent.DESTROYING, payload: player.id});
-              player.player.destroy();
-              // remove from DOM
-              this.playersFactory.domManager.tempGetElement()
-                  .querySelector("[id='" + player.id + "']")
-                  .remove();
-              this.dispatch({type: BufferEvent.DESTROYED, payload: player.id});
+              player.destroy();
               delete this.players[playerId];
+              this.dispatch({type: BufferEvent.DESTROYED, payload: player.id});
           }
       }
+
       this.entriesToCache = [];
   }
 
@@ -174,18 +177,11 @@ export class PlayersBufferManager extends Dispatcher {
    * The function starts to load the next players in cache-mode by the order of the array
    * @param entries
    */
-  public prepareNext(entries: string[]) {
+  public prepareNext(entries: string[] = []) {
     // optimize - no-point of caching a player if it is already cached.
-    entries = entries
-      .filter(entry => {
-        if (this.players.some(playerEl => playerEl.entryId === entry)) {
-          return false;
-        }
-        return true;
-      })
-      .filter((entry, i, all) => i === all.indexOf(entry)); // remove duplicates
+      this.entriesToCache = entries
+      .filter((entryId, i, all) => !!this.players[entryId] && i === all.indexOf(entryId));
 
-    this.entriesToCache = entries;
     this.cacheNextPlayer();
   }
 
@@ -264,23 +260,12 @@ export class PlayersBufferManager extends Dispatcher {
    */
   private cacheNextPlayer() {
     if (this.entriesToCache.length) {
-      const entryToCache = this.entriesToCache.shift();
-      this.createPlayer(entryToCache, false, () => {
-        this.cacheNextPlayer();
-      });
+      const nextEntryId = this.entriesToCache.shift();
+      const newPlayer = this.createPlayer(nextEntryId);
+      this.players[newPlayer.id] = newPlayer;
     } else {
       // done caching ! notify
       this.dispatch({ type: BufferEvent.ALL_BUFFERED });
     }
-  }
-
-  private getPlayerByEntryId(entryId: string): PlayerElement | null {
-    const player: PlayerElement = this.players.find(
-      (pl: PlayerElement) => pl.entryId === entryId
-    );
-    if (player) {
-      return player;
-    }
-    return null;
   }
 }

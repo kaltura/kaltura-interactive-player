@@ -1,7 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
-import { CreateElement } from "./helpers/CreateElement";
-import {PlayersFactory, playerTuple, RaptPlayer} from "./PlayersFactory";
+import { createElement } from "./helpers/CreateElement";
+import {PlayersFactory, KalturaPlayer} from "./PlayersFactory";
 import {
   BufferEvent,
   PersistencyType,
@@ -37,16 +37,16 @@ export const PlaybackState = {
  */
 export class PlayersManager extends Dispatcher {
   private playersBufferManager: PlayersBufferManager;
-  readonly playersFactory: PlayersFactory;
-  private activePlayer: RaptPlayer;
+  private playersFactory: PlayersFactory;
+  private activePlayer: KalturaPlayer;
   private activeNode: RaptNode;
-  public element: HTMLElement; // must be called 'element' because rapt delegate implementation
+  private element: HTMLElement; // must be called 'element' because rapt delegate implementation
   private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
   public raptEngine: any;
   private model: any = undefined;
-
+  private isAvailable: boolean;
 
   constructor(
     private config: any,
@@ -55,94 +55,118 @@ export class PlayersManager extends Dispatcher {
     private raptData: any,
     private domManager: PlayersDomManager
   ) {
-    super();
-    // create the rapt-engine layer. We must use this.element because of rapt delegate names
-    this.element = CreateElement(
-      "div",
-      this.raptProjectId + "-rapt-engine",
-      "kiv-rapt-engine"
-    );
-    // adding the rapt layer to the main-app div
-    this.mainDiv.appendChild(this.element);
+      super();
 
-    /**
-     * This function interrupts the player kava beacons, alter some attributes (in case of need) and prevents some
-     * of the events.
-     * @param model
-     */
-    const analyticsInterruptFunc = (model: any): boolean => {
-      //TODO - fix
-      if (!this.model) {
-        this.model = model; // store model data for future use of Rapt sending data
+      this.isAvailable = this.initPlayersFactory() && this.initPlayersBufferManager();
+
+      if (this.isAvailable) {
+          this.isAvailable = this.initRaptEngine();
       }
-      model.rootEntryId = this.raptProjectId;
-      model.nodeId = this.activeNode.id;
-      switch (model.eventType) {
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-          return false; // don't send quartiles events
-        case 1:
-        case 2:
-        case 3:
-          model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
+
+      if (this.isAvailable) {
+          document.addEventListener("fullscreenchange", () => this.exitHandler());
+          document.addEventListener("webkitfullscreenchange", () =>
+              this.exitHandler()
+          );
       }
+  }
+
+  private initPlayersBufferManager(): boolean {
+      // create the PlayersBufferManager
+      this.playersBufferManager = new PlayersBufferManager(this.playersFactory);
+      // listen to all BufferEvent types from PlayersBufferManager
+      for (let o of Object.values(BufferEvent)) {
+          this.playersBufferManager.addListener(o, (event: any) => {
+              // bubble up all events
+              this.dispatch(event);
+          });
+      }
+
+      if (this.config.rapt &&
+          this.config.rapt.hasOwnProperty("bufferNextNodes") &&
+          this.config.rapt.bufferNextNodes === false) {
+          this.playersBufferManager.disable();
+      }
+
       return true;
-    };
+  }
 
-    // create a PlayersFactory instance
-    this.playersFactory = new PlayersFactory(
-      this.domManager,
-      this.raptProjectId,
-      this.playerLibrary,
-      analyticsInterruptFunc,
-      this.config
-    );
+  private initPlayersFactory(): boolean {
+      /**
+       * This function interrupts the player kava beacons, alter some attributes (in case of need) and prevents some
+       * of the events.
+       * @param model
+       */
+      const analyticsInterruptFunc = (model: any): boolean => {
+          //TODO - fix
+          if (!this.model) {
+              this.model = model; // store model data for future use of Rapt sending data
+          }
+          model.rootEntryId = this.raptProjectId;
+          model.nodeId = this.activeNode.id;
+          switch (model.eventType) {
+              case 11:
+              case 12:
+              case 13:
+              case 14:
+                  return false; // don't send quartiles events
+              case 1:
+              case 2:
+              case 3:
+                  model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
+          }
+          return true;
+      };
 
-    // create the PlayersBufferManager
-    this.playersBufferManager = new PlayersBufferManager(this.playersFactory);
-    // listen to all BufferEvent types from PlayersBufferManager
-    for (let o of Object.values(BufferEvent)) {
-      this.playersBufferManager.addListener(o, (event: any) => {
-        // bubble up all events
-        this.dispatch(event);
+      // create a PlayersFactory instance
+      this.playersFactory = new PlayersFactory(
+          this.domManager,
+          this.raptProjectId,
+          this.playerLibrary,
+          analyticsInterruptFunc,
+          this.config
+      );
+
+      // listen to fullscreen events from the players
+      this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
+          this.toggleFullscreenState();
       });
-    }
 
-    document.addEventListener("fullscreenchange", () => this.exitHandler());
-    document.addEventListener("webkitfullscreenchange", () =>
-      this.exitHandler()
-    );
-
-    // listen to fullscreen events from the players
-    this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
-      this.toggleFullscreenState();
-    });
+      return true;
   }
 
-  public getPlayer(throwOnEmpty = false): any {
-    // TODO make this.currentItem scope private
-  }
+  private initRaptEngine(): boolean {
+      const {id: raptEngineId} = this.domManager.createDomElement('div', 'rapt-engine', 'kiv-rapt-engine');
+      // create the rapt-engine layer. We must use this.element because of rapt delegate names
 
-  public init() {
-    const { nodes, settings } = this.raptData;
-    const startNodeId = settings.startNodeId;
-    // retrieve the 1st node
-    const firstNode: RaptNode = nodes.find(function(element: any) {
-      return element.id === startNodeId;
-    });
+      const {nodes, settings} = this.raptData;
+      const startNodeId = settings.startNodeId;
+      // retrieve the 1st node
+      const firstNode: RaptNode = nodes.find(function (element: any) {
+          return element.id === startNodeId;
+      });
 
-    if (!firstNode) {
-      this.dispatch({ type: KipEvent.FIRST_PLAY_ERROR });
-    }
-    // load the 1st media
-    this.currentNode = firstNode;
-    this.initRapt();
+      if (!firstNode) {
+          this.dispatch({type: KipEvent.FIRST_PLAY_ERROR});
+          return false;
+      }
+
+      // load the 1st media
+      this.updateCurrentPlayer(null, this.activeNode);
+
+      this.raptEngine = new Rapt.Engine(this);
+      this.raptEngine.load(this.raptData);
+      this.resizeEngine();
+
+      setInterval(
+          () => this.tick(),
+          PlayersManager.PLAYER_TICK_INTERVAL
+      );
+
+      return true;
   }
 
   private toggleFullscreenState() {
-    let element: HTMLElement;
     const doc: any = document; // todo handle more elegantly
     if (doc.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
@@ -151,11 +175,9 @@ export class PlayersManager extends Dispatcher {
         doc.webkitExitFullscreen();
       }
     } else {
-      element = this.mainDiv;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      }
+        this.domManager.requestFullscreen();
     }
+
     setTimeout(() => {
       this.resizeEngine();
     }, 100); // todo - optimize / dom-event
@@ -168,27 +190,18 @@ export class PlayersManager extends Dispatcher {
     }
   }
 
-  // initiate Rapt-engine layer
-  private initRapt() {
-    this.raptEngine = new Rapt.Engine(this);
-    this.raptEngine.load(this.raptData);
-    this.resizeEngine();
-    setInterval(
-      () => this.tick(),
-      PlayersManager.PLAYER_TICK_INTERVAL
-    );
-  }
   private resizeEngine() {
+    const raptContainer = this.domManager.getContainer();
     this.raptEngine.resize({
-      width: this.mainDiv.offsetWidth,
-      height: this.mainDiv.offsetHeight
+      width: raptContainer.offsetWidth,
+      height: raptContainer.offsetHeight
     });
   }
 
   ////////////////////////////////////////////
   // store the player and the node
   private updateCurrentPlayer(
-      nextPlayer: RaptPlayer,
+      nextPlayer: KalturaPlayer,
       nextNode: RaptNode
   ): void {
     const hasActivePlayer = this.activePlayer;
@@ -219,7 +232,7 @@ export class PlayersManager extends Dispatcher {
       const expectList = this.getNextNodes(this.activeNode).map(
         node => node.entryId
       );
-      this.playersBufferManager.purgePlayers(expectList);
+      this.playersBufferManager.purgePlayers();
     }
 
 
@@ -275,31 +288,6 @@ export class PlayersManager extends Dispatcher {
   }
 
   /**
-   * Start the sequence of caching next entries from a given node
-   * @param node
-   */
-  private loadNextByNode(node: RaptNode) {
-    return;
-
-    // TODO move logic to buffer manager .isAvailable() method
-    // prevent caching on Safari and if config set to no-cache
-    const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
-      navigator.userAgent
-    );
-    if (
-      isSafari ||
-      (this.config.rapt &&
-        this.config.rapt.hasOwnProperty("bufferNextNodes") &&
-        this.config.rapt.bufferNextNodes === false)
-    ) {
-      return;
-    }
-    // end of todo
-
-    // this.playersBufferManager.prepareNext(nextEntries);
-  }
-
-  /**
    * Get a list of optional nodes for the given node
    *  @param node
    */
@@ -314,6 +302,7 @@ export class PlayersManager extends Dispatcher {
     return nodes;
   }
 
+  // TODO should be removed
   private getNodeByEntryId(entryId: string): RaptNode {
     // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
     const newNode: RaptNode = this.raptData.nodes.find(

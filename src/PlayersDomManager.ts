@@ -1,21 +1,55 @@
-import {CreateElement} from "./helpers/CreateElement";
-import {RaptPlayer} from "./PlayersFactory";
+import {createElement} from "./helpers/CreateElement";
+import {KalturaPlayer} from "./PlayersFactory";
 
 export class PlayersDomManager {
-    private static instanceCounter = 1;
-    private element: HTMLElement;
+    private static raptPlayerCounter = 1;
+    private static kalturaPlayerCounter = 1;
+
+    private namespace: string;
+    private raptContainer: HTMLElement;
 
     public tempGetElement() {
         // TODO remove when you complete refactoring
-        return this.element;
+        return this.raptContainer;
+    }
+
+    public getContainer() {
+        return this.raptContainer;
+    }
+
+    private createElementName(suffix: string) {
+        return `${this.namespace}-${suffix}`;
+    }
+
+    public createDomElement(
+        type: string,
+        idSuffix: string,
+        initialClasses?: string
+    ): { id: string, domElement: HTMLElement } {
+        const newElement = document.createElement(type);
+        const newElementId = this.createElementName(idSuffix);
+        newElement.setAttribute("id", newElementId);
+
+        if (initialClasses) {
+            newElement.setAttribute("class", initialClasses);
+        }
+
+        this.raptContainer.appendChild(newElement);
+        return { id: newElementId, domElement: newElement};
     }
 
     constructor(parentId: string) {
-        this.createElement(parentId);
+        this.createRaptPlayerElement(parentId);
     }
 
-    public changeActivePlayer(player: RaptPlayer): void {
-        this.element.querySelectorAll('.current-playing').forEach(playerElement => {
+    public requestFullscreen(): void {
+        if (this.raptContainer && this.raptContainer.requestFullscreen) {
+            this.raptContainer.requestFullscreen();
+        }
+    }
+
+    public changeActivePlayer(player: KalturaPlayer): void {
+        this.raptContainer.querySelectorAll('.current-playing').forEach(playerElement => {
             playerElement.classList.remove(
                 "current-playing"
             );
@@ -24,15 +58,28 @@ export class PlayersDomManager {
         player.container.classList.add("current-playing");
     }
 
-    private createElement(parentId: string) {
+    public createKalturaPlayerContainer() : { id: string, container: HTMLElement } {
+        const containerId = `kaltura-container__${PlayersDomManager.kalturaPlayerCounter}`;
+        PlayersDomManager.kalturaPlayerCounter++;
+
+        let playerClass = "kiv-player kiv-cache-player";
+        const kalturaContainer = createElement("div", containerId, playerClass);
+        this.raptContainer.appendChild(kalturaContainer);
+
+        return {id: containerId, container: kalturaContainer };
+    }
+
+    private createRaptPlayerElement(parentId: string) {
+        this.namespace = "kiv-container__" + PlayersDomManager.raptPlayerCounter;
+
         // create a top-level container
-        this.element = CreateElement(
+        this.raptContainer = createElement(
             "div",
-            "kiv-container__" + PlayersDomManager.instanceCounter,
+            this.namespace,
             "kiv-container"
         );
 
-        PlayersDomManager.instanceCounter++;
-        document.getElementById(parentId).appendChild(this.element);
+        PlayersDomManager.raptPlayerCounter++;
+        document.getElementById(parentId).appendChild(this.raptContainer);
     }
 }

@@ -1,6 +1,6 @@
 import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
-import { CreateElement } from "./helpers/CreateElement";
+import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
 import {PlayersDomManager} from "./PlayersDomManager";
@@ -104,7 +104,6 @@ class KalturaInteractiveVideo extends Dispatcher {
         this.dispatchApi(event);
       });
     }
-    this.playerManager.init();
   }
   /**
    * Expose API to the wrapping page/app
@@ -140,9 +139,9 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param text
    */
   printMessage(title: string, text: string = "") {
-    const messageDiv = CreateElement("div", null, "kiv-message__message");
-    const titleDiv = CreateElement("div", null, "kiv-message__title");
-    const bodeDiv = CreateElement("div", null, "kiv-message__body");
+    const messageDiv = createElement("div", null, "kiv-message__message");
+    const titleDiv = createElement("div", null, "kiv-message__title");
+    const bodeDiv = createElement("div", null, "kiv-message__body");
     titleDiv.innerHTML = title;
     bodeDiv.innerHTML = text;
     messageDiv.appendChild(titleDiv);
