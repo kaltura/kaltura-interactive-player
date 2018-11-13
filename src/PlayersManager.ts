@@ -53,10 +53,11 @@ export class PlayersManager extends Dispatcher {
     private domManager: PlayersDomManager
   ) {
     super();
-    this.isAvailable =
-      this.initPlayersFactory() && this.initPlayersBufferManager();
 
     this.initBufferManager();
+
+    this.isAvailable =
+      this.initPlayersFactory() && this.initPlayersBufferManager();
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
@@ -81,7 +82,8 @@ export class PlayersManager extends Dispatcher {
     // create the PlayersBufferManager
     this.playersBufferManager = new PlayersBufferManager(
       this.raptData,
-      this.playersFactory
+      this.playersFactory,
+      this.bufferManager
     );
     // listen to all BufferEvent types from PlayersBufferManager
     for (let o of Object.values(BufferEvent)) {
@@ -156,13 +158,13 @@ export class PlayersManager extends Dispatcher {
   }
 
   private initRaptEngine(): boolean {
-    const { id: raptEngineId } = this.domManager.createDomElement(
+    const { id: raptEngineId, domElement } = this.domManager.createDomElement(
       "div",
       "rapt-engine",
       "kiv-rapt-engine"
     );
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
-
+    this.element = domElement;
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
@@ -260,7 +262,7 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player.pause();
       if (isSwitchingPlayer) {
         // remove listeners
-        this.removeListeners(); // todo - safer to send reference ?
+        this.removeListeners();
 
         if (!this.playersBufferManager.isAvailable()) {
           // TODO must destroy active player
@@ -276,16 +278,15 @@ export class PlayersManager extends Dispatcher {
     }
 
     if (isSwitchingPlayer) {
-      // TODO eitan apply
-      // remove player from ui
+      // bufferNext only if we switched to a new node
+      if (this.activePlayer && this.activePlayer.player) {
+        this.bufferManager.handleBuffered(this.activePlayer.player, () => {
+          this.playersBufferManager.prepareNext(this.activeNode);
+        });
+      }
       this.domManager.changeActivePlayer(this.activePlayer);
       // register listeners
       this.addListenersToPlayer();
-    }
-    if (this.activePlayer && this.activePlayer.player) {
-      this.bufferManager.handleBuffered(this.activePlayer.player, () => {
-        console.log(">>>>> !!!!!!!");
-      });
     }
   }
   ////////////////////////////////////////////

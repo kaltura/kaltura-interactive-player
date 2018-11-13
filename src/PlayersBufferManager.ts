@@ -1,6 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
 import { RaptNode } from "./PlayersManager";
+import { BufferManager } from "./helpers/BufferManager";
 
 export const BufferEvent = {
   BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
@@ -22,9 +23,6 @@ export const enum PersistencyType {
 }
 
 export class PlayersBufferManager extends Dispatcher {
-  readonly SECONDS_TO_BUFFER: number = 6;
-  private BUFFER_CHECK_INTERVAL: number = 100;
-  private BUFFER_DONE_TIMEOUT: number = 100;
   private players: { [id: string]: KalturaPlayer } = {};
   private entriesToCache: string[] = []; // array of entry-ids to cache
 
@@ -35,7 +33,11 @@ export class PlayersBufferManager extends Dispatcher {
   private currentVolume: number = undefined;
   private _isAvailable: boolean;
 
-  constructor(private raptData: any, private playersFactory: PlayersFactory) {
+  constructor(
+    private raptData: any,
+    private playersFactory: PlayersFactory,
+    private bufferManager: BufferManager
+  ) {
     super();
     this.initializeAvailablity();
   }
@@ -45,20 +47,21 @@ export class PlayersBufferManager extends Dispatcher {
     const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
       navigator.userAgent
     );
-
     this._isAvailable = !isSafari;
   }
   /**
    * Look if there is a relevant player that was created already
    * @param playerId
    */
-  public getPlayer(playerId: string): KalturaPlayer | null {
-    const result = this.players[playerId] || null;
-
+  public getPlayer(entryId: string): KalturaPlayer | null {
+    let result = Object.values(this.players).find(
+      (kalturaPlayer: KalturaPlayer) => {
+        return kalturaPlayer.player.getMediaInfo().entryId === entryId;
+      }
+    );
     if (result && result.player.currentTime > 0) {
       result.player.currentTime = 0;
     }
-
     return result;
   }
 
@@ -104,74 +107,26 @@ export class PlayersBufferManager extends Dispatcher {
 
     return kalturaPlayer;
   }
-  /**
-   * Check if the current content of bufferPlayer was loaded;
-   * @param callback
-   * @param bufferPlayer
-   */
-  public checkIfBuffered(
-    bufferPlayer: any,
-    callback: (entryId: string) => void
-  ) {
-    if (
-      bufferPlayer.duration &&
-      bufferPlayer.duration !== NaN &&
-      bufferPlayer.duration < 7
-    ) {
-      // short entry - mark it as buffered
-      setTimeout(() => {
-        if (
-          bufferPlayer.config &&
-          bufferPlayer.config.sources &&
-          bufferPlayer.config.sources.id
-        )
-          callback(bufferPlayer.getMediaInfo().entryId);
-      }, this.BUFFER_DONE_TIMEOUT);
-      return;
-    }
-    if (
-      bufferPlayer.buffered &&
-      bufferPlayer.buffered.length &&
-      bufferPlayer.buffered.end &&
-      bufferPlayer.buffered.end(0) > this.SECONDS_TO_BUFFER - 1
-    ) {
-      setTimeout(() => {
-        if (
-          bufferPlayer.config &&
-          bufferPlayer.config.sources &&
-          bufferPlayer.config.sources.id
-        )
-          callback(bufferPlayer.getMediaInfo().entryId);
-      }, this.BUFFER_DONE_TIMEOUT);
-    } else {
-      // not buffered yet - check again
-      setTimeout(() => {
-        this.checkIfBuffered(callback, bufferPlayer);
-      }, this.BUFFER_CHECK_INTERVAL);
-    }
-  }
 
   /**
-   * Clear all current players
-   * @param exceptList
+   * Clear all current players (but the players that are relevant for next node)
+   * @param nextNode
    */
   public purgePlayers(nextNode?: RaptNode) {
-    // purge players from bufferManager
     const exceptList = nextNode
       ? this.getNextNodes(nextNode).map(node => node.entryId)
       : [];
-
     const existingPlayerIds = Object.keys(this.players);
     for (let playerId of existingPlayerIds) {
-      const player = this.players[playerId];
-      if (exceptList.indexOf(playerId) === -1) {
-        this.dispatch({ type: BufferEvent.DESTROYING, payload: player.id });
-        player.destroy();
+      const kalturaPlayer = this.players[playerId];
+      const entryId = kalturaPlayer.player.getMediaInfo().entryId;
+      if (exceptList.indexOf(entryId) === -1 && entryId !== nextNode.entryId) {
+        this.dispatch({ type: BufferEvent.DESTROYING, payload: entryId });
+        kalturaPlayer.destroy();
         delete this.players[playerId];
-        this.dispatch({ type: BufferEvent.DESTROYED, payload: player.id });
+        this.dispatch({ type: BufferEvent.DESTROYED, payload: entryId });
       }
     }
-
     this.entriesToCache = [];
   }
 
@@ -179,12 +134,14 @@ export class PlayersBufferManager extends Dispatcher {
    * The function starts to load the next players in cache-mode by the order of the array
    * @param entries
    */
-  public prepareNext(entries: string[] = []) {
-    // optimize - no-point of caching a player if it is already cached.
-    this.entriesToCache = entries.filter(
-      (entryId, i, all) => !!this.players[entryId] && i === all.indexOf(entryId)
-    );
-
+  public prepareNext(node: RaptNode): void {
+    let nextEntries = this.getNextNodes(node).map(raptNode => raptNode.entryId);
+    // // optimize - no-point of caching a player if it is already cached.
+    // todo - rehook this
+    // nextEntries = nextEntries.filter(
+    //   (entryId, i, all) => !!this.players[entryId] && i === all.indexOf(entryId)
+    // );
+    this.entriesToCache = nextEntries;
     this.cacheNextPlayer();
   }
 
@@ -264,8 +221,13 @@ export class PlayersBufferManager extends Dispatcher {
   private cacheNextPlayer() {
     if (this.entriesToCache.length) {
       const nextEntryId = this.entriesToCache.shift();
+      this.dispatch({ type: BufferEvent.BUFFERING, payload: nextEntryId });
       const newPlayer = this.createPlayer(nextEntryId);
       this.players[newPlayer.id] = newPlayer;
+      this.bufferManager.handleBuffered(newPlayer.player, entryId => {
+        this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
+        this.cacheNextPlayer();
+      });
     } else {
       // done caching ! notify
       this.dispatch({ type: BufferEvent.ALL_BUFFERED });

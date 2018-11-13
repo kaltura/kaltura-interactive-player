@@ -21,17 +21,17 @@ export class KalturaPlayer {
   }
 
   destroy() {
-      if (this.isDestroyed) {
-          return;
-      }
+    if (this.isDestroyed) {
+      return;
+    }
 
-      this.isDestroyed = true;
-      this.player.destroy();
+    this.isDestroyed = true;
+    this.player.destroy();
 
-      const parentElement = this.container.parentElement;
-      if (parentElement) {
-          parentElement.removeChild(this.container);
-      }
+    const parentElement = this.container.parentElement;
+    if (parentElement) {
+      parentElement.removeChild(this.container);
+    }
   }
 }
 
@@ -65,9 +65,11 @@ export class PlayersFactory extends Dispatcher {
     persistencyObject?: persistancy
   ): KalturaPlayer {
     // TODO check if the id already exists and if so throw exception
-    const { id: playerContainerId, container: playerContainer } = this.domManager.createKalturaPlayerContainer();
+    const {
+      id: playerContainerId,
+      container: playerContainer
+    } = this.domManager.createKalturaPlayerContainer();
     let conf: any = this.getPlayerConf(playerContainerId, playImmediate);
-
     // persistancy logic of new creation. If a new player is created - push the relevant persistancy attribute to config
     if (persistencyObject) {
       if (persistencyObject.audio) {
@@ -89,7 +91,7 @@ export class PlayersFactory extends Dispatcher {
     });
 
     newPlayer.loadMedia({ entryId: entryId });
-    return new KalturaPlayer(newPlayer, playerContainer) ;
+    return new KalturaPlayer(newPlayer, playerContainer);
   }
 
   /**
