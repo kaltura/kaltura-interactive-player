@@ -26,10 +26,6 @@ export interface RaptNode {
   prefetchNodeIds?: string[];
 }
 
-export const PlaybackState = {
-  PLAYING: "playing",
-  PAUSED: "paused"
-};
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer
@@ -40,8 +36,6 @@ export class PlayersManager extends Dispatcher {
   private playersFactory: PlayersFactory;
   private activePlayer: KalturaPlayer;
   private activeNode: RaptNode;
-  private element: HTMLElement; // must be called 'element' because rapt delegate implementation
-  private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
   public raptEngine: any;
@@ -73,7 +67,7 @@ export class PlayersManager extends Dispatcher {
 
   private initPlayersBufferManager(): boolean {
       // create the PlayersBufferManager
-      this.playersBufferManager = new PlayersBufferManager(this.playersFactory);
+      this.playersBufferManager = new PlayersBufferManager(this.raptData, this.playersFactory);
       // listen to all BufferEvent types from PlayersBufferManager
       for (let o of Object.values(BufferEvent)) {
           this.playersBufferManager.addListener(o, (event: any) => {
@@ -159,12 +153,31 @@ export class PlayersManager extends Dispatcher {
       this.resizeEngine();
 
       setInterval(
-          () => this.tick(),
+          () => this.syncRaptStatus(),
           PlayersManager.PLAYER_TICK_INTERVAL
       );
 
       return true;
   }
+
+    private syncRaptStatus() {
+        if (!this.activePlayer) {
+            return;
+        }
+
+        const currentPlayingVideoElement: any = this.activePlayer.player.getVideoElement();
+        if (currentPlayingVideoElement) {
+            this.raptEngine.update({
+                currentTime: currentPlayingVideoElement.currentTime,
+                duration: currentPlayingVideoElement.duration,
+                ended: currentPlayingVideoElement.ended,
+                videoWidth: currentPlayingVideoElement.videoWidth,
+                videoHeight: currentPlayingVideoElement.videoHeight,
+                paused: currentPlayingVideoElement.paused,
+                readyState: currentPlayingVideoElement.readyState
+            });
+        }
+    }
 
   private toggleFullscreenState() {
     const doc: any = document; // todo handle more elegantly
@@ -227,17 +240,13 @@ export class PlayersManager extends Dispatcher {
           }
       }
 
-    if (isSwitchingRaptNode) {
-      // purge players from bufferManager
-      const expectList = this.getNextNodes(this.activeNode).map(
-        node => node.entryId
-      );
-      this.playersBufferManager.purgePlayers();
-    }
-
-
     this.activePlayer = nextPlayer;
     this.activeNode = nextNode;
+
+      if (isSwitchingRaptNode) {
+
+          this.playersBufferManager.purgePlayers(this.activeNode);
+      }
 
     if (isSwitchingPlayer) {
         // remove player from ui
@@ -286,85 +295,14 @@ export class PlayersManager extends Dispatcher {
           })
       }
   }
-
-  /**
-   * Get a list of optional nodes for the given node
-   *  @param node
-   */
-  private getNextNodes(node: RaptNode): RaptNode[] {
-    let nodes: RaptNode[] = node.prefetchNodeIds.length
-      ? node.prefetchNodeIds.map((nodeId: string) =>
-          this.getNodeByRaptId(nodeId)
-        )
-      : [];
-    // at this point we have a list of next nodes without default-path and without order according to appearance time
-    nodes = this.sortByApearenceTime(nodes, node);
-    return nodes;
-  }
-
-  // TODO should be removed
-  private getNodeByEntryId(entryId: string): RaptNode {
-    // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
-    const newNode: RaptNode = this.raptData.nodes.find(
-      (node: RaptNode) => node.entryId === entryId
-    );
-    return newNode;
-  }
-
-  /**
-   * Return a rapt node
-   * @param id
-   */
-  private getNodeByRaptId(id: string): RaptNode {
-    const nodes: RaptNode[] = this.raptData.nodes;
-    return nodes.find((item: RaptNode) => item.id === id);
-  }
-
-  /**
-   * Sort a given nodes-array by the appearance-order of the hotspots in that node
-   * @param arr of Nodes
-   * @param givenNode
-   */
-  private sortByApearenceTime(
-    arr: RaptNode[],
-    givenNode: RaptNode
-  ): RaptNode[] {
-    // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
-    const hotspots: any[] = this.raptData.hotspots
-      .filter((hotSpot: any) => {
-        return (
-          hotSpot.nodeId === givenNode.id &&
-          hotSpot.onClick &&
-          hotSpot.onClick.find((itm: any) => itm.type === "project:jump") // filter out only-URL clicks
+    // TODO should be removed
+    private getNodeByEntryId(entryId: string): RaptNode {
+        // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
+        const newNode: RaptNode = this.raptData.nodes.find(
+            (node: RaptNode) => node.entryId === entryId
         );
-      })
-      .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
-
-    const arrayToCache: RaptNode[] = [];
-    for (const hotSpot of hotspots) {
-      arrayToCache.push(
-        arr.find((itm: RaptNode) => {
-          // extract the onClick element with type 'project:jump'
-          const clickItem: any = hotSpot.onClick.find(
-            (itm: any) => itm.type === "project:jump"
-          );
-          return clickItem.payload.destination === itm.id;
-        })
-      );
+        return newNode;
     }
-    // if there was a default-path on the current node - make sure it is returned as well
-    const defaultPath: any = givenNode.onEnded.find(
-      (itm: any) => itm.type === "project:jump"
-    );
-    if (defaultPath) {
-      const defaultPathNodeId: string = defaultPath.payload.destination;
-      const defaultPathNode: RaptNode = this.raptData.nodes.find(
-        n => n.id === defaultPathNodeId
-      );
-      arrayToCache.push(defaultPathNode);
-    }
-    return arrayToCache;
-  }
 
   public execute(command: any) {
     if (!this.raptEngine) {
@@ -376,21 +314,22 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine.execute(command);
   }
 
+  private handleTextTrackChanged = (event: any) => {
+      this.playersBufferManager.applyToPlayers(
+          PersistencyType.captions,
+          event.payload.selectedTextTrack._language,
+          this.activePlayer.player
+      );
+  }
+
   removeListeners() {
-    // todo - implement removeEventsListeners
     const player: any = this.activePlayer.player;
     if (player) {
       player.removeEventListener(
         player.Event.Core.TEXT_TRACK_CHANGED,
-        event => {
-          // todo - switch to external func to ease the removeEvList
-          this.playersBufferManager.applyToPlayers(
-            PersistencyType.captions,
-            event.payload.selectedTextTrack._language,
-            player
-          );
-        }
+        this.handleTextTrackChanged
       );
+      // TODO eitan fix
       player.removeEventListener(
         player.Event.Core.AUDIO_TRACK_CHANGED,
         event => {
@@ -415,7 +354,7 @@ export class PlayersManager extends Dispatcher {
           player
         );
       });
-      player.addEventListener(player.Event.Core.VIDEO_TRACK_CHANGED, event => {
+      player.removeEventListener(player.Event.Core.VIDEO_TRACK_CHANGED, event => {
         // TODO handle quality later
         // this.playersBufferManager.applyToPlayers(
         //   PersistencyType.quality,
@@ -427,6 +366,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   addListenersToPlayer() {
+      // TODO eitan fix
     if (this.activePlayer) {
       // // todo - switch to external func to ease the removeEvList
       // player.addEventListener(player.Event.Core.TEXT_TRACK_CHANGED, event => {
@@ -469,24 +409,16 @@ export class PlayersManager extends Dispatcher {
     }
   }
 
-  //////////////////////  Rapt delegate functions  ////////////////////////
+  // Rapt interface - dont change signature //
+  private element: HTMLElement; // must be called 'element' because rapt delegate implementation
+
+  // Rapt interface - dont change signature //
   load(media: any) {
     const id = media.sources[0].src;
     this.switchPlayer(id);
   }
 
-  play() {
-    this.playbackState = PlaybackState.PLAYING;
-  }
-
-  pause() {
-    this.playbackState = PlaybackState.PAUSED;
-  }
-
-  seek(time: number) {
-    //window.mainPlayer.currentTime = time;
-  }
-
+    // Rapt interface - dont change signature //
   event(event: any) {
     if (event.type === "hotspot:click") {
       let tmpModel = Object.assign({}, this.model);
@@ -499,24 +431,4 @@ export class PlayersManager extends Dispatcher {
     }
     this.dispatch(event);
   }
-
-  private tick() {
-    if (!this.activePlayer) {
-      return;
-    }
-    
-    const currentPlayingVideoElement: any = this.activePlayer.player.getVideoElement();
-    if (currentPlayingVideoElement) {
-      this.raptEngine.update({
-        currentTime: currentPlayingVideoElement.currentTime,
-        duration: currentPlayingVideoElement.duration,
-        ended: currentPlayingVideoElement.ended,
-        videoWidth: currentPlayingVideoElement.videoWidth,
-        videoHeight: currentPlayingVideoElement.videoHeight,
-        paused: currentPlayingVideoElement.paused,
-        readyState: currentPlayingVideoElement.readyState
-      });
-    }
-  }
-  /////////////////////////////////////////////////////////////////////////
 }

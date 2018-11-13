@@ -1,5 +1,6 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
+import {RaptNode} from "./PlayersManager";
 
 
 export const BufferEvent = {
@@ -35,7 +36,7 @@ export class PlayersBufferManager extends Dispatcher {
   private currentVolume: number = undefined;
   private _isAvailable: boolean;
 
-  constructor(private playersFactory: PlayersFactory) {
+  constructor(private raptData: any, private playersFactory: PlayersFactory) {
     super();
     this.initializeAvailablity();
   }
@@ -158,7 +159,13 @@ export class PlayersBufferManager extends Dispatcher {
    * Clear all current players
    * @param exceptList
    */
-  public purgePlayers(exceptList: string[] = []) {
+  public purgePlayers(nextNode?: RaptNode) {
+
+      // purge players from bufferManager
+      const exceptList = nextNode? this.getNextNodes(nextNode).map(
+          node => node.entryId
+      ) : [];
+
       const existingPlayerIds = Object.keys(this.players);
       for (let playerId of existingPlayerIds) {
           const player = this.players[playerId];
@@ -268,4 +275,76 @@ export class PlayersBufferManager extends Dispatcher {
       this.dispatch({ type: BufferEvent.ALL_BUFFERED });
     }
   }
+
+
+    /**
+     * Get a list of optional nodes for the given node
+     *  @param node
+     */
+    private getNextNodes(node: RaptNode): RaptNode[] {
+        let nodes: RaptNode[] = node.prefetchNodeIds.length
+            ? node.prefetchNodeIds.map((nodeId: string) =>
+                this.getNodeByRaptId(nodeId)
+            )
+            : [];
+        // at this point we have a list of next nodes without default-path and without order according to appearance time
+        nodes = this.sortByApearenceTime(nodes, node);
+        return nodes;
+    }
+
+    /**
+     * Return a rapt node
+     * @param id
+     */
+    private getNodeByRaptId(id: string): RaptNode {
+        const nodes: RaptNode[] = this.raptData.nodes;
+        return nodes.find((item: RaptNode) => item.id === id);
+    }
+
+    /**
+     * Sort a given nodes-array by the appearance-order of the hotspots in that node
+     * @param arr of Nodes
+     * @param givenNode
+     */
+    private sortByApearenceTime(
+        arr: RaptNode[],
+        givenNode: RaptNode
+    ): RaptNode[] {
+        // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
+        const hotspots: any[] = this.raptData.hotspots
+            .filter((hotSpot: any) => {
+                return (
+                    hotSpot.nodeId === givenNode.id &&
+                    hotSpot.onClick &&
+                    hotSpot.onClick.find((itm: any) => itm.type === "project:jump") // filter out only-URL clicks
+                );
+            })
+            .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
+
+        const arrayToCache: RaptNode[] = [];
+        for (const hotSpot of hotspots) {
+            arrayToCache.push(
+                arr.find((itm: RaptNode) => {
+                    // extract the onClick element with type 'project:jump'
+                    const clickItem: any = hotSpot.onClick.find(
+                        (itm: any) => itm.type === "project:jump"
+                    );
+                    return clickItem.payload.destination === itm.id;
+                })
+            );
+        }
+        // if there was a default-path on the current node - make sure it is returned as well
+        const defaultPath: any = givenNode.onEnded.find(
+            (itm: any) => itm.type === "project:jump"
+        );
+        if (defaultPath) {
+            const defaultPathNodeId: string = defaultPath.payload.destination;
+            const defaultPathNode: RaptNode = this.raptData.nodes.find(
+                n => n.id === defaultPathNodeId
+            );
+            arrayToCache.push(defaultPathNode);
+        }
+        return arrayToCache;
+    }
+
 }
