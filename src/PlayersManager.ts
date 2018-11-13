@@ -1,23 +1,15 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
 import { CreateElement } from "./helpers/CreateElement";
-import { PlayersFactory, playerTuple } from "./PlayersFactory";
+import {PlayersFactory, playerTuple, RaptPlayer} from "./PlayersFactory";
 import {
   BufferEvent,
   PersistencyType,
-  PlayerElement,
-  PlayersBufferManager
+    PlayersBufferManager
 } from "./PlayersBufferManager";
 import {PlayersDomManager} from "./PlayersDomManager";
 
 declare var Rapt: any;
-
-// tuple nodeId and playerElement (that contains now also the player wrapper id)
-export interface CurrentItem {
-  player: any;
-  playerContainer: HTMLElement;
-  node: RaptNode;
-}
 
 export const KipFullscreen = {
   FULL_SCREEN_CLICKED: "fullScreenClicked",
@@ -46,15 +38,15 @@ export const PlaybackState = {
 export class PlayersManager extends Dispatcher {
   private playersBufferManager: PlayersBufferManager;
   readonly playersFactory: PlayersFactory;
-  public currentPlayer: any;
-  public currentNode: RaptNode;
+  private activePlayer: RaptPlayer;
+  private activeNode: RaptNode;
   public element: HTMLElement; // must be called 'element' because rapt delegate implementation
   private playbackState: string;
   static PLAYER_TICK_INTERVAL: number = 250;
   private clickedHotspotId: String = undefined;
   public raptEngine: any;
   private model: any = undefined;
-  public currentItem: CurrentItem = null;
+
 
   constructor(
     private config: any,
@@ -84,7 +76,7 @@ export class PlayersManager extends Dispatcher {
         this.model = model; // store model data for future use of Rapt sending data
       }
       model.rootEntryId = this.raptProjectId;
-      model.nodeId = this.currentNode.id;
+      model.nodeId = this.activeNode.id;
       switch (model.eventType) {
         case 11:
         case 12:
@@ -182,7 +174,7 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
     setInterval(
-      () => this.tick(this.currentPlayer, this.raptEngine),
+      () => this.tick(),
       PlayersManager.PLAYER_TICK_INTERVAL
     );
   }
@@ -196,49 +188,52 @@ export class PlayersManager extends Dispatcher {
   ////////////////////////////////////////////
   // store the player and the node
   private updateCurrentPlayer(
-    player: any,
-    playerContainer: HTMLElement,
-    node: RaptNode
+      nextPlayer: RaptPlayer,
+      nextNode: RaptNode
   ): void {
-    const hasCurrentPlayer = this.currentItem && this.currentItem.player;
+    const hasActivePlayer = this.activePlayer;
+      const hasActiveNode = this.activeNode;
     const isSwitchingPlayer =
-      !this.currentItem || this.currentItem.player !== player;
+        !hasActivePlayer || this.activePlayer != nextPlayer;
+    const isSwitchingRaptNode =
+          !hasActiveNode || this.activeNode !== nextNode;
 
     // TODO stop checking for buffer completed of current played entry
     // whatever.stopCheckTimeout();
 
-    if (hasCurrentPlayer && isSwitchingPlayer) {
-      // remove listeners
-      this.removeListeners(); // todo - safer to send reference ?
+      if (hasActivePlayer) {
+          this.activePlayer.player.pause();
 
-      // remove from ui
-      this.currentItem.player.playerContainer.classList.remove(
-        "current-playing"
-      );
-    }
+          if (isSwitchingPlayer) {
+              // remove listeners
+              this.removeListeners(); // todo - safer to send reference ?
 
-    if (this.currentItem.node !== node) {
+              if (!this.playersBufferManager.isAvailable()) {
+                  // TODO must destroy active player
+              }
+          }
+      }
+
+    if (isSwitchingRaptNode) {
       // purge players from bufferManager
-      const expectList = this.getNextNodes(this.currentItem.node).map(
+      const expectList = this.getNextNodes(this.activeNode).map(
         node => node.entryId
       );
       this.playersBufferManager.purgePlayers(expectList);
     }
 
-    this.currentItem = { player, playerContainer, node };
 
-    // prepareFutureNodes() (purge logic of BM)
+    this.activePlayer = nextPlayer;
+    this.activeNode = nextNode;
+
     if (isSwitchingPlayer) {
-      // add to ui
-      this.currentItem.player.playerContainer.classList.add("current-playing");
+        // remove player from ui
+        this.domManager.changeActivePlayer(this.activePlayer);
       // register listeners
       this.addListenersToPlayer(); // todo - safer to send reference ?
     }
-    this.playersBufferManager.checkIfBuffered(this.currentItem.player, () => {
-      console.log(">>>>> YEY");
-    });
 
-    // start checking for buffer completed of current played entry
+    // TODO start checking for buffer completed of current played entry
     // utils.onPlaying(playerEl.player, () => {
     // this.startBufferCheck()
     // });
@@ -247,65 +242,36 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
-    // edge case where node is "switched" to itself
-    if (
-      newEntryId === this.currentNode.entryId &&
-      this.currentPlayer !== undefined
-    ) {
-      // if so - just seek to 0 and play
-      this.currentPlayer.currentTime = 0;
-      this.currentPlayer.play();
-      return;
-    }
-    // check if bufferManager has a ready-to-play player
-    const nextPlayer = this.playersBufferManager.getPlayer(newEntryId);
-    if (nextPlayer) {
-      this.removeListeners();
-      // found a player !
-      const nextPlayersDivId = this.playersBufferManager.getPlayerDivId(
-        newEntryId
-      );
-      const prevPlayerDivId = this.playersBufferManager.getPlayerDivId(
-        this.currentNode.entryId
-      );
+      const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
 
-      // pause current player and play next player
-      this.currentPlayer.pause();
-
-      // in case the next player was already played - seek to 0, else play it
-      if (nextPlayer.currentTime > 0) {
-        nextPlayer.currentTime = 0;
+      if (this.activePlayer && this.activeNode === nextRaptNode) {
+          // node is "switched" to itself
+          this.activePlayer.player.currentTime = 0;
+          this.activePlayer.player.play();
+          return;
       }
-      nextPlayer.play();
-      this.currentPlayer = nextPlayer;
-      this.addListenersToPlayer();
 
-      // pop it to the front of the stack and move back the current
-      this.mainDiv
-        .querySelector("[id='" + nextPlayersDivId + "']")
-        .classList.add("current-playing");
-      this.mainDiv
-        .querySelector("[id='" + prevPlayerDivId + "']")
-        .classList.remove("current-playing");
-      // now we can start buffer the next items
-      this.currentNode = this.getNodeByEntryId(newEntryId);
-      this.loadNextByNode(this.currentNode);
-    } else {
-      //////////////////////////
-      // no next player - create a new one. Happens on first load / player wasn't created yet / buffer-feature is off
-
-      if (this.currentItem) {
+      // check if bufferManager has a ready-to-play player
+      const bufferedPlayer = this.playersBufferManager.getPlayer(newEntryId);
+      if (bufferedPlayer) {
+          this.updateCurrentPlayer(bufferedPlayer, nextRaptNode);
+          this.activePlayer.player.play();
+      }
+      else if (!this.activePlayer || this.playersBufferManager.isAvailable()) {
+          const newPlayer = this.playersFactory.createPlayer(
+              newEntryId,
+              true,
+              {}
+          );
+          this.updateCurrentPlayer(newPlayer, nextRaptNode);
       } else {
-        const { player, playerContainer } = this.playersFactory.createPlayer(
-          newEntryId,
-          true,
-          {}
-        );
-        // async - when the player is actually buffering
-        const newNode: RaptNode = this.getNodeByEntryId(newEntryId);
-        this.updateCurrentPlayer(player, playerContainer, newNode);
+          this.updateCurrentPlayer(this.activePlayer, nextRaptNode);
+
+          // fallback to re-use of active player (allowed ONLY IF buffer manager is not available)
+          this.activePlayer.player.loadMedia({
+              entryId: this.activeNode.entryId
+          })
       }
-    }
   }
 
   /**
@@ -423,7 +389,7 @@ export class PlayersManager extends Dispatcher {
 
   removeListeners() {
     // todo - implement removeEventsListeners
-    const player: any = this.currentItem.player;
+    const player: any = this.activePlayer.player;
     if (player) {
       player.removeEventListener(
         player.Event.Core.TEXT_TRACK_CHANGED,
@@ -449,14 +415,14 @@ export class PlayersManager extends Dispatcher {
       player.removeEventListener(player.Event.Core.RATE_CHANGE, () => {
         this.playersBufferManager.applyToPlayers(
           PersistencyType.rate,
-          this.currentPlayer.playbackRate,
+          this.activePlayer.player.playbackRate,
           player
         );
       });
       player.removeEventListener(player.Event.Core.VOLUME_CHANGE, () => {
         this.playersBufferManager.applyToPlayers(
           PersistencyType.volume,
-          this.currentPlayer.volume,
+          this.activePlayer.player.volume,
           player
         );
       });
@@ -472,8 +438,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   addListenersToPlayer() {
-    const player: any = this.currentItem.player;
-    if (player) {
+    if (this.activePlayer) {
       // // todo - switch to external func to ease the removeEvList
       // player.addEventListener(player.Event.Core.TEXT_TRACK_CHANGED, event => {
       //   this.playersBufferManager.applyToPlayers(
@@ -493,14 +458,14 @@ export class PlayersManager extends Dispatcher {
       // player.addEventListener(player.Event.Core.RATE_CHANGE, () => {
       //   this.playersBufferManager.applyToPlayers(
       //     PersistencyType.rate,
-      //     this.currentPlayer.playbackRate,
+      //     this.activePlayer2.player.playbackRate,
       //     player
       //   );
       // });
       // player.addEventListener(player.Event.Core.VOLUME_CHANGE, () => {
       //   this.playersBufferManager.applyToPlayers(
       //     PersistencyType.volume,
-      //     this.currentPlayer.volume,
+      //     this.activePlayer2.player.volume,
       //     player
       //   );
       // });
@@ -537,7 +502,7 @@ export class PlayersManager extends Dispatcher {
     if (event.type === "hotspot:click") {
       let tmpModel = Object.assign({}, this.model);
       tmpModel.eventType = 44;
-      // this.currentPlayer.plugins.kava.sendAnalytics(tmpModel);
+      // this.activePlayer2.player.plugins.kava.sendAnalytics(tmpModel);
       this.clickedHotspotId = event.payload.hotspot.id;
     }
     if (event.type === "project:ready") {
@@ -546,13 +511,14 @@ export class PlayersManager extends Dispatcher {
     this.dispatch(event);
   }
 
-  tick(currentPlayer: any, raptEngine: any) {
-    if (!currentPlayer) {
+  private tick() {
+    if (!this.activePlayer) {
       return;
     }
-    const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
+    
+    const currentPlayingVideoElement: any = this.activePlayer.player.getVideoElement();
     if (currentPlayingVideoElement) {
-      raptEngine.update({
+      this.raptEngine.update({
         currentTime: currentPlayingVideoElement.currentTime,
         duration: currentPlayingVideoElement.duration,
         ended: currentPlayingVideoElement.ended,

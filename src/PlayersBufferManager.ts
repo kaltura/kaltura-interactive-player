@@ -43,11 +43,21 @@ export class PlayersBufferManager extends Dispatcher {
    * @param playerId
    */
   public getPlayer(playerId: string): RaptPlayer | null {
-    return this.players[playerId] || null;
+    const result = this.players[playerId] || null;
+
+    if (result && result.player.currentTime > 0) {
+      result.player.currentTime = 0;
+    }
+
+    return result;
   }
 
   public getPlayerDivId(entryId: string): string {
     return this.playersFactory.raptProjectId + "__" + entryId;
+  }
+
+  public isAvailable(): boolean {
+
   }
   /**
    * Create a player by the entryId. If playImmediate is set to true play it, if not - this is a cache player
@@ -140,7 +150,7 @@ export class PlayersBufferManager extends Dispatcher {
 
   /**
    * Clear all current players
-   * @param entryId
+   * @param exceptList
    */
   public purgePlayers(exceptList: string[] = []) {
       const existingPlayerIds = Object.keys(this.players);
@@ -150,7 +160,7 @@ export class PlayersBufferManager extends Dispatcher {
               this.dispatch({type: BufferEvent.DESTROYING, payload: player.id});
               player.player.destroy();
               // remove from DOM
-              this.playersFactory.mainDiv
+              this.playersFactory.domManager.tempGetElement()
                   .querySelector("[id='" + player.id + "']")
                   .remove();
               this.dispatch({type: BufferEvent.DESTROYED, payload: player.id});

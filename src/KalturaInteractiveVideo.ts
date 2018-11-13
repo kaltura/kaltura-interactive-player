@@ -153,15 +153,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.currentItem.player.player.pause();
+    this.playerManager.activePlayer.player.player.pause();
   }
 
   public play() {
-    this.playerManager.currentItem.player.player.play();
+    this.playerManager.activePlayer.player.player.play();
   }
 
   public seek(n: number) {
-    this.playerManager.currentItem.player.player.currentTime = n;
+    this.playerManager.activePlayer.player.player.currentTime = n;
   }
 
   public replay() {
@@ -181,27 +181,27 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   public get currentTime(): number {
     // this.playerManager.getPlayer()
-    return this.playerManager.currentItem.player.player.currentTime;
+    return this.playerManager.activePlayer.player.player.currentTime;
   }
 
   public get duration(): number {
-    return this.playerManager.currentItem.player.player.duration;
+    return this.playerManager.activePlayer.player.player.duration;
   }
 
   public get currentNode(): RaptNode {
-    return this.playerManager.currentItem.node;
+    return this.playerManager.activePlayer.node;
   }
 
   public get volume(): number {
-    return this.playerManager.currentItem.player.player.volume;
+    return this.playerManager.activePlayer.player.player.volume;
   }
 
   public set volume(n: number) {
-    this.playerManager.currentItem.player.player.volume = n;
+    this.playerManager.activePlayer.player.player.volume = n;
   }
 
   public get muted(): number {
-    return this.playerManager.currentItem.player.player.muted;
+    return this.playerManager.activePlayer.player.player.muted;
   }
 
   public get playbackRate(): number {

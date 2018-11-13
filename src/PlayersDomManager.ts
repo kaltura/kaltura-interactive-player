@@ -1,4 +1,5 @@
 import {CreateElement} from "./helpers/CreateElement";
+import {RaptPlayer} from "./PlayersFactory";
 
 export class PlayersDomManager {
     private static instanceCounter = 1;
@@ -11,6 +12,16 @@ export class PlayersDomManager {
 
     constructor(parentId: string) {
         this.createElement(parentId);
+    }
+
+    public changeActivePlayer(player: RaptPlayer): void {
+        this.element.querySelectorAll('.current-playing').forEach(playerElement => {
+            playerElement.classList.remove(
+                "current-playing"
+            );
+        })
+
+        player.container.classList.add("current-playing");
     }
 
     private createElement(parentId: string) {

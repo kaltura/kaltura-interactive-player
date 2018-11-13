@@ -18,14 +18,6 @@ export class RaptPlayer {
     }
 
     public container: HTMLElement;
-
-
-}
-
-
-export interface playerTuple {
-    player: any;
-    playerContainer: HTMLElement;
 }
 
 export class PlayersFactory extends Dispatcher {
