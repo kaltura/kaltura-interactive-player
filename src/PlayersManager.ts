@@ -450,10 +450,5 @@ export class PlayersManager extends Dispatcher {
       this.raptEngine.metadata.account = this.config.partnetId;
     }
     this.dispatch(event);
-    // todo cleanup
-    // if (event.type !== "player:timeupdate") {
-    //   console.log(">>>>>", event);
-    //   this.resizeEngine();
-    // }
   }
 }

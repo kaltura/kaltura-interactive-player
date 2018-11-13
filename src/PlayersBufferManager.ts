@@ -150,69 +150,48 @@ export class PlayersBufferManager extends Dispatcher {
     value: number | string,
     currentPlayer: any
   ) {
-    // switch (attribute) {
-    //   case PersistencyType.captions:
-    //     // iterate all buffered players
-    //     this.currentCaptionsLanguage = value.toString();
-    //     for (const playerElement of this.players) {
-    //       if (playerElement.player === currentPlayer) {
-    //         // no need to apply to the current player - if we do we get to infinity loop
-    //         continue;
-    //       }
-    //       const textTracks = playerElement.player.getTracks(
-    //         this.playersFactory.playerLibrary.core.TrackType.TEXT
-    //       );
-    //       const textTrack = textTracks.find(
-    //         track => track.language === this.currentCaptionsLanguage
-    //       );
-    //       if (textTrack) {
-    //         playerElement.player.selectTrack(textTrack);
-    //       }
-    //     }
-    //     break;
-    //   case PersistencyType.audioTrack:
-    //     // iterate all buffered players
-    //     this.currentAudioLanguage = value.toString();
-    //     for (const playerElement of this.players) {
-    //       if (playerElement.player === currentPlayer) {
-    //         // no need to apply to the current player - if we do we get to infinity loop
-    //         continue;
-    //       }
-    //       const audioTracks = playerElement.player.getTracks(
-    //         this.playersFactory.playerLibrary.core.TrackType.AUDIO
-    //       );
-    //       const audioTrack = audioTracks.find(
-    //         track => track.language === this.currentCaptionsLanguage
-    //       );
-    //       if (audioTrack) {
-    //         playerElement.player.selectTrack(audioTrack);
-    //       }
-    //     }
-    //     break;
-    //   case PersistencyType.rate:
-    //     this.currentPlaybackRate = Number(value);
-    //     for (const playerElement of this.players) {
-    //       if (playerElement.player === currentPlayer) {
-    //         // no need to apply to the current player - if we do we get to infinity loop
-    //         continue;
-    //       }
-    //       playerElement.player.playbackRate = this.currentPlaybackRate;
-    //     }
-    //     break;
-    //   case PersistencyType.volume:
-    //     this.currentVolume = currentPlayer.volume;
-    //     for (const playerElement of this.players) {
-    //       if (playerElement.player === currentPlayer) {
-    //         // no need to apply to the current player - if we do we get to infinity loop
-    //         continue;
-    //       }
-    //       playerElement.player.volume = this.currentVolume;
-    //     }
-    //     break;
-    //   case PersistencyType.quality:
-    //     // todo - consult product if we want to implement this
-    //     break;
-    // }
+    Object.values(this.players).forEach(kalturaPlayer => {
+      const player: any = kalturaPlayer.player;
+      switch (attribute) {
+        case PersistencyType.captions:
+          // iterate all buffered players
+          this.currentCaptionsLanguage = value.toString();
+          const textTracks = player.getTracks(
+            this.playersFactory.playerLibrary.core.TrackType.TEXT
+          );
+          const textTrack = textTracks.find(
+            track => track.language === this.currentCaptionsLanguage
+          );
+          if (textTrack) {
+            player.selectTrack(textTrack);
+          }
+          break;
+        case PersistencyType.audioTrack:
+          // iterate all buffered players
+          this.currentAudioLanguage = value.toString();
+          const audioTracks = player.getTracks(
+            this.playersFactory.playerLibrary.core.TrackType.AUDIO
+          );
+          const audioTrack = audioTracks.find(
+            track => track.language === this.currentCaptionsLanguage
+          );
+          if (audioTrack) {
+            player.selectTrack(audioTrack);
+          }
+          break;
+        case PersistencyType.rate:
+          this.currentPlaybackRate = Number(value);
+          player.playbackRate = this.currentPlaybackRate;
+          break;
+        case PersistencyType.volume:
+          this.currentVolume = currentPlayer.volume;
+          player.volume = this.currentVolume;
+          break;
+        case PersistencyType.quality:
+          // todo - consult product if we want to implement this
+          break;
+      }
+    });
   }
 
   /**
