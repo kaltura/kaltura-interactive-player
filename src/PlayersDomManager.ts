@@ -1,85 +1,87 @@
-import {createElement} from "./helpers/CreateElement";
-import {KalturaPlayer} from "./PlayersFactory";
+import { createElement } from "./helpers/CreateElement";
+import { KalturaPlayer } from "./PlayersFactory";
 
 export class PlayersDomManager {
-    private static raptPlayerCounter = 1;
-    private static kalturaPlayerCounter = 1;
+  private static raptPlayerCounter = 1;
+  private static kalturaPlayerCounter = 1;
 
-    private namespace: string;
-    private raptContainer: HTMLElement;
+  private namespace: string;
+  private raptContainer: HTMLElement;
 
-    public tempGetElement() {
-        // TODO remove when you complete refactoring
-        return this.raptContainer;
+  public tempGetElement() {
+    // TODO remove when you complete refactoring
+    return this.raptContainer;
+  }
+
+  public getContainer() {
+    return this.raptContainer;
+  }
+
+  private createElementName(suffix: string) {
+    return `${this.namespace}-${suffix}`;
+  }
+
+  public createDomElement(
+    type: string,
+    idSuffix: string,
+    initialClasses?: string
+  ): { id: string; domElement: HTMLElement } {
+    const newElement = document.createElement(type);
+    const newElementId = this.createElementName(idSuffix);
+    newElement.setAttribute("id", newElementId);
+
+    if (initialClasses) {
+      newElement.setAttribute("class", initialClasses);
     }
 
-    public getContainer() {
-        return this.raptContainer;
+    this.raptContainer.appendChild(newElement);
+    return { id: newElementId, domElement: newElement };
+  }
+
+  constructor(parentId: string) {
+    this.createRaptPlayerElement(parentId);
+  }
+
+  public requestFullscreen(): void {
+    if (this.raptContainer && this.raptContainer.requestFullscreen) {
+      this.raptContainer.requestFullscreen();
     }
+  }
 
-    private createElementName(suffix: string) {
-        return `${this.namespace}-${suffix}`;
+  public changeActivePlayer(player: KalturaPlayer): void {
+    this.raptContainer
+      .querySelectorAll(".current-playing")
+      .forEach(playerElement => {
+        playerElement.classList.remove("current-playing");
+      });
+    if (player) {
+      player.container.classList.add("current-playing");
     }
+  }
 
-    public createDomElement(
-        type: string,
-        idSuffix: string,
-        initialClasses?: string
-    ): { id: string, domElement: HTMLElement } {
-        const newElement = document.createElement(type);
-        const newElementId = this.createElementName(idSuffix);
-        newElement.setAttribute("id", newElementId);
+  public createKalturaPlayerContainer(): {
+    id: string;
+    container: HTMLElement;
+  } {
+    const containerId = `kaltura-container__${
+      PlayersDomManager.kalturaPlayerCounter
+    }`;
+    PlayersDomManager.kalturaPlayerCounter++;
 
-        if (initialClasses) {
-            newElement.setAttribute("class", initialClasses);
-        }
+    let playerClass = "kiv-player kiv-cache-player";
+    const kalturaContainer = createElement("div", containerId, playerClass);
+    this.raptContainer.appendChild(kalturaContainer);
 
-        this.raptContainer.appendChild(newElement);
-        return { id: newElementId, domElement: newElement};
-    }
+    return { id: containerId, container: kalturaContainer };
+  }
 
-    constructor(parentId: string) {
-        this.createRaptPlayerElement(parentId);
-    }
+  private createRaptPlayerElement(parentId: string) {
+    this.namespace = "kiv-container__" + PlayersDomManager.raptPlayerCounter;
 
-    public requestFullscreen(): void {
-        if (this.raptContainer && this.raptContainer.requestFullscreen) {
-            this.raptContainer.requestFullscreen();
-        }
-    }
+    // create a top-level container
+    this.raptContainer = createElement("div", this.namespace, "kiv-container");
 
-    public changeActivePlayer(player: KalturaPlayer): void {
-        this.raptContainer.querySelectorAll('.current-playing').forEach(playerElement => {
-            playerElement.classList.remove(
-                "current-playing"
-            );
-        })
-
-        player.container.classList.add("current-playing");
-    }
-
-    public createKalturaPlayerContainer() : { id: string, container: HTMLElement } {
-        const containerId = `kaltura-container__${PlayersDomManager.kalturaPlayerCounter}`;
-        PlayersDomManager.kalturaPlayerCounter++;
-
-        let playerClass = "kiv-player kiv-cache-player";
-        const kalturaContainer = createElement("div", containerId, playerClass);
-        this.raptContainer.appendChild(kalturaContainer);
-
-        return {id: containerId, container: kalturaContainer };
-    }
-
-    private createRaptPlayerElement(parentId: string) {
-        this.namespace = "kiv-container__" + PlayersDomManager.raptPlayerCounter;
-
-        // create a top-level container
-        this.raptContainer = createElement(
-            "div",
-            this.namespace,
-            "kiv-container"
-        );
-
-        PlayersDomManager.raptPlayerCounter++;
-        document.getElementById(parentId).appendChild(this.raptContainer);
-    }
+    PlayersDomManager.raptPlayerCounter++;
+    document.getElementById(parentId).appendChild(this.raptContainer);
+  }
 }

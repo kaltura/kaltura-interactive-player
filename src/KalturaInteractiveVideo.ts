@@ -3,7 +3,7 @@ import { KipClient } from "./KipClient";
 import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
-import {PlayersDomManager} from "./PlayersDomManager";
+import { PlayersDomManager } from "./PlayersDomManager";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -49,7 +49,9 @@ class KalturaInteractiveVideo extends Dispatcher {
     }
 
     if (this.isInitialized) {
-      throw new Error('currently cannot load media twice to the same instance. Please use "setup" method again');
+      throw new Error(
+        'currently cannot load media twice to the same instance. Please use "setup" method again'
+      );
     }
     this.isInitialized = true;
 
@@ -152,15 +154,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.activePlayer.player.player.pause();
+    this.playerManager.getActiveKalturaPlayer().pause();
   }
 
   public play() {
-    this.playerManager.activePlayer.player.player.play();
+    this.playerManager.getActiveKalturaPlayer().play();
   }
 
   public seek(n: number) {
-    this.playerManager.activePlayer.player.player.currentTime = n;
+    this.playerManager.getActiveKalturaPlayer().currentTime = n;
   }
 
   public replay() {
@@ -180,31 +182,31 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   public get currentTime(): number {
     // this.playerManager.getPlayer()
-    return this.playerManager.activePlayer.player.player.currentTime;
+    return this.playerManager.getActiveKalturaPlayer().currentTime;
   }
 
   public get duration(): number {
-    return this.playerManager.activePlayer.player.player.duration;
+    return this.playerManager.getActiveKalturaPlayer().duration;
   }
 
   public get currentNode(): RaptNode {
-    return this.playerManager.activePlayer.node;
+    return this.playerManager.getActiveKalturaPlayer().node;
   }
 
   public get volume(): number {
-    return this.playerManager.activePlayer.player.player.volume;
+    return this.playerManager.getActiveKalturaPlayer().player.player.volume;
   }
 
   public set volume(n: number) {
-    this.playerManager.activePlayer.player.player.volume = n;
+    this.playerManager.getActiveKalturaPlayer().player.player.volume = n;
   }
 
   public get muted(): number {
-    return this.playerManager.activePlayer.player.player.muted;
+    return this.playerManager.getActiveKalturaPlayer().player.player.muted;
   }
 
   public get playbackRate(): number {
-    return this.playerManager.currentPlayer.playbackRate;
+    return this.playerManager.getActiveKalturaPlayer().playbackRate;
   }
 
   public jump(locator: any, autoplay: boolean) {
@@ -235,9 +237,9 @@ class KalturaInteractiveVideo extends Dispatcher {
     if (key === "{raptMedia.info}") {
       let dataCopy = Object.assign({}, this._data);
       dataCopy.player = {
-        currentPlayer: this.playerManager.currentPlayer,
-        currentNode: this.playerManager.currentNode,
-        currentVideo: this.playerManager.currentNode.entryId
+        currentPlayer: this.playerManager.getActiveKalturaPlayer(),
+        currentNode: this.playerManager.getActiveNode(),
+        currentVideo: this.playerManager.getActiveNode().entryId
       };
       dataCopy.project = {
         projectId: this.playerManager.raptProjectId
