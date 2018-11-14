@@ -126,7 +126,7 @@ export class PlayersManager extends Dispatcher {
         this.model = model; // store model data for future use of Rapt sending data
         setTimeout(() => {
           this.sendAnalytics(44);
-        }, 51);
+        }, 73);
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
