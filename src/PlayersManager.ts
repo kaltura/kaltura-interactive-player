@@ -286,6 +286,7 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
+    debugger;
     const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
     log("log", "pm_switchPlayer", "executed", {
       entryId: newEntryId,
@@ -335,7 +336,7 @@ export class PlayersManager extends Dispatcher {
           entryId: newEntryId
         });
         this.activePlayer.player.loadMedia({
-          entryId: this.activeNode.entryId
+          entryId: newEntryId
         });
       }
     }
