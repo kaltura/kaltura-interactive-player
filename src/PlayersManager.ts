@@ -7,7 +7,6 @@ import {
   PlayersBufferManager
 } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
-import { BufferManager } from "./helpers/BufferManager";
 import { log } from "./helpers/logger";
 
 declare var Rapt: any;
@@ -32,7 +31,6 @@ export interface RaptNode {
  * This class creates and manages BufferManager
  */
 export class PlayersManager extends Dispatcher {
-  private bufferManager: BufferManager;
   private playersBufferManager: PlayersBufferManager;
   private playersFactory: PlayersFactory;
   private activePlayer: KalturaPlayer = null;
@@ -75,7 +73,6 @@ export class PlayersManager extends Dispatcher {
     const secondsToBuffer: number = this.config.rapt.bufferTime
       ? this.config.rapt.bufferTime
       : PlayersManager.defaultBufferTime;
-    this.bufferManager = new BufferManager(secondsToBuffer);
     return true;
   }
 
@@ -83,8 +80,7 @@ export class PlayersManager extends Dispatcher {
     // create the PlayersBufferManager
     this.playersBufferManager = new PlayersBufferManager(
       this.raptData,
-      this.playersFactory,
-      this.bufferManager
+      this.playersFactory
     );
     // listen to all BufferEvent types from PlayersBufferManager
     for (let o of Object.values(BufferEvent)) {
@@ -286,7 +282,6 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
-    debugger;
     const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
     log("log", "pm_switchPlayer", "executed", {
       entryId: newEntryId,

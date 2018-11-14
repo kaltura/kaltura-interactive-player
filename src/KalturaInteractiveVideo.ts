@@ -4,8 +4,8 @@ import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
-import { enable as enableLog, log } from './helpers/logger';
-import {VERSION} from "../version";
+import { enable as enableLog, log } from "./helpers/logger";
+import { VERSION } from "../version";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -39,12 +39,16 @@ class KalturaInteractiveVideo extends Dispatcher {
   private playerDomManager: PlayersDomManager;
 
   constructor(private config: any, private playerLibrary: any) {
-      super();
+    super();
 
-      if (config && config.rapt && config.rapt.debug) {
-          enableLog();
-          log("log", 'KalturaInteractiveVideo', 'log enabled by config version ' + VERSION);
-      }
+    if (config && config.rapt && config.rapt.debug) {
+      enableLog();
+      log(
+        "log",
+        "KalturaInteractiveVideo",
+        "log enabled by config version " + VERSION
+      );
+    }
   }
 
   private isInitialized = false;
@@ -120,14 +124,6 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param data
    */
   dispatchApi(event: KivEvent) {
-    if (this.config.rapt.debug) {
-      // debug mode - print to console
-      if (event.type === "player:timeupdate") {
-        return;
-      }
-      console.warn("Rapt: > ", event);
-    }
-
     //this is a legacy API
     if (this.legacyCallback) {
       let legacyEvent: any = { type: event.type };

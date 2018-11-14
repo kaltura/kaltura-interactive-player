@@ -1,8 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
 import { RaptNode } from "./PlayersManager";
-import { BufferManager } from "./helpers/BufferManager";
-import { log } from './helpers/logger';
+import { log } from "./helpers/logger";
 
 interface BufferItem {
   player: KalturaPlayer;
@@ -35,8 +34,6 @@ export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
   private secondsToBuffer: number = 6;
 
-  private players: { [id: string]: KalturaPlayer } = {};
-  private entriesToCache: string[] = []; // array of entry-ids to cache
   private bufferList: BufferItem[] = [];
 
   // playback persistency
@@ -46,11 +43,7 @@ export class PlayersBufferManager extends Dispatcher {
   private currentVolume: number = undefined;
   private _isAvailable: boolean;
 
-  constructor(
-    private raptData: any,
-    private playersFactory: PlayersFactory,
-    private bufferManager: BufferManager
-  ) {
+  constructor(private raptData: any, private playersFactory: PlayersFactory) {
     super();
     this.initializeAvailablity();
   }
@@ -67,7 +60,7 @@ export class PlayersBufferManager extends Dispatcher {
    * @param playerId
    */
   public getPlayer(entryId: string, playImmediate: boolean): KalturaPlayer {
-      log('log', 'pbm_getPlayer', 'executed', { entryId, playImmediate});
+    log("log", "pbm_getPlayer", "executed", { entryId, playImmediate });
     if (!this._isAvailable) {
       throw new Error("BufferManager is not available");
     }
@@ -77,45 +70,57 @@ export class PlayersBufferManager extends Dispatcher {
 
     if (bufferedItem) {
       if (bufferedItem.player) {
-          log('log', 'pbm_getPlayer', 'found player in buffer list', { entryId });
-          result = bufferedItem.player;
+        log("log", "pbm_getPlayer", "found player in buffer list", { entryId });
+        result = bufferedItem.player;
 
-          if (result.player.currentTime > 0) {
-              log('log', 'pbm_getPlayer', 'seek player to the beginning', { entryId });
-              result.player.currentTime = 0;
-          }
+        if (result.player.currentTime > 0) {
+          log("log", "pbm_getPlayer", "seek player to the beginning", {
+            entryId
+          });
+          result.player.currentTime = 0;
+        }
 
-          // TODO [eitan] for persistancy - assign only synced persistancy
+        // TODO [eitan] for persistancy - assign only synced persistancy
 
-          if (playImmediate && !result.player.isPlaying) {
-              log('log', 'pbm_getPlayer', 'execute play command', { entryId });
-              result.player.play();
-          }
-      }else {
-          log('log', 'pbm_getPlayer', 'player buffered in pending mode, create player', { entryId, trackBuffer: playImmediate });
+        if (playImmediate && !result.player.isPlaying) {
+          log("log", "pbm_getPlayer", "execute play command", { entryId });
+          result.player.play();
+        }
+      } else {
+        log(
+          "log",
+          "pbm_getPlayer",
+          "player buffered in pending mode, create player",
+          { entryId, trackBuffer: playImmediate }
+        );
         bufferedItem.player = this.createPlayer(entryId, playImmediate);
         if (playImmediate) {
-            this.trackBufferOfItem(bufferedItem);
+          this.trackBufferOfItem(bufferedItem);
         }
         result = bufferedItem.player;
       }
     } else {
-        log('log', 'pbm_getPlayer', 'not found in buffer list, create player for entry', { entryId });
-        result = this.createPlayer(entryId, playImmediate);
+      log(
+        "log",
+        "pbm_getPlayer",
+        "not found in buffer list, create player for entry",
+        { entryId }
+      );
+      result = this.createPlayer(entryId, playImmediate);
 
-        const newItem = {
-            entryId: entryId,
-            player: result,
-            isRunning: playImmediate,
-            bufferingTimeoutToken: null,
-            isReady: false
-        };
+      const newItem = {
+        entryId: entryId,
+        player: result,
+        isRunning: playImmediate,
+        bufferingTimeoutToken: null,
+        isReady: false
+      };
 
-        this.bufferList.push(newItem);
+      this.bufferList.push(newItem);
 
-        if (playImmediate) {
-          this.trackBufferOfItem(newItem);
-        }
+      if (playImmediate) {
+        this.trackBufferOfItem(newItem);
+      }
     }
 
     return result;
@@ -129,12 +134,11 @@ export class PlayersBufferManager extends Dispatcher {
     this._isAvailable = false;
   }
 
-  private createPlayer(
-    entryId: string,
-    playImmediate: boolean
-  ): KalturaPlayer {
-
-    log('log', 'pbm_createPlayer', 'create player for entry', { entryId, playImmediate});
+  private createPlayer(entryId: string, playImmediate: boolean): KalturaPlayer {
+    log("log", "pbm_createPlayer", "create player for entry", {
+      entryId,
+      playImmediate
+    });
     // TODO move persistence to PM
     let persistence: persistancy = {};
     if (this.currentPlaybackRate) {
@@ -154,17 +158,18 @@ export class PlayersBufferManager extends Dispatcher {
       playImmediate,
       persistence
     );
-    // store locally
-    // this.players[kalturaPlayer.id] = kalturaPlayer; // todo old mechanism - remove
     return kalturaPlayer;
   }
 
   public switchPlayer(nextNode?: RaptNode) {
-
-      if (!this._isAvailable) {
-          log('warn', 'pbm_switchPlayer', 'buffer manager is disabled, ignore switch player request');
-          return
-      }
+    if (!this._isAvailable) {
+      log(
+        "warn",
+        "pbm_switchPlayer",
+        "buffer manager is disabled, ignore switch player request"
+      );
+      return;
+    }
 
     if (nextNode) {
       const nodesToBuffer = [nextNode, ...this.getNextNodes(nextNode)];
@@ -176,15 +181,25 @@ export class PlayersBufferManager extends Dispatcher {
 
       this.bufferList = [];
 
-      log('log','pbm_switchPlayer', 'rebuliding buffer list', { prevCount: prevItemsCount, newCount: nodesToBuffer.length})
+      log("log", "pbm_switchPlayer", "rebuliding buffer list", {
+        prevCount: prevItemsCount,
+        newCount: nodesToBuffer.length
+      });
       nodesToBuffer.forEach(node => {
         const existinItem = prevItemsMap[node.entryId];
         if (existinItem) {
-          log('log', 'pbm_switchPlayer', 'entry id was in previous buffer list, copy to current list', { entryId: node.entryId });
+          log(
+            "log",
+            "pbm_switchPlayer",
+            "entry id was in previous buffer list, copy to current list",
+            { entryId: node.entryId }
+          );
           this.bufferList.push(existinItem);
           delete prevItemsMap[node.entryId];
         } else {
-            log('log', 'pbm_switchPlayer', 'add entry to buffer queue', { entryId: node.entryId });
+          log("log", "pbm_switchPlayer", "add entry to buffer queue", {
+            entryId: node.entryId
+          });
           this.bufferList.push({
             entryId: node.entryId,
             player: null,
@@ -202,43 +217,55 @@ export class PlayersBufferManager extends Dispatcher {
   }
 
   private handleBufferList(): void {
-      log('log', 'pbm_handleBufferList', 'executed');
-      const allReady = this.bufferList.length === 0 || this.bufferList.every(item => item.isReady);
-      if (allReady) {
-          log('log', 'pbm_handleBufferList', 'all items are buffered', {count: this.bufferList.length});
-          this.dispatch({
-              type: BufferEvent.ALL_BUFFERED
-          });
-          return;
-      }
+    log("log", "pbm_handleBufferList", "executed");
+    const allReady =
+      this.bufferList.length === 0 ||
+      this.bufferList.every(item => item.isReady);
+    if (allReady) {
+      log("log", "pbm_handleBufferList", "all items are buffered", {
+        count: this.bufferList.length
+      });
+      this.dispatch({
+        type: BufferEvent.ALL_BUFFERED
+      });
+      return;
+    }
 
-      const isSomeoneBuffering = this.bufferList.some(item => item.isRunning);
-      // check if need to buffer an item (has items, no one is running and someone is not ready)
-      if (!isSomeoneBuffering) {
-          // find the 1st item on the list that is not buffering (list is ordered)
-          const unbufferedItem = this.bufferList.find(item => !item.isReady);
-          log('log', 'pbm_handleBufferList', 'start track item', {entryId: unbufferedItem.entryId});
-          this.executeItemBuffering(unbufferedItem);
-      } else {
-          log('log', 'pbm_handleBufferList', 'an item is already in buffer mode, nothing to do');
-      }
+    const isSomeoneBuffering = this.bufferList.some(item => item.isRunning);
+    // check if need to buffer an item (has items, no one is running and someone is not ready)
+    if (!isSomeoneBuffering) {
+      // find the 1st item on the list that is not buffering (list is ordered)
+      const unbufferedItem = this.bufferList.find(item => !item.isReady);
+      log("log", "pbm_handleBufferList", "start track item", {
+        entryId: unbufferedItem.entryId
+      });
+      this.executeItemBuffering(unbufferedItem);
+    } else {
+      log(
+        "log",
+        "pbm_handleBufferList",
+        "an item is already in buffer mode, nothing to do"
+      );
+    }
   }
 
   private trackBufferOfItem(item: BufferItem) {
-      item.isRunning = true;
-      item.bufferingTimeoutToken = setTimeout(
-          this.executeItemBuffering.bind(this, item),
-          200
-      );
+    item.isRunning = true;
+    item.bufferingTimeoutToken = setTimeout(
+      this.executeItemBuffering.bind(this, item),
+      200
+    );
   }
   private executeItemBuffering(item: BufferItem): void {
     item.bufferingTimeoutToken = null;
 
     if (!item.isRunning) {
-        log('log', 'pbm_executeItemBuffering', 'start buffering entry', { entryId: item.entryId } );
+      log("log", "pbm_executeItemBuffering", "start buffering entry", {
+        entryId: item.entryId
+      });
 
-        item.player = this.createPlayer(item.entryId, false);
-        this.trackBufferOfItem(item);
+      item.player = this.createPlayer(item.entryId, false);
+      this.trackBufferOfItem(item);
     } else {
       // has player ! find if we have duration
       const player = item.player.player;
@@ -247,7 +274,12 @@ export class PlayersBufferManager extends Dispatcher {
         player.duration !== NaN &&
         player.duration < this.shortEntryThreshold
       ) {
-          log('log', 'pbm_executeItemBuffering', 'buffered not needed, mark entry as ready', { entryId: item.entryId } );
+        log(
+          "log",
+          "pbm_executeItemBuffering",
+          "buffered not needed, mark entry as ready",
+          { entryId: item.entryId }
+        );
         item.isReady = true;
         item.isRunning = false;
         this.handleBufferList();
@@ -258,12 +290,17 @@ export class PlayersBufferManager extends Dispatcher {
         player.buffered.end &&
         player.buffered.end(0) > this.secondsToBuffer - 1
       ) {
-          log('log', 'pbm_executeItemBuffering', 'buffer completed, mark entry as ready', { entryId: item.entryId } );
+        log(
+          "log",
+          "pbm_executeItemBuffering",
+          "buffer completed, mark entry as ready",
+          { entryId: item.entryId }
+        );
         item.isRunning = false;
         item.isReady = true;
         this.handleBufferList();
       } else {
-          this.trackBufferOfItem(item);
+        this.trackBufferOfItem(item);
       }
     }
 
@@ -276,10 +313,17 @@ export class PlayersBufferManager extends Dispatcher {
    * @param nextNode
    */
   private destroyBufferedItems(items: BufferItem[]) {
-      log('log', 'pbm_destroyBufferedItems', 'executed', { entries: items.map(item => item.entryId) });
+    log("log", "pbm_destroyBufferedItems", "executed", {
+      entries: items.map(item => item.entryId)
+    });
     items.forEach(item => {
       if (item.player) {
-          log('log', 'pbm_destroyBufferedItems', 'remove entry from buffer queue', { entryId: item.entryId });
+        log(
+          "log",
+          "pbm_destroyBufferedItems",
+          "remove entry from buffer queue",
+          { entryId: item.entryId }
+        );
         this.dispatch({
           type: BufferEvent.DESTROYING,
           payload: { entryId: item.entryId }
@@ -292,7 +336,12 @@ export class PlayersBufferManager extends Dispatcher {
       }
 
       if (item.bufferingTimeoutToken) {
-        log('log', 'pbm_destroyBufferedItems', 'cancel running buffer for entry', { entryId: item.entryId });
+        log(
+          "log",
+          "pbm_destroyBufferedItems",
+          "cancel running buffer for entry",
+          { entryId: item.entryId }
+        );
         clearTimeout(item.bufferingTimeoutToken);
       }
     });
@@ -301,16 +350,14 @@ export class PlayersBufferManager extends Dispatcher {
   public syncPlayersStatus(activeEntryId: string) {
     // TODO [eitan] for persistancy
     // store new persistance info
-
-      // if changing async info
-      // 1. cancel active buffering (except for the active)
-      // 2. for all players in buffer list which are not the active one:
-      // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
-      // 2.2 apply async information
-      // 3. re-run buffering logic
-
+    // if changing async info
+    // 1. cancel active buffering (except for the active)
+    // 2. for all players in buffer list which are not the active one:
+    // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
+    // 2.2 apply async information
+    // 3. re-run buffering logic
     //
-      // if a-synced issue,
+    // if a-synced issue,
   }
 
   public applyToPlayers(
@@ -318,10 +365,16 @@ export class PlayersBufferManager extends Dispatcher {
     value: number | string,
     currentPlayer: any
   ) {
+    log("log", "pbm_applyToPlayers", "executed", {
+      attribute,
+      value,
+      currentPlayer
+    });
+    const availablePlayers = this.bufferList
+      .filter(item => item.player)
+      .map(item => item.player);
 
-
-    return; // todo - hook to this.bufferList existing players
-    Object.values(this.players).forEach(kalturaPlayer => {
+    availablePlayers.forEach(kalturaPlayer => {
       const player: any = kalturaPlayer.player;
       switch (attribute) {
         case PersistencyType.captions:

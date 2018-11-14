@@ -33,6 +33,7 @@
 		{
 			name: "Multi Audio" ,
 			id: "1_q94de4ui" ,
+			selected: true
 		},
 		{
 			name: "CL1" ,
@@ -61,7 +62,6 @@
 		{
 			name: "1 to 2,3,4" ,
 			id: "1_4sjm8veb",
-			selected: true
 		} ,
 		{
 			name: "Same-node" ,
@@ -92,7 +92,7 @@
 		},
 
 		provider: {
-			ks : "MmFkM2JiOGFlODQzOWM5NTI2YWYzNWJlOTVkNGQzNWI5YzIxYzY4YXwyNzAxNzsyNzAxNzsxNTQyMjA4MjYwOzI7Mjc4NztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA==",
+			ks : "ZmI4NjkzNmY0YmM4OTE5MTZkMDc4YjMzZTlhMzRmNjhhNjM4ZWQzYXwyNzAxNzsyNzAxNzsxNTQyMjk0NzkxOzI7ODQxMztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA==",
 			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
 		},
 
@@ -106,8 +106,7 @@
 
 	var kip = PathKalturaPlayer.setup(config);
 	kip.loadMedia({playlistId: selectedItem.id});
-	var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup","allUnbuffered"];
-	var apiEvents = [
+	var allEvents = [
 		"browser:hidden",
 		"browser:open",
 		"cue:forward",
@@ -129,11 +128,6 @@
 		"player:volumechange"
 	];
 
-	var allEvents;
-	// allEvents  = bufferingEvents ;
-	// allEvents = apiEvents;
-	allEvents = apiEvents.concat(bufferingEvents);
-
 	for (var i = 0 ; i< allEvents.length; i++){
 		kip.addListener(allEvents[i] , function (event) {
 			logDebugMsg(event);
@@ -151,56 +145,34 @@
 		// mark buffering event in green
 		var printStr = event.type;
 		var payload = event.payload;
-		if( bufferingEvents.some( a => a ===event.type) ){
-			// this is a buffering event
-			oneLine.style.cssText = "color: green";
-			switch (event.type) {
-				case "allBuffered":
-					printStr+='<span style="color: purple"> ['+payload+'] ✿ ✿ ✿</span>';
-					break;
-				case "catchup":
-					debugger;
-					printStr+='<span style="color: #227a15"> ['+payload.toString()+'] ➥</span>';
-					break;
-				case "buffering":
-					printStr+='<span style="color: #4398a8"> ['+payload+'] ⬇︎ </span>';
-					break;
-				case "doneBuffering":
-					printStr+='<span style="color: brown"> ['+payload+'] ✔︎︎</span>';
-					break;
-				default:
-					printStr+='<span style="color: #c78f35"> ['+payload+']</span>' ;
-
-			}
-		}else{
 			oneLine.style.cssText = "color: blue";
 			switch (event.type) {
 				case "player:timeupdate":
 					return; // we do not want to print this - it junks the log
 				case "cue:forward":
 				case "cue:revere":
-					printStr+='<span style="color: darkcyan"> ['+payload.cue.customData+']</span>' ;
+					printStr+='<span style="color: #8b227c"> ['+payload.cue.customData+']</span>' ;
 					break;
 				case "hotspot:click":
-					printStr+='<span style="color: darkcyan"> ['+payload.hotspot.name+']</span>' ;
+					printStr+='<span style="color: #648b24"> ['+payload.hotspot.name+']</span>' ;
 					break;
 				case "node:enter":
 				case "node:ended":
 				case "node:exit":
-					printStr+='<span style="color: darkcyan"> ['+payload.node.name+']</span>' ;
+					printStr+='<span style="color: #24468b"> ['+payload.node.name+']</span>' ;
 					break;
 				case "player:progress":
-					printStr+='<span style="color: darkcyan"> ['+payload.progress+']</span>' ;
+					printStr+='<span style="color: #8b2136"> ['+payload.progress+']</span>' ;
 					break;
 				case "browser:open":
-					printStr+='<span style="color: darkcyan"> ['+payload.href+']</span>' ;
+					printStr+='<span style="color: #648b24"> ['+payload.href+']</span>' ;
 					break;
 				default:
 					if(!isEmpty(payload)){
 						printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
 					}
 
-			}
+
 			// this is a Rapt event
 		}
 		oneLine.innerHTML = printStr;
