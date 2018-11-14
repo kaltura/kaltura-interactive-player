@@ -139,6 +139,11 @@ export class PlayersBufferManager extends Dispatcher {
     return kalturaPlayer;
   }
 
+  /**
+   * Anytime a new entry is requested to play (1st node, or on any nodeChange, by user or by defaultPath
+   * The function loads/play the nodes entry-player and handles buffering of next optional entries players
+   * @param nextNode
+   */
   public switchPlayer(nextNode?: RaptNode) {
     if (!this._isAvailable) {
       log(
@@ -163,6 +168,7 @@ export class PlayersBufferManager extends Dispatcher {
         prevCount: prevItemsCount,
         newCount: nodesToBuffer.length
       });
+
       nodesToBuffer.forEach(node => {
         const existinItem = prevItemsMap[node.entryId];
         if (existinItem) {
@@ -191,6 +197,17 @@ export class PlayersBufferManager extends Dispatcher {
     } else {
       this.destroyBufferedItems(this.bufferList);
     }
+    // remove duplicity items //todo - prefer items that are better ready (has players, has token or isReady / isRunning
+    this.bufferList = this.bufferList.reduce((acc, item) => {
+      if (
+        !acc.some(
+          (bufferItem: BufferItem) => bufferItem.entryId === item.entryId
+        )
+      ) {
+        acc.push(item);
+      }
+      return acc;
+    }, []);
     this.handleBufferList();
   }
 
@@ -202,9 +219,6 @@ export class PlayersBufferManager extends Dispatcher {
     if (allReady) {
       log("log", "pbm_handleBufferList", "all items are buffered", {
         count: this.bufferList.length
-      });
-      this.dispatch({
-        type: BufferEvent.ALL_BUFFERED
       });
       return;
     }
@@ -241,7 +255,6 @@ export class PlayersBufferManager extends Dispatcher {
       log("log", "pbm_executeItemBuffering", "start buffering entry", {
         entryId: item.entryId
       });
-
       item.player = this.createPlayer(item.entryId, false);
       this.trackBufferOfItem(item);
     } else {
