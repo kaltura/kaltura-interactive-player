@@ -5,6 +5,7 @@ import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { enable as enableLog, log } from './helpers/logger';
+import {VERSION} from "../version";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -42,7 +43,7 @@ class KalturaInteractiveVideo extends Dispatcher {
 
       if (config && config.rapt && config.rapt.debug) {
           enableLog();
-          log('log', 'KalturaInteractiveVideo', 'log enabled by config');
+          log("log", 'KalturaInteractiveVideo', 'log enabled by config version ' + VERSION);
       }
   }
 
