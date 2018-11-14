@@ -84,6 +84,7 @@ export class PlayersFactory extends Dispatcher {
     }
 
     const newPlayer = this.playerLibrary.setup(conf);
+
     // @ts-ignore
     newPlayer._uiWrapper._uiManager.store.dispatch({
       type: "shell/UPDATE_PRE_PLAYBACK",

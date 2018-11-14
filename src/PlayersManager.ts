@@ -8,7 +8,7 @@ import {
 } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { BufferManager } from "./helpers/BufferManager";
-import { log } from './helpers/logger';
+import { log } from "./helpers/logger";
 
 declare var Rapt: any;
 
@@ -179,7 +179,7 @@ export class PlayersManager extends Dispatcher {
     }
 
     // load the 1st media
-    this.updateActiveItems(null, firstNode);
+    // this.updateActiveItems(null, firstNode);
     this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
@@ -249,10 +249,14 @@ export class PlayersManager extends Dispatcher {
     nextNode: RaptNode
   ): void {
     const hasActivePlayer = !!this.activePlayer;
-    const hasActiveNode = !!this.activeNode;
     const isSwitchingPlayer = this.activePlayer !== nextPlayer;
     const isSwitchingRaptNode = this.activeNode !== nextNode;
-    log('log','pm_updateActiveItems', 'executed', { hasActivePlayer, hasActiveNode, isSwitchingPlayer, isSwitchingRaptNode, nodeId: nextNode ? nextNode.id : null});
+    log("log", "pm_updateActiveItems", "executed", {
+      hasActivePlayer,
+      isSwitchingPlayer,
+      isSwitchingRaptNode,
+      nodeId: nextNode ? nextNode.id : null
+    });
 
     if (hasActivePlayer) {
       this.activePlayer.player.pause();
@@ -282,11 +286,18 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
-
     const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
-      log('log','pm_switchPlayer', 'executed', { entryId: newEntryId, nodeId: nextRaptNode.id});
+    log("log", "pm_switchPlayer", "executed", {
+      entryId: newEntryId,
+      nodeId: nextRaptNode.id
+    });
     if (this.activePlayer && this.activeNode === nextRaptNode) {
-      log('log','pm_switchPlayer', 'switch to same node, seek to the beginning', { entryId: newEntryId});
+      log(
+        "log",
+        "pm_switchPlayer",
+        "switch to same node, seek to the beginning",
+        { entryId: newEntryId }
+      );
       // node is "switched" to itself
       this.activePlayer.player.currentTime = 0;
       this.activePlayer.player.play();
@@ -294,25 +305,39 @@ export class PlayersManager extends Dispatcher {
     }
 
     if (this.playersBufferManager.isAvailable()) {
-      log('log','pm_switchPlayer', 'use buffer manager to get player for entry', { entryId: newEntryId});
-      const bufferedPlayer = this.playersBufferManager.getPlayer(newEntryId, true);
+      log(
+        "log",
+        "pm_switchPlayer",
+        "use buffer manager to get player for entry",
+        { entryId: newEntryId }
+      );
+      const bufferedPlayer = this.playersBufferManager.getPlayer(
+        newEntryId,
+        true
+      );
       this.updateActiveItems(bufferedPlayer, nextRaptNode);
     } else {
-        log('log','pm_switchPlayer', 'buffer manager not available, switch media on current player', { entryId: newEntryId});
+      log(
+        "log",
+        "pm_switchPlayer",
+        "buffer manager not available, switch media on current player",
+        { entryId: newEntryId }
+      );
 
-        if (!this.activePlayer) {
-            log('log','pm_switchPlayer', 'no player found, create main player', { entryId: newEntryId});
-            const newPlayer = this.playersFactory.createPlayer(
-                newEntryId,
-                true
-            )
-            this.updateActiveItems(newPlayer, nextRaptNode);
-        } else {
-            log('log','pm_switchPlayer', 'switch media on main player', { entryId: newEntryId});
-            this.activePlayer.player.loadMedia({
-                entryId: this.activeNode.entryId
-            });
-        }
+      if (!this.activePlayer) {
+        log("log", "pm_switchPlayer", "no player found, create main player", {
+          entryId: newEntryId
+        });
+        const newPlayer = this.playersFactory.createPlayer(newEntryId, true);
+        this.updateActiveItems(newPlayer, nextRaptNode);
+      } else {
+        log("log", "pm_switchPlayer", "switch media on main player", {
+          entryId: newEntryId
+        });
+        this.activePlayer.player.loadMedia({
+          entryId: this.activeNode.entryId
+        });
+      }
     }
   }
 

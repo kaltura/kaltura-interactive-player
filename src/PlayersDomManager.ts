@@ -1,5 +1,6 @@
 import { createElement } from "./helpers/CreateElement";
 import { KalturaPlayer } from "./PlayersFactory";
+import { log } from "./helpers/logger";
 
 export class PlayersDomManager {
   private static raptPlayerCounter = 1;
@@ -49,6 +50,7 @@ export class PlayersDomManager {
   }
 
   public changeActivePlayer(player: KalturaPlayer): void {
+    log("log", "dm_changeActivePlayer", "executed", { id: player.id });
     this.raptContainer
       .querySelectorAll(".current-playing")
       .forEach(playerElement => {

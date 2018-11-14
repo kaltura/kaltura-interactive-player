@@ -87,7 +87,7 @@ export class PlayersBufferManager extends Dispatcher {
 
           // TODO [eitan] for persistancy - assign only synced persistancy
 
-          if (playImmediate) {
+          if (playImmediate && !result.player.isPlaying) {
               log('log', 'pbm_getPlayer', 'execute play command', { entryId });
               result.player.play();
           }
@@ -111,11 +111,11 @@ export class PlayersBufferManager extends Dispatcher {
             isReady: false
         };
 
+        this.bufferList.push(newItem);
+
         if (playImmediate) {
           this.trackBufferOfItem(newItem);
         }
-
-        this.bufferList.push(newItem);
     }
 
     return result;
