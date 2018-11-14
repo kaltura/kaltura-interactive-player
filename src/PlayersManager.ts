@@ -8,6 +8,7 @@ import {
 } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { BufferManager } from "./helpers/BufferManager";
+import { log } from './helpers/logger';
 
 declare var Rapt: any;
 
@@ -34,8 +35,8 @@ export class PlayersManager extends Dispatcher {
   private bufferManager: BufferManager;
   private playersBufferManager: PlayersBufferManager;
   private playersFactory: PlayersFactory;
-  private activePlayer: KalturaPlayer;
-  private activeNode: RaptNode;
+  private activePlayer: KalturaPlayer = null;
+  private activeNode: RaptNode = null;
 
   static PLAYER_TICK_INTERVAL: number = 250;
   static defaultBufferTime: number = 6;
@@ -178,9 +179,7 @@ export class PlayersManager extends Dispatcher {
     }
 
     // load the 1st media
-    this.activeNode = firstNode;
-    this.updateCurrentPlayer(null, this.activeNode);
-
+    this.updateActiveItems(null, firstNode);
     this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
@@ -245,25 +244,21 @@ export class PlayersManager extends Dispatcher {
 
   ////////////////////////////////////////////
   // store the player and the node
-  private updateCurrentPlayer(
+  private updateActiveItems(
     nextPlayer: KalturaPlayer,
     nextNode: RaptNode
   ): void {
-    const hasActivePlayer = this.activePlayer;
-    const hasActiveNode = this.activeNode;
-    const isSwitchingPlayer =
-      !hasActivePlayer || this.activePlayer != nextPlayer;
-    const isSwitchingRaptNode = !hasActiveNode || this.activeNode !== nextNode;
-
-    // TODO stop checking for buffer completed of current played entry
-    // whatever.stopCheckTimeout();
+    const hasActivePlayer = !!this.activePlayer;
+    const hasActiveNode = !!this.activeNode;
+    const isSwitchingPlayer = this.activePlayer !== nextPlayer;
+    const isSwitchingRaptNode = this.activeNode !== nextNode;
+    log('log','pm_updateActiveItems', 'executed', { hasActivePlayer, hasActiveNode, isSwitchingPlayer, isSwitchingRaptNode, nodeId: nextNode ? nextNode.id : null});
 
     if (hasActivePlayer) {
       this.activePlayer.player.pause();
       if (isSwitchingPlayer) {
         // remove listeners
         this.removeListeners();
-
         if (!this.playersBufferManager.isAvailable()) {
           // TODO must destroy active player
         }
@@ -274,16 +269,10 @@ export class PlayersManager extends Dispatcher {
     this.activeNode = nextNode;
 
     if (isSwitchingRaptNode) {
-      this.playersBufferManager.purgePlayers(this.activeNode);
+      this.playersBufferManager.switchPlayer(this.activeNode);
     }
 
     if (isSwitchingPlayer) {
-      // bufferNext only if we switched to a new node
-      if (this.activePlayer && this.activePlayer.player) {
-        this.bufferManager.handleBuffered(this.activePlayer.player, () => {
-          this.playersBufferManager.prepareNext(this.activeNode);
-        });
-      }
       this.domManager.changeActivePlayer(this.activePlayer);
       // register listeners
       this.addListenersToPlayer();
@@ -293,32 +282,40 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
-    const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
 
+    const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
+      log('log','pm_switchPlayer', 'executed', { entryId: newEntryId, nodeId: nextRaptNode.id});
     if (this.activePlayer && this.activeNode === nextRaptNode) {
+      log('log','pm_switchPlayer', 'switch to same node, seek to the beginning', { entryId: newEntryId});
       // node is "switched" to itself
       this.activePlayer.player.currentTime = 0;
       this.activePlayer.player.play();
       return;
     }
 
-    // check if bufferManager has a ready-to-play player
-    const bufferedPlayer = this.playersBufferManager.getPlayer(newEntryId);
-    if (bufferedPlayer) {
-      this.updateCurrentPlayer(bufferedPlayer, nextRaptNode);
-      this.activePlayer.player.play();
-    } else if (!this.activePlayer || this.playersBufferManager.isAvailable()) {
-      const newPlayer = this.playersFactory.createPlayer(newEntryId, true, {});
-      this.updateCurrentPlayer(newPlayer, nextRaptNode);
+    if (this.playersBufferManager.isAvailable()) {
+      log('log','pm_switchPlayer', 'use buffer manager to get player for entry', { entryId: newEntryId});
+      const bufferedPlayer = this.playersBufferManager.getPlayer(newEntryId, true);
+      this.updateActiveItems(bufferedPlayer, nextRaptNode);
     } else {
-      this.updateCurrentPlayer(this.activePlayer, nextRaptNode);
+        log('log','pm_switchPlayer', 'buffer manager not available, switch media on current player', { entryId: newEntryId});
 
-      // fallback to re-use of active player (allowed ONLY IF buffer manager is not available)
-      this.activePlayer.player.loadMedia({
-        entryId: this.activeNode.entryId
-      });
+        if (!this.activePlayer) {
+            log('log','pm_switchPlayer', 'no player found, create main player', { entryId: newEntryId});
+            const newPlayer = this.playersFactory.createPlayer(
+                newEntryId,
+                true
+            )
+            this.updateActiveItems(newPlayer, nextRaptNode);
+        } else {
+            log('log','pm_switchPlayer', 'switch media on main player', { entryId: newEntryId});
+            this.activePlayer.player.loadMedia({
+                entryId: this.activeNode.entryId
+            });
+        }
     }
   }
+
   // TODO should be removed
   private getNodeByEntryId(entryId: string): RaptNode {
     // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id

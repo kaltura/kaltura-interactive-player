@@ -2,6 +2,15 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
 import { RaptNode } from "./PlayersManager";
 import { BufferManager } from "./helpers/BufferManager";
+import { log } from './helpers/logger';
+
+interface BufferItem {
+  player: KalturaPlayer;
+  isReady: boolean;
+  isRunning: boolean;
+  bufferingTimeoutToken: number;
+  entryId: string;
+}
 
 export const BufferEvent = {
   BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
@@ -23,8 +32,12 @@ export const enum PersistencyType {
 }
 
 export class PlayersBufferManager extends Dispatcher {
+  private shortEntryThreshold: number = 6;
+  private secondsToBuffer: number = 6;
+
   private players: { [id: string]: KalturaPlayer } = {};
   private entriesToCache: string[] = []; // array of entry-ids to cache
+  private bufferList: BufferItem[] = [];
 
   // playback persistency
   private currentAudioLanguage: string = undefined;
@@ -53,15 +66,58 @@ export class PlayersBufferManager extends Dispatcher {
    * Look if there is a relevant player that was created already
    * @param playerId
    */
-  public getPlayer(entryId: string): KalturaPlayer | null {
-    let result = Object.values(this.players).find(
-      (kalturaPlayer: KalturaPlayer) => {
-        return kalturaPlayer.player.getMediaInfo().entryId === entryId;
-      }
-    );
-    if (result && result.player.currentTime > 0) {
-      result.player.currentTime = 0;
+  public getPlayer(entryId: string, playImmediate: boolean): KalturaPlayer {
+      log('log', 'pbm_getPlayer', 'executed', { entryId, playImmediate});
+    if (!this._isAvailable) {
+      throw new Error("BufferManager is not available");
     }
+
+    let result: KalturaPlayer;
+    let bufferedItem = this.bufferList.find(item => item.entryId === entryId);
+
+    if (bufferedItem) {
+      if (bufferedItem.player) {
+          log('log', 'pbm_getPlayer', 'found player in buffer list', { entryId });
+          result = bufferedItem.player;
+
+          if (result.player.currentTime > 0) {
+              log('log', 'pbm_getPlayer', 'seek player to the beginning', { entryId });
+              result.player.currentTime = 0;
+          }
+
+          // TODO [eitan] for persistancy - assign only synced persistancy
+
+          if (playImmediate) {
+              log('log', 'pbm_getPlayer', 'execute play command', { entryId });
+              result.player.play();
+          }
+      }else {
+          log('log', 'pbm_getPlayer', 'player buffered in pending mode, create player', { entryId, trackBuffer: playImmediate });
+        bufferedItem.player = this.createPlayer(entryId, playImmediate);
+        if (playImmediate) {
+            this.trackBufferOfItem(bufferedItem);
+        }
+        result = bufferedItem.player;
+      }
+    } else {
+        log('log', 'pbm_getPlayer', 'not found in buffer list, create player for entry', { entryId });
+        result = this.createPlayer(entryId, playImmediate);
+
+        const newItem = {
+            entryId: entryId,
+            player: result,
+            isRunning: playImmediate,
+            bufferingTimeoutToken: null,
+            isReady: false
+        };
+
+        if (playImmediate) {
+          this.trackBufferOfItem(newItem);
+        }
+
+        this.bufferList.push(newItem);
+    }
+
     return result;
   }
 
@@ -73,7 +129,12 @@ export class PlayersBufferManager extends Dispatcher {
     this._isAvailable = false;
   }
 
-  private createPlayer(entryId: string): KalturaPlayer {
+  private createPlayer(
+    entryId: string,
+    playImmediate: boolean
+  ): KalturaPlayer {
+
+    log('log', 'pbm_createPlayer', 'create player for entry', { entryId, playImmediate});
     // TODO move persistence to PM
     let persistence: persistancy = {};
     if (this.currentPlaybackRate) {
@@ -86,70 +147,180 @@ export class PlayersBufferManager extends Dispatcher {
       persistence.audio = this.currentAudioLanguage;
     }
 
+    // TODO [eitan] for persistancy - apply async info
+
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
-      false,
+      playImmediate,
       persistence
     );
-
     // store locally
-    this.players[kalturaPlayer.id] = kalturaPlayer;
-
-    // TODO move to dedicated service
-    // this.checkIfBuffered(player, entryId => {
-    //   this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
-    //   // call the function
-    //   const playerEl = this.getPlayerByEntryId(entryId);
-    //   if (playerEl && playerEl.readyFunc) {
-    //     playerEl.readyFunc(entryId);
-    //   }
-    // });
-
+    // this.players[kalturaPlayer.id] = kalturaPlayer; // todo old mechanism - remove
     return kalturaPlayer;
   }
 
+  public switchPlayer(nextNode?: RaptNode) {
+
+      if (!this._isAvailable) {
+          log('warn', 'pbm_switchPlayer', 'buffer manager is disabled, ignore switch player request');
+          return
+      }
+
+    if (nextNode) {
+      const nodesToBuffer = [nextNode, ...this.getNextNodes(nextNode)];
+      const prevItemsMap = this.bufferList.reduce((acc, item) => {
+        acc[item.entryId] = item;
+        return acc;
+      }, {});
+      const prevItemsCount = this.bufferList.length;
+
+      this.bufferList = [];
+
+      log('log','pbm_switchPlayer', 'rebuliding buffer list', { prevCount: prevItemsCount, newCount: nodesToBuffer.length})
+      nodesToBuffer.forEach(node => {
+        const existinItem = prevItemsMap[node.entryId];
+        if (existinItem) {
+          log('log', 'pbm_switchPlayer', 'entry id was in previous buffer list, copy to current list', { entryId: node.entryId });
+          this.bufferList.push(existinItem);
+          delete prevItemsMap[node.entryId];
+        } else {
+            log('log', 'pbm_switchPlayer', 'add entry to buffer queue', { entryId: node.entryId });
+          this.bufferList.push({
+            entryId: node.entryId,
+            player: null,
+            isRunning: false,
+            bufferingTimeoutToken: null,
+            isReady: false
+          });
+        }
+      });
+      this.destroyBufferedItems(Object.values(prevItemsMap));
+    } else {
+      this.destroyBufferedItems(this.bufferList);
+    }
+    this.handleBufferList();
+  }
+
+  private handleBufferList(): void {
+      log('log', 'pbm_handleBufferList', 'executed');
+      const allReady = this.bufferList.length === 0 || this.bufferList.every(item => item.isReady);
+      if (allReady) {
+          log('log', 'pbm_handleBufferList', 'all items are buffered', {count: this.bufferList.length});
+          this.dispatch({
+              type: BufferEvent.ALL_BUFFERED
+          });
+          return;
+      }
+
+      const isSomeoneBuffering = this.bufferList.some(item => item.isRunning);
+      // check if need to buffer an item (has items, no one is running and someone is not ready)
+      if (!isSomeoneBuffering) {
+          // find the 1st item on the list that is not buffering (list is ordered)
+          const unbufferedItem = this.bufferList.find(item => !item.isReady);
+          log('log', 'pbm_handleBufferList', 'start track item', {entryId: unbufferedItem.entryId});
+          this.executeItemBuffering(unbufferedItem);
+      } else {
+          log('log', 'pbm_handleBufferList', 'an item is already in buffer mode, nothing to do');
+      }
+  }
+
+  private trackBufferOfItem(item: BufferItem) {
+      item.isRunning = true;
+      item.bufferingTimeoutToken = setTimeout(
+          this.executeItemBuffering.bind(this, item),
+          200
+      );
+  }
+  private executeItemBuffering(item: BufferItem): void {
+    item.bufferingTimeoutToken = null;
+
+    if (!item.isRunning) {
+        log('log', 'pbm_executeItemBuffering', 'start buffering entry', { entryId: item.entryId } );
+
+        item.player = this.createPlayer(item.entryId, false);
+        this.trackBufferOfItem(item);
+    } else {
+      // has player ! find if we have duration
+      const player = item.player.player;
+      if (
+        player.duration &&
+        player.duration !== NaN &&
+        player.duration < this.shortEntryThreshold
+      ) {
+          log('log', 'pbm_executeItemBuffering', 'buffered not needed, mark entry as ready', { entryId: item.entryId } );
+        item.isReady = true;
+        item.isRunning = false;
+        this.handleBufferList();
+      } else if (
+        item.isRunning &&
+        player.buffered &&
+        player.buffered.length &&
+        player.buffered.end &&
+        player.buffered.end(0) > this.secondsToBuffer - 1
+      ) {
+          log('log', 'pbm_executeItemBuffering', 'buffer completed, mark entry as ready', { entryId: item.entryId } );
+        item.isRunning = false;
+        item.isReady = true;
+        this.handleBufferList();
+      } else {
+          this.trackBufferOfItem(item);
+      }
+    }
+
+    // if has not running -> set running, create player and set a timeout on that item which will execute executeItemBuffering(item)
+    // if item is too short => set is ready and reexecute handlebufferlist
+    // if running -> check if ready mark as is ready and not running, and execute handleBufferList, otherwise, reset timeout
+  }
   /**
    * Clear all current players (but the players that are relevant for next node)
    * @param nextNode
    */
-  public purgePlayers(nextNode?: RaptNode) {
-    const exceptList = nextNode
-      ? this.getNextNodes(nextNode).map(node => node.entryId)
-      : [];
-    const existingPlayerIds = Object.keys(this.players);
-    for (let playerId of existingPlayerIds) {
-      const kalturaPlayer = this.players[playerId];
-      const entryId = kalturaPlayer.player.getMediaInfo().entryId;
-      if (exceptList.indexOf(entryId) === -1 && entryId !== nextNode.entryId) {
-        this.dispatch({ type: BufferEvent.DESTROYING, payload: entryId });
-        kalturaPlayer.destroy();
-        delete this.players[playerId];
-        this.dispatch({ type: BufferEvent.DESTROYED, payload: entryId });
+  private destroyBufferedItems(items: BufferItem[]) {
+      log('log', 'pbm_destroyBufferedItems', 'executed', { entries: items.map(item => item.entryId) });
+    items.forEach(item => {
+      if (item.player) {
+          log('log', 'pbm_destroyBufferedItems', 'remove entry from buffer queue', { entryId: item.entryId });
+        this.dispatch({
+          type: BufferEvent.DESTROYING,
+          payload: { entryId: item.entryId }
+        });
+        item.player.destroy();
+        this.dispatch({
+          type: BufferEvent.DESTROYED,
+          payload: { entryId: item.entryId }
+        });
       }
-    }
-    this.entriesToCache = [];
+
+      if (item.bufferingTimeoutToken) {
+        log('log', 'pbm_destroyBufferedItems', 'cancel running buffer for entry', { entryId: item.entryId });
+        clearTimeout(item.bufferingTimeoutToken);
+      }
+    });
   }
 
-  /**
-   * The function starts to load the next players in cache-mode by the order of the array
-   * @param entries
-   */
-  public prepareNext(node: RaptNode): void {
-    let nextEntries = this.getNextNodes(node).map(raptNode => raptNode.entryId);
-    // // optimize - no-point of caching a player if it is already cached.
-    // todo - rehook this
-    // nextEntries = nextEntries.filter(
-    //   (entryId, i, all) => !!this.players[entryId] && i === all.indexOf(entryId)
-    // );
-    this.entriesToCache = nextEntries;
-    this.cacheNextPlayer();
+  public syncPlayersStatus(activeEntryId: string) {
+    // TODO [eitan] for persistancy
+    // store new persistance info
+
+      // if changing async info
+      // 1. cancel active buffering (except for the active)
+      // 2. for all players in buffer list which are not the active one:
+      // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
+      // 2.2 apply async information
+      // 3. re-run buffering logic
+
+    //
+      // if a-synced issue,
   }
 
-  applyToPlayers(
+  public applyToPlayers(
     attribute: PersistencyType,
     value: number | string,
     currentPlayer: any
   ) {
+
+
+    return; // todo - hook to this.bufferList existing players
     Object.values(this.players).forEach(kalturaPlayer => {
       const player: any = kalturaPlayer.player;
       switch (attribute) {
@@ -192,25 +363,6 @@ export class PlayersBufferManager extends Dispatcher {
           break;
       }
     });
-  }
-
-  /**
-   * Grab the next player from this.cachingPlayers and cache it. if this.cachingPlayers is empty we are done caching
-   */
-  private cacheNextPlayer() {
-    if (this.entriesToCache.length) {
-      const nextEntryId = this.entriesToCache.shift();
-      this.dispatch({ type: BufferEvent.BUFFERING, payload: nextEntryId });
-      const newPlayer = this.createPlayer(nextEntryId);
-      this.players[newPlayer.id] = newPlayer;
-      this.bufferManager.handleBuffered(newPlayer.player, entryId => {
-        this.dispatch({ type: BufferEvent.DONE_BUFFERING, payload: entryId });
-        this.cacheNextPlayer();
-      });
-    } else {
-      // done caching ! notify
-      this.dispatch({ type: BufferEvent.ALL_BUFFERED });
-    }
   }
 
   /**
