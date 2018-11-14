@@ -1,11 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
 import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
-import {
-  BufferEvent,
-  PersistencyType,
-  PlayersBufferManager
-} from "./PlayersBufferManager";
+import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { log } from "./helpers/logger";
 
@@ -24,6 +20,14 @@ export interface RaptNode {
   name: string;
   customData?: any;
   prefetchNodeIds?: string[];
+}
+
+export enum Persistency {
+  bbb = "bbb",
+  captions = "captions",
+  volume = "volume",
+  audioTrack = "audioTrack",
+  rate = "rate"
 }
 
 /**
@@ -357,37 +361,34 @@ export class PlayersManager extends Dispatcher {
   }
 
   private handleTextTrackChanged = (event: any) => {
-    this.playersBufferManager.applyToPlayers(
-      PersistencyType.captions,
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.captions,
       event.payload.selectedTextTrack._language,
       this.activePlayer.player
     );
   };
 
   private handleRateChanged = (event: any) => {
-    this.playersBufferManager.applyToPlayers(
-      PersistencyType.rate,
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.rate,
       this.activePlayer.player.playbackRate,
       this.activePlayer.player
     );
   };
 
   private handleAudiotrackChanged = (event: any) => {
-    this.playersBufferManager.applyToPlayers(
-      PersistencyType.audioTrack,
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.audioTrack,
       event.payload.selectedAudioTrack._language,
       this.activePlayer.player
     );
   };
   private handleVolumeChanged = (event: any) => {
-    this.playersBufferManager.applyToPlayers(
-      PersistencyType.volume,
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.volume,
       this.activePlayer.player.volume,
       this.activePlayer.player
     );
-  };
-  private handleQualityChanged = (event: any) => {
-    // Corrently not supported !
   };
 
   removeListeners() {
@@ -408,10 +409,6 @@ export class PlayersManager extends Dispatcher {
       player.removeEventListener(
         player.Event.Core.VOLUME_CHANGE,
         this.handleVolumeChanged
-      );
-      player.removeEventListener(
-        player.Event.Core.VIDEO_TRACK_CHANGED,
-        this.handleQualityChanged
       );
     }
   }
@@ -438,11 +435,6 @@ export class PlayersManager extends Dispatcher {
       player.addEventListener(
         player.Event.Core.VOLUME_CHANGE,
         this.handleVolumeChanged
-      );
-
-      player.addEventListener(
-        player.Event.Core.VIDEO_TRACK_CHANGED,
-        this.handleQualityChanged
       );
     }
   }

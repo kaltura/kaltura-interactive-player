@@ -4,12 +4,6 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { KipFullscreen } from "./PlayersManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 
-export interface persistancy {
-  captions?: string;
-  audio?: string;
-  rate?: number;
-}
-
 export class KalturaPlayer {
   private static instanceCounter = 1;
   public id;
@@ -62,7 +56,7 @@ export class PlayersFactory extends Dispatcher {
   public createPlayer(
     entryId: string,
     playImmediate: boolean,
-    persistencyObject?: persistancy
+    persistencyObject?: any
   ): KalturaPlayer {
     // TODO check if the id already exists and if so throw exception
     const {
@@ -72,7 +66,7 @@ export class PlayersFactory extends Dispatcher {
     let conf: any = this.getPlayerConf(playerContainerId, playImmediate);
     // persistancy logic of new creation. If a new player is created - push the relevant persistancy attribute to config
     if (persistencyObject) {
-      if (persistencyObject.audio) {
+      if (persistencyObject) {
         conf.playback.audioLanguage = persistencyObject.audio;
       }
       if (persistencyObject.captions) {

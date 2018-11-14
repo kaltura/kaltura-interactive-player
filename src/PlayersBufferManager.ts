@@ -1,6 +1,6 @@
 import { Dispatcher } from "./helpers/Dispatcher";
-import { persistancy, PlayersFactory, KalturaPlayer } from "./PlayersFactory";
-import { RaptNode } from "./PlayersManager";
+import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
+import { Persistency, RaptNode } from "./PlayersManager";
 import { log } from "./helpers/logger";
 
 interface BufferItem {
@@ -21,28 +21,17 @@ export const BufferEvent = {
   ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
 };
 
-export const enum PersistencyType {
-  // todo - post debug - remove values
-  captions = "captions",
-  audioTrack = "audioTrack",
-  rate = "rate",
-  volume = "volume",
-  quality = "quality"
-}
-
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
   private secondsToBuffer: number = 6;
-
   private bufferList: BufferItem[] = [];
-
-  // playback persistency
-  private currentAudioLanguage: string = undefined;
-  private currentCaptionsLanguage: string = undefined;
-  private currentPlaybackRate: number = 1;
-  private currentVolume: number = undefined;
+  private persistenceObj: {
+    rate?: number;
+    captions?: string;
+    volume?: number;
+    audio?: string;
+  } = {};
   private _isAvailable: boolean;
-
   constructor(private raptData: any, private playersFactory: PlayersFactory) {
     super();
     this.initializeAvailablity();
@@ -139,24 +128,13 @@ export class PlayersBufferManager extends Dispatcher {
       entryId,
       playImmediate
     });
-    // TODO move persistence to PM
-    let persistence: persistancy = {};
-    if (this.currentPlaybackRate) {
-      persistence.rate = this.currentPlaybackRate;
-    }
-    if (this.currentCaptionsLanguage) {
-      persistence.captions = this.currentCaptionsLanguage;
-    }
-    if (this.currentAudioLanguage) {
-      persistence.audio = this.currentAudioLanguage;
-    }
 
     // TODO [eitan] for persistancy - apply async info
 
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
-      persistence
+      this.persistenceObj
     );
     return kalturaPlayer;
   }
@@ -347,21 +325,17 @@ export class PlayersBufferManager extends Dispatcher {
     });
   }
 
-  public syncPlayersStatus(activeEntryId: string) {
+  public applyToPlayers(arg) {
     // TODO [eitan] for persistancy
     // store new persistance info
     // if changing async info
-    // 1. cancel active buffering (except for the active)
-    // 2. for all players in buffer list which are not the active one:
-    // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
-    // 2.2 apply async information
     // 3. re-run buffering logic
     //
     // if a-synced issue,
   }
 
-  public applyToPlayers(
-    attribute: PersistencyType,
+  public syncPlayersStatus(
+    attribute: Persistency,
     value: number | string,
     currentPlayer: any
   ) {
@@ -370,49 +344,58 @@ export class PlayersBufferManager extends Dispatcher {
       value,
       currentPlayer
     });
+    // store to local
+    this.persistenceObj[attribute] = value;
+
     const availablePlayers = this.bufferList
       .filter(item => item.player)
       .map(item => item.player);
 
+    //if (attribute === Persistency.audioTrack) {
+    // handle async if necessary
+
+    // 1. cancel active buffering (except for the active)
+    // 2. for all players in buffer list which are not the active one:
+    // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
+    // 2.2 apply async information
+
+    //return;
+    //}
+
     availablePlayers.forEach(kalturaPlayer => {
       const player: any = kalturaPlayer.player;
       switch (attribute) {
-        case PersistencyType.captions:
+        case Persistency.captions:
           // iterate all buffered players
-          this.currentCaptionsLanguage = value.toString();
           const textTracks = player.getTracks(
             this.playersFactory.playerLibrary.core.TrackType.TEXT
           );
           const textTrack = textTracks.find(
-            track => track.language === this.currentCaptionsLanguage
+            track => track.language === this.persistenceObj.captions
           );
           if (textTrack) {
             player.selectTrack(textTrack);
           }
           break;
-        case PersistencyType.audioTrack:
+
+        case Persistency.audioTrack:
           // iterate all buffered players
-          this.currentAudioLanguage = value.toString();
           const audioTracks = player.getTracks(
             this.playersFactory.playerLibrary.core.TrackType.AUDIO
           );
           const audioTrack = audioTracks.find(
-            track => track.language === this.currentCaptionsLanguage
+            track => track.language === this.persistenceObj.audio
           );
           if (audioTrack) {
             player.selectTrack(audioTrack);
           }
           break;
-        case PersistencyType.rate:
-          this.currentPlaybackRate = Number(value);
-          player.playbackRate = this.currentPlaybackRate;
+
+        case Persistency.rate:
+          player.playbackRate = this.persistenceObj.rate;
           break;
-        case PersistencyType.volume:
-          this.currentVolume = currentPlayer.volume;
-          player.volume = this.currentVolume;
-          break;
-        case PersistencyType.quality:
-          // todo - consult product if we want to implement this
+        case Persistency.volume:
+          player.volume = this.persistenceObj.volume;
           break;
       }
     });
