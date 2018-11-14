@@ -124,6 +124,9 @@ export class PlayersManager extends Dispatcher {
       //TODO - fix
       if (!this.model) {
         this.model = model; // store model data for future use of Rapt sending data
+        setTimeout(() => {
+          this.sendAnalytics(44);
+        }, 51);
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
@@ -134,6 +137,7 @@ export class PlayersManager extends Dispatcher {
         case 14:
           return false; // don't send quartiles events
         case 1:
+          console.log(">>>>>1");
         case 2:
         case 3:
           model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
@@ -286,6 +290,18 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   public switchPlayer(newEntryId: string): void {
+    // send analytics of nodePlay - event44
+    if (this.model) {
+      this.sendAnalytics(44, { entryId: newEntryId });
+    }
+
+    if (this.activeNode) {
+      this.sendAnalytics(48, {
+        entryId: newEntryId,
+        fromNodeId: this.activeNode.entryId,
+        toNodeId: newEntryId
+      });
+    }
     const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
     log("log", "pm_switchPlayer", "executed", {
       entryId: newEntryId,
@@ -352,7 +368,9 @@ export class PlayersManager extends Dispatcher {
 
   public execute(command: any) {
     if (!this.raptEngine) {
-      console.log(
+      log(
+        "error",
+        "pm_execute",
         "WARNING: Rapt Media commands received before initialization is complete"
       );
       return;
@@ -451,14 +469,54 @@ export class PlayersManager extends Dispatcher {
   // Rapt interface - don't change signature //
   event(event: any) {
     if (event.type === "hotspot:click") {
-      let tmpModel = Object.assign({}, this.model);
-      tmpModel.eventType = 44;
-      // this.activePlayer2.player.plugins.kava.sendAnalytics(tmpModel);
       this.clickedHotspotId = event.payload.hotspot.id;
+    }
+    if (event.type === "browser:open") {
+      const additionalData = {
+        target: event.payload.href,
+        hotspotId: event.context.payload.hotspot.id
+      };
+      this.sendAnalytics(47, additionalData);
     }
     if (event.type === "project:ready") {
       this.raptEngine.metadata.account = this.config.partnetId;
     }
     this.dispatch(event);
+  }
+
+  /**
+   * The function sends an anlytics beacon.
+   * @param eventNumber
+   * @param attributes - an object of attributes to send on top of the event (will override existing attr
+   * @param fieldsToRemove - array of strings that are not required on the event
+   */
+  sendAnalytics(
+    eventNumber: number,
+    attributes?: object,
+    fieldsToRemove?: string[]
+  ) {
+    if (!this.model) {
+      log(
+        "error",
+        "pm_sendAnalytics",
+        "Missing basic event model - cannot send analytics"
+      );
+      return;
+    }
+    let tmpModel = Object.assign({}, this.model);
+    tmpModel.eventType = eventNumber;
+
+    if (attributes) {
+      Object.keys(attributes).forEach(item => {
+        tmpModel[item] = attributes[item];
+      });
+    }
+
+    if (fieldsToRemove) {
+      fieldsToRemove.forEach(field => {
+        delete tmpModel[field];
+      });
+    }
+    this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
   }
 }
