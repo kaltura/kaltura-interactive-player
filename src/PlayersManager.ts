@@ -137,7 +137,6 @@ export class PlayersManager extends Dispatcher {
         case 14:
           return false; // don't send quartiles events
         case 1:
-          console.log(">>>>>1");
         case 2:
         case 3:
           model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
