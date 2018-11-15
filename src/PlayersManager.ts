@@ -43,7 +43,6 @@ export class PlayersManager extends Dispatcher {
   static PLAYER_TICK_INTERVAL: number = 250;
   static defaultBufferTime: number = 6;
 
-  private clickedHotspotId: String = undefined;
   public raptEngine: any;
   private model: any = undefined;
   private isAvailable: boolean;
@@ -121,15 +120,12 @@ export class PlayersManager extends Dispatcher {
      * @param model
      */
     const analyticsInterruptFunc = (model: any): boolean => {
-      //TODO - fix
       if (!this.model) {
         this.model = model; // store model data for future use of Rapt sending data
-        setTimeout(() => {
-          this.sendAnalytics(44);
-        }, 73);
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
+      model.entryId = this.activeNode.id;
       switch (model.eventType) {
         case 11:
         case 12:
@@ -140,6 +136,7 @@ export class PlayersManager extends Dispatcher {
         case 2:
         case 3:
           model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
+          break;
       }
       return true;
     };
@@ -271,14 +268,11 @@ export class PlayersManager extends Dispatcher {
         }
       }
     }
-
     this.activePlayer = nextPlayer;
     this.activeNode = nextNode;
-
     if (isSwitchingRaptNode) {
       this.playersBufferManager.switchPlayer(this.activeNode);
     }
-
     if (isSwitchingPlayer) {
       this.domManager.changeActivePlayer(this.activePlayer);
       // register listeners
@@ -288,10 +282,15 @@ export class PlayersManager extends Dispatcher {
   ////////////////////////////////////////////
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
-  public switchPlayer(newEntryId: string): void {
+  private switchPlayer(media: any): void {
+    const newEntryId = media.sources[0].src;
+    const nextRaptNode: RaptNode = media.node;
+
     // send analytics of nodePlay - event44
     if (this.model) {
       this.sendAnalytics(44, { entryId: newEntryId });
+    } else {
+      // TODO - handle analytics of first event44 later;
     }
 
     if (this.activeNode) {
@@ -301,7 +300,7 @@ export class PlayersManager extends Dispatcher {
         toNodeId: newEntryId
       });
     }
-    const nextRaptNode: RaptNode = this.getNodeByEntryId(newEntryId);
+
     log("log", "pm_switchPlayer", "executed", {
       entryId: newEntryId,
       nodeId: nextRaptNode.id
@@ -354,15 +353,6 @@ export class PlayersManager extends Dispatcher {
         });
       }
     }
-  }
-
-  // TODO should be removed
-  private getNodeByEntryId(entryId: string): RaptNode {
-    // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
-    const newNode: RaptNode = this.raptData.nodes.find(
-      (node: RaptNode) => node.entryId === entryId
-    );
-    return newNode;
   }
 
   public execute(command: any) {
@@ -461,16 +451,13 @@ export class PlayersManager extends Dispatcher {
 
   // Rapt interface - don't change signature //
   load(media: any) {
-    const id = media.sources[0].src;
-    this.switchPlayer(id);
+    this.switchPlayer(media);
   }
 
   // Rapt interface - don't change signature //
   event(event: any) {
-    if (event.type === "hotspot:click") {
-      this.clickedHotspotId = event.payload.hotspot.id;
-    }
     if (event.type === "browser:open") {
+      // track hotspot click
       const additionalData = {
         target: event.payload.href,
         hotspotId: event.context.payload.hotspot.id
