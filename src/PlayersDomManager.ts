@@ -51,11 +51,14 @@ export class PlayersDomManager {
 
   public changeActivePlayer(player: KalturaPlayer): void {
     log("log", "dm_changeActivePlayer", "executed", { id: player.id });
-    this.raptContainer
-      .querySelectorAll(".current-playing")
-      .forEach(playerElement => {
-        playerElement.classList.remove("current-playing");
-      });
+    const allMarkedPlayers = this.raptContainer.querySelectorAll(
+      ".current-playing"
+    );
+    // IE cannot iterate normally with forEach
+    [].forEach.call(allMarkedPlayers, function(div) {
+      // do whatever
+      div.classList.remove("current-playing");
+    });
     if (player) {
       player.container.classList.add("current-playing");
     }

@@ -38,11 +38,18 @@ export class PlayersBufferManager extends Dispatcher {
   }
 
   private initializeAvailablity(): void {
-    // prevent caching on Safari and if config set to no-cache
-    const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
-      navigator.userAgent
-    );
-    this._isAvailable = !isSafari;
+    // prevent caching on Safari and IE11-Win7 and if config set to no-cache
+    const browser = this.playersFactory.playerLibrary.core.Env.browser.name;
+    // TODO will be used later to exclude other OS & browsers
+    // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
+    // const os = this.playersFactory.playerLibrary.core.Env.os.name;
+    // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
+
+    this._isAvailable = true;
+    // Safari - disable;
+    if (browser === "Safari") {
+      this._isAvailable = false;
+    }
   }
   /**
    * Look if there is a relevant player that was created already
