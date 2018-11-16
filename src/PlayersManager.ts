@@ -56,8 +56,6 @@ export class PlayersManager extends Dispatcher {
   ) {
     super();
 
-    this.initBufferManager();
-
     this.isAvailable =
       this.initPlayersFactory() && this.initPlayersBufferManager();
 
@@ -71,12 +69,6 @@ export class PlayersManager extends Dispatcher {
         this.exitHandler()
       );
     }
-  }
-  private initBufferManager(): boolean {
-    const secondsToBuffer: number = this.config.rapt.bufferTime
-      ? this.config.rapt.bufferTime
-      : PlayersManager.defaultBufferTime;
-    return true;
   }
 
   private initPlayersBufferManager(): boolean {
