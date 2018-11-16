@@ -27,6 +27,10 @@
 
 	var optionalPlaylists = [
 		{
+			name: "links and hotspots" ,
+			id: "1_pdnk89fb" ,
+		},
+		{
 			name: "a-bb-a" ,
 			id: "1_o9h3609b" ,
 		},
@@ -37,6 +41,7 @@
 		{
 			name: "Multi Audio" ,
 			id: "1_q94de4ui" ,
+			selected: true
 		},
 		{
 			name: "CL1" ,
@@ -73,7 +78,6 @@
 		{
 			name: "defaultPath" ,
 			id: "1_r33krd2s",
-			selected: true
 		} ,
 		{
 			name: "self-loop" ,
@@ -83,9 +87,20 @@
 			name: "split same" ,
 			id: "1_a2m8w1pi",
 		} ,
+		{
+			name: "balconette " ,
+			id: "0_dl86knxb",
+		} ,
 	];
 
-	var selectedItem = optionalPlaylists.find(item => item.selected === true);
+	var selectedItem ;
+
+	for (var j = 0 ; j< optionalPlaylists.length; j++){
+		if(optionalPlaylists[j].selected){
+			selectedItem = 	optionalPlaylists[j];
+		}
+
+	}
 	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
 
 	var config = {
@@ -96,14 +111,14 @@
 		},
 
 		provider: {
-			ks : "ZmI4NjkzNmY0YmM4OTE5MTZkMDc4YjMzZTlhMzRmNjhhNjM4ZWQzYXwyNzAxNzsyNzAxNzsxNTQyMjk0NzkxOzI7ODQxMztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA==",
+            ks : "ODk2M2QzZmZkMzE1MTliOWFiMTBkNDRjNTZmYjBhZTU0M2JmYTcwN3wyNzAxNzsyNzAxNzsxNTQyMzY2NDI5OzI7MjgwNzc7X19BRE1JTl9fMjY2ODM7KixkaXNhYmxlZW50aXRsZW1lbnQ=",
 			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
 		},
 
 		rapt:{
 			debug:true,
 			bufferNextNodes: true,
-			bufferTime: 3
+			bufferTime: 6
 		}
 
 	};
@@ -145,7 +160,7 @@
 
 	// logger - debug mode !
 	function logDebugMsg(event){
-		const oneLine = document.createElement("div");
+		var oneLine = document.createElement("div");
 		// mark buffering event in green
 		var printStr = event.type;
 		var payload = event.payload;
@@ -203,9 +218,6 @@
 	}
 	function getNodes() {
 		console.table(kip.data.nodes);
-	}
-	function getMetadata(){
-		console.table(kip.metadata.account);
 	}
 	function currentTime(){
 		console.log(kip.currentTime);
@@ -276,10 +288,8 @@
     <br/>
     <br/>
     <button onclick="evaluateKip('nodes')" style="background: #f4Fd98" >player.data.nodes</button>
-    <button onclick="evaluateKip('raptMedia.account')" style="background: #f4Fd98" >raptMedia.account</button>
     <button onclick="evaluateKip('account')" style="background: #f4Fd98" >account</button>
     <button onclick="evaluateKip('{raptMedia.info}')" style="background: #f4Fd98" >{raptMedia.info}</button>
-    <button onclick="getMetadata()">player.metadata.account</button>
     <br/>
     <br/>
     <button onclick="currentTime()">player.currentTime</button>
