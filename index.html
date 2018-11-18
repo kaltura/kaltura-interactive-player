@@ -91,6 +91,10 @@
 			name: "balconette " ,
 			id: "0_dl86knxb",
 		} ,
+		{
+			name: "QA BE " ,
+			id: "0_3ifwiywl",
+		} ,
 	];
 
 	var selectedItem ;
@@ -99,10 +103,8 @@
 		if(optionalPlaylists[j].selected){
 			selectedItem = 	optionalPlaylists[j];
 		}
-
 	}
 	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
-
 	var config = {
 		targetId: 'player',
 		playback:{
@@ -111,14 +113,18 @@
 		},
 
 		provider: {
-            // ks : "ODk2M2QzZmZkMzE1MTliOWFiMTBkNDRjNTZmYjBhZTU0M2JmYTcwN3wyNzAxNzsyNzAxNzsxNTQyMzY2NDI5OzI7MjgwNzc7X19BRE1JTl9fMjY2ODM7KixkaXNhYmxlZW50aXRsZW1lbnQ=",
-			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
+            // ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
+			partnerId: 27017 , // 2413351 - balconet 0_dl86knxb // QA -5885
+			env : {
+			    // serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
+			    // cdnUrl: "//qa-apache-php7.dev.kaltura.com"
+		    }
 		},
 
 		rapt:{
 			debug:false,
 			bufferNextNodes: true,
-			bufferTime: 6
+			bufferTime: 10
 		}
 
 	};

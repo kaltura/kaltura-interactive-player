@@ -30,7 +30,7 @@ export class KalturaPlayer {
 }
 
 export class PlayersFactory extends Dispatcher {
-  readonly SECONDS_TO_BUFFER: number = 6;
+  readonly secondsToBuffer: number = 6;
   readonly playbackPreset: any;
 
   constructor(
@@ -41,6 +41,9 @@ export class PlayersFactory extends Dispatcher {
     private config: any
   ) {
     super();
+    if (config.rapt && config.rapt.bufferTime) {
+      this.secondsToBuffer = parseInt(config.rapt.bufferTime);
+    }
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
@@ -113,7 +116,7 @@ export class PlayersFactory extends Dispatcher {
         options: {
           html5: {
             hls: {
-              maxMaxBufferLength: this.SECONDS_TO_BUFFER
+              maxMaxBufferLength: this.secondsToBuffer
             }
           }
         }

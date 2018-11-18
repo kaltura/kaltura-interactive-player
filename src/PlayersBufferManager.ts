@@ -23,7 +23,7 @@ export const BufferEvent = {
 
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
-  private secondsToBuffer: number = 6;
+  readonly secondsToBuffer: number;
   private bufferList: BufferItem[] = [];
   private persistenceObj: {
     rate?: number;
@@ -34,6 +34,7 @@ export class PlayersBufferManager extends Dispatcher {
   private _isAvailable: boolean;
   constructor(private raptData: any, private playersFactory: PlayersFactory) {
     super();
+    this.secondsToBuffer = playersFactory.secondsToBuffer;
     this.initializeAvailablity();
   }
 

@@ -40,12 +40,11 @@ export class PlayersManager extends Dispatcher {
   private activePlayer: KalturaPlayer = null;
   private activeNode: RaptNode = null;
 
-  static PLAYER_TICK_INTERVAL: number = 250;
-  static defaultBufferTime: number = 6;
+  static playerTickInterval: number = 250;
 
   public raptEngine: any;
   private model: any = undefined;
-  private isAvailable: boolean;
+  readonly isAvailable: boolean;
 
   constructor(
     private config: any,
@@ -176,10 +175,7 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine.load(this.raptData);
     this.resizeEngine();
 
-    setInterval(
-      () => this.syncRaptStatus(),
-      PlayersManager.PLAYER_TICK_INTERVAL
-    );
+    setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
 
     return true;
   }
