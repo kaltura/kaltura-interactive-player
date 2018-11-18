@@ -73,10 +73,21 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.config.session && this.config.session.ks
         ? this.config.session.ks
         : "";
+    let envUrl = "http://www.kaltura.com";
+    if (
+      this.config.provider &&
+      this.config.provider.env &&
+      this.config.provider.env.serviceUrl
+    ) {
+      // player config serviceUrl is expected with "/api_v3" while the app client doesn't
+      envUrl = this.config.provider.env.serviceUrl.split("/api_v3")[0];
+    }
+
     this.client = new KipClient({
       ks: ks,
-      partnerId: this.config.provider.partnerId
-    }); //TODO add serviceUrl
+      partnerId: this.config.provider.partnerId,
+      serviceUrl: envUrl
+    });
     this.playlistId = obj.playlistId || obj.entryId;
     this.client
       .loadRaptData(this.playlistId)

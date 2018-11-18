@@ -32,9 +32,7 @@ export class KipClient extends Dispatcher {
 
   constructor(config: ClientConfig) {
     super();
-    this.serviceUrl = config.serviceUrl
-      ? config.serviceUrl
-      : "http://www.kaltura.com";
+    this.serviceUrl = config.serviceUrl;
     this.ks = config.ks;
     this.partnerId = config.partnerId;
     this.config = { ks: this.ks, serviceUrl: this.serviceUrl };
