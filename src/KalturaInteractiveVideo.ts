@@ -1,8 +1,11 @@
 import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
-import { CreateElement } from "./helpers/CreateElement";
+import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { BufferEvent } from "./PlayersBufferManager";
+import { PlayersDomManager } from "./PlayersDomManager";
+import { enable as enableLog, log } from "./helpers/logger";
+import { VERSION } from "../version";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -28,30 +31,43 @@ const API_EVENTS = [
 
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
-  private mainDiv: HTMLElement;
+  private mainDiv: HTMLElement; // TODO should move all executions to use the playerDomManager and remove this property
   private playlistId: string = "";
   private client: KipClient; // Backend Client
   private _data: any; // container to data API
   private legacyCallback: (event: any) => void; // legacy API generic callback func
+  private playerDomManager: PlayersDomManager;
 
   constructor(private config: any, private playerLibrary: any) {
     super();
+
+    if (config && config.rapt && config.rapt.debug) {
+      enableLog();
+      log(
+        "log",
+        "KalturaInteractiveVideo",
+        "log enabled by config version " + VERSION
+      );
+    }
   }
+
+  private isInitialized = false;
 
   loadMedia(obj: any): void {
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
       return;
     }
-    // support both entryId and playlistId
-    const entryPoint: string = obj.playlistId ? obj.playlistId : obj.entryId;
-    // create a top-level container
-    this.mainDiv = CreateElement(
-      "div",
-      "kiv-container__" + entryPoint,
-      "kiv-container"
-    );
-    document.getElementById(this.config.targetId).appendChild(this.mainDiv);
+
+    if (this.isInitialized) {
+      throw new Error(
+        'currently cannot load media twice to the same instance. Please use "setup" method again'
+      );
+    }
+    this.isInitialized = true;
+
+    this.playerDomManager = new PlayersDomManager(this.config.targetId);
+    this.mainDiv = this.playerDomManager.tempGetElement();
 
     let ks: string =
       this.config.session && this.config.session.ks
@@ -61,7 +77,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       ks: ks,
       partnerId: this.config.provider.partnerId
     }); //TODO add serviceUrl
-    this.playlistId = entryPoint;
+    this.playlistId = obj.playlistId || obj.entryId;
     this.client
       .loadRaptData(this.playlistId)
       .then(graphData => {
@@ -85,7 +101,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
-      this.mainDiv
+      this.playerDomManager
     );
 
     // reflect all buffering evnets to the API
@@ -101,7 +117,6 @@ class KalturaInteractiveVideo extends Dispatcher {
         this.dispatchApi(event);
       });
     }
-    this.playerManager.init();
   }
   /**
    * Expose API to the wrapping page/app
@@ -109,14 +124,6 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param data
    */
   dispatchApi(event: KivEvent) {
-    if (this.config.rapt.debug) {
-      // debug mode - print to console
-      if (event.type === "player:timeupdate") {
-        return;
-      }
-      console.warn("Rapt: > ", event);
-    }
-
     //this is a legacy API
     if (this.legacyCallback) {
       let legacyEvent: any = { type: event.type };
@@ -137,9 +144,9 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param text
    */
   printMessage(title: string, text: string = "") {
-    const messageDiv = CreateElement("div", null, "kiv-message__message");
-    const titleDiv = CreateElement("div", null, "kiv-message__title");
-    const bodeDiv = CreateElement("div", null, "kiv-message__body");
+    const messageDiv = createElement("div", null, "kiv-message__message");
+    const titleDiv = createElement("div", null, "kiv-message__title");
+    const bodeDiv = createElement("div", null, "kiv-message__body");
     titleDiv.innerHTML = title;
     bodeDiv.innerHTML = text;
     messageDiv.appendChild(titleDiv);
@@ -150,15 +157,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.currentPlayer.pause();
+    this.playerManager.getActiveKalturaPlayer().pause();
   }
 
   public play() {
-    this.playerManager.currentPlayer.play();
+    this.playerManager.getActiveKalturaPlayer().play();
   }
 
   public seek(n: number) {
-    this.playerManager.currentPlayer.currentTime = n;
+    this.playerManager.getActiveKalturaPlayer().currentTime = n;
   }
 
   public replay() {
@@ -177,31 +184,32 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public get currentTime(): number {
-    return this.playerManager.currentPlayer.currentTime;
+    // this.playerManager.getPlayer()
+    return this.playerManager.getActiveKalturaPlayer().currentTime;
   }
 
   public get duration(): number {
-    return this.playerManager.currentPlayer.duration;
+    return this.playerManager.getActiveKalturaPlayer().duration;
   }
 
   public get currentNode(): RaptNode {
-    return this.playerManager.currentNode;
+    return this.playerManager.getActiveKalturaPlayer().node;
   }
 
   public get volume(): number {
-    return this.playerManager.currentPlayer.volume;
+    return this.playerManager.getActiveKalturaPlayer().player.player.volume;
   }
 
   public set volume(n: number) {
-    this.playerManager.currentPlayer.volume = n;
+    this.playerManager.getActiveKalturaPlayer().player.player.volume = n;
   }
 
   public get muted(): number {
-    return this.playerManager.currentPlayer.muted;
+    return this.playerManager.getActiveKalturaPlayer().player.player.muted;
   }
 
   public get playbackRate(): number {
-    return this.playerManager.currentPlayer.playbackRate;
+    return this.playerManager.getActiveKalturaPlayer().playbackRate;
   }
 
   public jump(locator: any, autoplay: boolean) {
@@ -232,9 +240,9 @@ class KalturaInteractiveVideo extends Dispatcher {
     if (key === "{raptMedia.info}") {
       let dataCopy = Object.assign({}, this._data);
       dataCopy.player = {
-        currentPlayer: this.playerManager.currentPlayer,
-        currentNode: this.playerManager.currentNode,
-        currentVideo: this.playerManager.currentNode.entryId
+        currentPlayer: this.playerManager.getActiveKalturaPlayer(),
+        currentNode: this.playerManager.getActiveNode(),
+        currentVideo: this.playerManager.getActiveNode().entryId
       };
       dataCopy.project = {
         projectId: this.playerManager.raptProjectId

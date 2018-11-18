@@ -6,8 +6,9 @@
 </head>
 <body>
 <!-- relevant for development only! -->
-<script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43398051"></script>
+<!--<script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43398051"></script>-->
 <!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script>-->
+<script src="./scripts/localJs.js"></script>
 <script src="dist/path-kaltura-player.js" type="text/javascript"></script>
 <script src="http://localhost:35729/livereload.js"></script>
 <!-- end of relevant for development only! -->
@@ -25,6 +26,14 @@
 <script>
 
 	var optionalPlaylists = [
+		{
+			name: "links and hotspots" ,
+			id: "1_pdnk89fb" ,
+		},
+		{
+			name: "a-bb-a" ,
+			id: "1_o9h3609b" ,
+		},
 		{
 			name: "short" ,
 			id: "1_91tbi9q8" ,
@@ -78,9 +87,20 @@
 			name: "split same" ,
 			id: "1_a2m8w1pi",
 		} ,
+		{
+			name: "balconette " ,
+			id: "0_dl86knxb",
+		} ,
 	];
 
-	var selectedItem = optionalPlaylists.find(item => item.selected === true);
+	var selectedItem ;
+
+	for (var j = 0 ; j< optionalPlaylists.length; j++){
+		if(optionalPlaylists[j].selected){
+			selectedItem = 	optionalPlaylists[j];
+		}
+
+	}
 	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
 
 	var config = {
@@ -91,21 +111,21 @@
 		},
 
 		provider: {
+            // ks : "ODk2M2QzZmZkMzE1MTliOWFiMTBkNDRjNTZmYjBhZTU0M2JmYTcwN3wyNzAxNzsyNzAxNzsxNTQyMzY2NDI5OzI7MjgwNzc7X19BRE1JTl9fMjY2ODM7KixkaXNhYmxlZW50aXRsZW1lbnQ=",
 			partnerId: 27017 // 2413351 - balconet 0_dl86knxb
 		},
 
 		rapt:{
 			debug:false,
 			bufferNextNodes: true,
-			bufferTime: 3
+			bufferTime: 6
 		}
 
 	};
 
 	var kip = PathKalturaPlayer.setup(config);
 	kip.loadMedia({playlistId: selectedItem.id});
-	var bufferingEvents = ["buffering","destroying","destroyed","doneBuffering","allBuffered","catchup","allUnbuffered"];
-	var apiEvents = [
+	var allEvents = [
 		"browser:hidden",
 		"browser:open",
 		"cue:forward",
@@ -127,11 +147,6 @@
 		"player:volumechange"
 	];
 
-	var allEvents;
-	// allEvents  = bufferingEvents ;
-	// allEvents = apiEvents;
-	allEvents = apiEvents.concat(bufferingEvents);
-
 	for (var i = 0 ; i< allEvents.length; i++){
 		kip.addListener(allEvents[i] , function (event) {
 			logDebugMsg(event);
@@ -145,60 +160,38 @@
 
 	// logger - debug mode !
 	function logDebugMsg(event){
-		const oneLine = document.createElement("div");
+		var oneLine = document.createElement("div");
 		// mark buffering event in green
 		var printStr = event.type;
 		var payload = event.payload;
-		if( bufferingEvents.some( a => a ===event.type) ){
-			// this is a buffering event
-			oneLine.style.cssText = "color: green";
-			switch (event.type) {
-				case "allBuffered":
-					printStr+='<span style="color: purple"> ['+payload+'] ✿ ✿ ✿</span>';
-					break;
-				case "catchup":
-					debugger;
-					printStr+='<span style="color: #227a15"> ['+payload.toString()+'] ➥</span>';
-					break;
-				case "buffering":
-					printStr+='<span style="color: #4398a8"> ['+payload+'] ⬇︎ </span>';
-					break;
-				case "doneBuffering":
-					printStr+='<span style="color: brown"> ['+payload+'] ✔︎︎</span>';
-					break;
-				default:
-					printStr+='<span style="color: #c78f35"> ['+payload+']</span>' ;
-
-			}
-		}else{
 			oneLine.style.cssText = "color: blue";
 			switch (event.type) {
 				case "player:timeupdate":
 					return; // we do not want to print this - it junks the log
 				case "cue:forward":
 				case "cue:revere":
-					printStr+='<span style="color: darkcyan"> ['+payload.cue.customData+']</span>' ;
+					printStr+='<span style="color: #8b227c"> ['+payload.cue.customData+']</span>' ;
 					break;
 				case "hotspot:click":
-					printStr+='<span style="color: darkcyan"> ['+payload.hotspot.name+']</span>' ;
+					printStr+='<span style="color: #648b24"> ['+payload.hotspot.name+']</span>' ;
 					break;
 				case "node:enter":
 				case "node:ended":
 				case "node:exit":
-					printStr+='<span style="color: darkcyan"> ['+payload.node.name+']</span>' ;
+					printStr+='<span style="color: #24468b"> ['+payload.node.name+']</span>' ;
 					break;
 				case "player:progress":
-					printStr+='<span style="color: darkcyan"> ['+payload.progress+']</span>' ;
+					printStr+='<span style="color: #8b2136"> ['+payload.progress+']</span>' ;
 					break;
 				case "browser:open":
-					printStr+='<span style="color: darkcyan"> ['+payload.href+']</span>' ;
+					printStr+='<span style="color: #648b24"> ['+payload.href+']</span>' ;
 					break;
 				default:
 					if(!isEmpty(payload)){
 						printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
 					}
 
-			}
+
 			// this is a Rapt event
 		}
 		oneLine.innerHTML = printStr;
@@ -225,9 +218,6 @@
 	}
 	function getNodes() {
 		console.table(kip.data.nodes);
-	}
-	function getMetadata(){
-		console.table(kip.metadata.account);
 	}
 	function currentTime(){
 		console.log(kip.currentTime);
@@ -287,6 +277,7 @@
     <br/>
     <br/>
     <br/>
+    <button onclick="jumpToNodeKip({name:'Start'})">JumpToNode {name:'Start'}</button>
     <button onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})">JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}</button>
     <button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {ref:'1_4f9mue48'}</button>
     <!--<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {xref:'1_4f9mue48'}</button>-->
@@ -297,10 +288,8 @@
     <br/>
     <br/>
     <button onclick="evaluateKip('nodes')" style="background: #f4Fd98" >player.data.nodes</button>
-    <button onclick="evaluateKip('raptMedia.account')" style="background: #f4Fd98" >raptMedia.account</button>
     <button onclick="evaluateKip('account')" style="background: #f4Fd98" >account</button>
     <button onclick="evaluateKip('{raptMedia.info}')" style="background: #f4Fd98" >{raptMedia.info}</button>
-    <button onclick="getMetadata()">player.metadata.account</button>
     <br/>
     <br/>
     <button onclick="currentTime()">player.currentTime</button>

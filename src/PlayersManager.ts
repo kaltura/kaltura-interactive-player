@@ -1,12 +1,9 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
-import { CreateElement } from "./helpers/CreateElement";
-import { PlayersFactory } from "./PlayersFactory";
-import {
-  BufferEvent,
-  PersistencyType,
-  PlayersBufferManager
-} from "./PlayersBufferManager";
+import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
+import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
+import { PlayersDomManager } from "./PlayersDomManager";
+import { log } from "./helpers/logger";
 
 declare var Rapt: any;
 
@@ -25,10 +22,13 @@ export interface RaptNode {
   prefetchNodeIds?: string[];
 }
 
-export const PlaybackState = {
-  PLAYING: "playing",
-  PAUSED: "paused"
-};
+export enum Persistency {
+  bbb = "bbb",
+  captions = "captions",
+  volume = "volume",
+  audioTrack = "audioTrack",
+  rate = "rate"
+}
 
 /**
  * This class manages players, and places and interact with the Rapt engine layer
@@ -36,45 +36,88 @@ export const PlaybackState = {
  */
 export class PlayersManager extends Dispatcher {
   private playersBufferManager: PlayersBufferManager;
-  readonly playersFactory: PlayersFactory;
-  public currentPlayer: any;
-  public currentNode: RaptNode;
-  public element: HTMLElement; // must be called 'element' because rapt delegate implementation
-  private playbackState: string;
+  private playersFactory: PlayersFactory;
+  private activePlayer: KalturaPlayer = null;
+  private activeNode: RaptNode = null;
+
   static PLAYER_TICK_INTERVAL: number = 250;
-  private clickedHotspotId: String = undefined;
+  static defaultBufferTime: number = 6;
+
   public raptEngine: any;
   private model: any = undefined;
+  private isAvailable: boolean;
 
   constructor(
     private config: any,
     private playerLibrary: any,
     readonly raptProjectId: string,
     private raptData: any,
-    private mainDiv: HTMLElement
+    private domManager: PlayersDomManager
   ) {
     super();
-    // create the rapt-engine layer. We must use this.element because of rapt delegate names
-    this.element = CreateElement(
-      "div",
-      this.raptProjectId + "-rapt-engine",
-      "kiv-rapt-engine"
-    );
-    // adding the rapt layer to the main-app div
-    this.mainDiv.appendChild(this.element);
 
+    this.isAvailable =
+      this.initPlayersFactory() && this.initPlayersBufferManager();
+
+    if (this.isAvailable) {
+      this.isAvailable = this.initRaptEngine();
+    }
+
+    if (this.isAvailable) {
+      document.addEventListener("fullscreenchange", () => this.exitHandler());
+      document.addEventListener("webkitfullscreenchange", () =>
+        this.exitHandler()
+      );
+    }
+  }
+
+  private initPlayersBufferManager(): boolean {
+    // create the PlayersBufferManager
+    this.playersBufferManager = new PlayersBufferManager(
+      this.raptData,
+      this.playersFactory
+    );
+    // listen to all BufferEvent types from PlayersBufferManager
+    for (let o of Object.values(BufferEvent)) {
+      this.playersBufferManager.addListener(o, (event: any) => {
+        // bubble up all events
+        this.dispatch(event);
+      });
+    }
+    if (
+      this.config.rapt &&
+      this.config.rapt.hasOwnProperty("bufferNextNodes") &&
+      this.config.rapt.bufferNextNodes === false
+    ) {
+      this.playersBufferManager.disable();
+    }
+    return true;
+  }
+
+  public getActiveKalturaPlayer(): any {
+    if (this.activePlayer) {
+      return this.activePlayer.player;
+    }
+    return null;
+  }
+
+  public getActiveNode(): RaptNode {
+    return this.activeNode;
+  }
+
+  private initPlayersFactory(): boolean {
     /**
      * This function interrupts the player kava beacons, alter some attributes (in case of need) and prevents some
      * of the events.
      * @param model
      */
     const analyticsInterruptFunc = (model: any): boolean => {
-      //TODO - fix
       if (!this.model) {
         this.model = model; // store model data for future use of Rapt sending data
       }
       model.rootEntryId = this.raptProjectId;
-      model.nodeId = this.currentNode.id;
+      model.nodeId = this.activeNode.id;
+      model.entryId = this.activeNode.id;
       switch (model.eventType) {
         case 11:
         case 12:
@@ -85,53 +128,36 @@ export class PlayersManager extends Dispatcher {
         case 2:
         case 3:
           model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
+          break;
       }
       return true;
     };
 
     // create a PlayersFactory instance
     this.playersFactory = new PlayersFactory(
-      this.mainDiv,
+      this.domManager,
       this.raptProjectId,
       this.playerLibrary,
       analyticsInterruptFunc,
       this.config
     );
 
-    // create the PlayersBufferManager
-    this.playersBufferManager = new PlayersBufferManager(this.playersFactory);
-    // listen to all BufferEvent types from PlayersBufferManager
-    for (let o of Object.values(BufferEvent)) {
-      this.playersBufferManager.addListener(o, (event: any) => {
-        switch (event.type) {
-          // when a player was created but was not cached - this is its 'first play' event
-          case BufferEvent.CATCHUP:
-            // this.element.classList.remove("kiv-hidden");
-            // this.currentNode = event.payload.node;
-            // this.currentPlayer = event.payload.player;
-            // this.bufferManager.cacheNodes(event.payload.node);
-            break;
-          case BufferEvent.ALL_UNBUFFERED:
-            // this.element.classList.remove("kiv-hidden");
-            break;
-        }
-        // bubble up all events
-        this.dispatch(event);
-      });
-    }
-
-    document.addEventListener("fullscreenchange", () => this.exitHandler());
-    document.addEventListener("webkitfullscreenchange", () =>
-      this.exitHandler()
-    );
-
     // listen to fullscreen events from the players
     this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
       this.toggleFullscreenState();
     });
+
+    return true;
   }
 
-  public init() {
+  private initRaptEngine(): boolean {
+    const { id: raptEngineId, domElement } = this.domManager.createDomElement(
+      "div",
+      "rapt-engine",
+      "kiv-rapt-engine"
+    );
+    // create the rapt-engine layer. We must use this.element because of rapt delegate names
+    this.element = domElement;
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node
@@ -141,14 +167,42 @@ export class PlayersManager extends Dispatcher {
 
     if (!firstNode) {
       this.dispatch({ type: KipEvent.FIRST_PLAY_ERROR });
+      return false;
     }
+
     // load the 1st media
-    this.currentNode = firstNode;
-    this.initRapt();
+    // this.updateActiveItems(null, firstNode);
+    this.raptEngine = new Rapt.Engine(this);
+    this.raptEngine.load(this.raptData);
+    this.resizeEngine();
+
+    setInterval(
+      () => this.syncRaptStatus(),
+      PlayersManager.PLAYER_TICK_INTERVAL
+    );
+
+    return true;
+  }
+
+  private syncRaptStatus() {
+    if (!this.activePlayer) {
+      return;
+    }
+    const currentPlayingVideoElement: any = this.activePlayer.player.getVideoElement();
+    if (currentPlayingVideoElement) {
+      this.raptEngine.update({
+        currentTime: currentPlayingVideoElement.currentTime,
+        duration: currentPlayingVideoElement.duration,
+        ended: currentPlayingVideoElement.ended,
+        videoWidth: currentPlayingVideoElement.videoWidth,
+        videoHeight: currentPlayingVideoElement.videoHeight,
+        paused: currentPlayingVideoElement.paused,
+        readyState: currentPlayingVideoElement.readyState
+      });
+    }
   }
 
   private toggleFullscreenState() {
-    let element: HTMLElement;
     const doc: any = document; // todo handle more elegantly
     if (doc.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
@@ -157,11 +211,9 @@ export class PlayersManager extends Dispatcher {
         doc.webkitExitFullscreen();
       }
     } else {
-      element = this.mainDiv;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      }
+      this.domManager.requestFullscreen();
     }
+
     setTimeout(() => {
       this.resizeEngine();
     }, 100); // todo - optimize / dom-event
@@ -174,193 +226,132 @@ export class PlayersManager extends Dispatcher {
     }
   }
 
-  // initiate Rapt-engine layer
-  private initRapt() {
-    this.raptEngine = new Rapt.Engine(this);
-    this.raptEngine.load(this.raptData);
-    this.resizeEngine();
-    setInterval(
-      () => this.tick(this.currentPlayer, this.raptEngine),
-      PlayersManager.PLAYER_TICK_INTERVAL
-    );
-  }
   private resizeEngine() {
+    const raptContainer = this.domManager.getContainer();
     this.raptEngine.resize({
-      width: this.mainDiv.offsetWidth,
-      height: this.mainDiv.offsetHeight
+      width: raptContainer.offsetWidth,
+      height: raptContainer.offsetHeight
     });
   }
 
-  public switchPlayer(id: string): void {
-    if (id === this.currentNode.entryId && this.currentPlayer !== undefined) {
-      this.currentPlayer.currentTime = 0;
-      this.currentPlayer.play();
-      return;
-    }
-    const nextPlayer = this.playersBufferManager.getPlayer(id);
-    // edge case where node is "switching" to itself
-    if (nextPlayer) {
-      this.removeListeners();
-      this.addListenersToPlayer(nextPlayer);
-      // found a player !
-      const nextPlayersDivId = this.playersBufferManager.getPlayerDivId(id);
-      const prevPlayerDivId = this.playersBufferManager.getPlayerDivId(
-        this.currentNode.entryId
-      );
+  ////////////////////////////////////////////
+  // store the player and the node
+  private updateActiveItems(
+    nextPlayer: KalturaPlayer,
+    nextNode: RaptNode
+  ): void {
+    const hasActivePlayer = !!this.activePlayer;
+    const isSwitchingPlayer = this.activePlayer !== nextPlayer;
+    const isSwitchingRaptNode = this.activeNode !== nextNode;
+    log("log", "pm_updateActiveItems", "executed", {
+      hasActivePlayer,
+      isSwitchingPlayer,
+      isSwitchingRaptNode,
+      nodeId: nextNode ? nextNode.id : null
+    });
 
-      // pause current player and play next player
-      this.currentPlayer.pause();
-
-      // in case the next player was already played - seek to 0, else play it
-      if (nextPlayer.currentTime > 0) {
-        nextPlayer.currentTime = 0;
-      }
-      nextPlayer.play();
-      this.currentPlayer = nextPlayer;
-
-      // pop it to the front of the stack and move back the current
-      this.mainDiv
-        .querySelector("[id='" + nextPlayersDivId + "']")
-        .classList.add("current-playing");
-      this.mainDiv
-        .querySelector("[id='" + prevPlayerDivId + "']")
-        .classList.remove("current-playing");
-      // now we can start buffer the next items
-      this.currentNode = this.getNodeByEntryId(id);
-      this.loadNextByNode(this.currentNode);
-    } else {
-      if (this.currentPlayer) {
-        this.currentPlayer.pause();
-      }
-      this.currentNode = this.getNodeByEntryId(id);
-
-      // in case we are in the middle of cache - purge it and only then ask for player creation
-      const nextNodes: RaptNode[] = this.getNextNodes(this.currentNode);
-      // convert to a list of entryIds
-      let nextEntries: string[] = nextNodes.map(
-        (node: RaptNode) => node.entryId
-      );
-      this.playersBufferManager.purgePlayers(id, nextEntries);
-
-      // player does not exist - create it in autoplay mode
-      this.currentPlayer = this.playersBufferManager.createPlayer(
-        id,
-        true,
-        (entryId: string) => {
-          this.loadNextByNode(this.currentNode);
+    if (hasActivePlayer) {
+      this.activePlayer.player.pause();
+      if (isSwitchingPlayer) {
+        // remove listeners
+        this.removeListeners();
+        if (!this.playersBufferManager.isAvailable()) {
+          // TODO must destroy active player
         }
-      );
-      this.removeListeners();
-      this.addListenersToPlayer(this.currentPlayer);
+      }
+    }
+    this.activePlayer = nextPlayer;
+    this.activeNode = nextNode;
+    if (isSwitchingRaptNode) {
+      this.playersBufferManager.switchPlayer(this.activeNode);
+    }
+    if (isSwitchingPlayer) {
+      this.domManager.changeActivePlayer(this.activePlayer);
+      // register listeners
+      this.addListenersToPlayer();
     }
   }
+  ////////////////////////////////////////////
 
-  /**
-   * Start the sequence of caching next entries from a given node
-   * @param node
-   */
-  private loadNextByNode(node: RaptNode) {
-    // prevent caching on Safari and if config set to no-cache
-    const isSafari: boolean = /^((?!chrome|android).)*safari/i.test(
-      navigator.userAgent
-    );
-    if (
-      isSafari ||
-      (this.config.rapt &&
-        this.config.rapt.hasOwnProperty("bufferNextNodes") &&
-        this.config.rapt.bufferNextNodes === false)
-    ) {
+  // called by Rapt on first-node, user click, defaultPath and external API "jump"
+  private switchPlayer(media: any): void {
+    const newEntryId = media.sources[0].src;
+    const nextRaptNode: RaptNode = media.node;
+
+    // send analytics of nodePlay - event44
+    if (this.model) {
+      this.sendAnalytics(44, { entryId: newEntryId });
+    } else {
+      // TODO - handle analytics of first event44 later;
+    }
+
+    if (this.activeNode) {
+      this.sendAnalytics(48, {
+        entryId: newEntryId,
+        fromNodeId: this.activeNode.entryId,
+        toNodeId: newEntryId
+      });
+    }
+
+    log("log", "pm_switchPlayer", "executed", {
+      entryId: newEntryId,
+      nodeId: nextRaptNode.id
+    });
+    if (this.activePlayer && this.activeNode === nextRaptNode) {
+      log(
+        "log",
+        "pm_switchPlayer",
+        "switch to same node, seek to the beginning",
+        { entryId: newEntryId }
+      );
+      // node is "switched" to itself
+      this.activePlayer.player.currentTime = 0;
+      this.activePlayer.player.play();
       return;
     }
 
-    const nextNodes: RaptNode[] = this.getNextNodes(node);
-    // convert to a list of entryIds
-    let nextEntries: string[] = nextNodes.map((node: RaptNode) => node.entryId);
-    this.playersBufferManager.purgePlayers(node.entryId, nextEntries);
-    this.playersBufferManager.prepareNext(nextEntries);
-  }
-
-  /**
-   * Get a list of optional nodes for the given node
-   *  @param node
-   */
-  private getNextNodes(node: RaptNode): RaptNode[] {
-    let nodes: RaptNode[] = node.prefetchNodeIds.length
-      ? node.prefetchNodeIds.map((nodeId: string) =>
-          this.getNodeByRaptId(nodeId)
-        )
-      : [];
-    // at this point we have a list of next nodes without default-path and without order according to appearance time
-    nodes = this.sortByApearenceTime(nodes, node);
-    return nodes;
-  }
-
-  private getNodeByEntryId(entryId: string): RaptNode {
-    // TODO - optimize using this.clickedHotspotId in case there are more than one nodes with the same entry-id
-    const newNode: RaptNode = this.raptData.nodes.find(
-      (node: RaptNode) => node.entryId === entryId
-    );
-    return newNode;
-  }
-
-  /**
-   * Return a rapt node
-   * @param id
-   */
-  private getNodeByRaptId(id: string): RaptNode {
-    const nodes: RaptNode[] = this.raptData.nodes;
-    return nodes.find((item: RaptNode) => item.id === id);
-  }
-
-  /**
-   * Sort a given nodes-array by the appearance-order of the hotspots in that node
-   * @param arr of Nodes
-   * @param givenNode
-   */
-  private sortByApearenceTime(
-    arr: RaptNode[],
-    givenNode: RaptNode
-  ): RaptNode[] {
-    // get relevant hotspots (that has the givenNode as 'nodeId' ) and sort them by their showAt time
-    const hotspots: any[] = this.raptData.hotspots
-      .filter((hotSpot: any) => {
-        return (
-          hotSpot.nodeId === givenNode.id &&
-          hotSpot.onClick &&
-          hotSpot.onClick.find((itm: any) => itm.type === "project:jump") // filter out only-URL clicks
-        );
-      })
-      .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
-
-    const arrayToCache: RaptNode[] = [];
-    for (const hotSpot of hotspots) {
-      arrayToCache.push(
-        arr.find((itm: RaptNode) => {
-          // extract the onClick element with type 'project:jump'
-          const clickItem: any = hotSpot.onClick.find(
-            (itm: any) => itm.type === "project:jump"
-          );
-          return clickItem.payload.destination === itm.id;
-        })
+    if (this.playersBufferManager.isAvailable()) {
+      log(
+        "log",
+        "pm_switchPlayer",
+        "use buffer manager to get player for entry",
+        { entryId: newEntryId }
       );
-    }
-    // if there was a default-path on the current node - make sure it is returned as well
-    const defaultPath: any = givenNode.onEnded.find(
-      (itm: any) => itm.type === "project:jump"
-    );
-    if (defaultPath) {
-      const defaultPathNodeId: string = defaultPath.payload.destination;
-      const defaultPathNode: RaptNode = this.raptData.nodes.find(
-        n => n.id === defaultPathNodeId
+      const bufferedPlayer = this.playersBufferManager.getPlayer(
+        newEntryId,
+        true
       );
-      arrayToCache.push(defaultPathNode);
+      this.updateActiveItems(bufferedPlayer, nextRaptNode);
+    } else {
+      log(
+        "log",
+        "pm_switchPlayer",
+        "buffer manager not available, switch media on current player",
+        { entryId: newEntryId }
+      );
+
+      if (!this.activePlayer) {
+        log("log", "pm_switchPlayer", "no player found, create main player", {
+          entryId: newEntryId
+        });
+        const newPlayer = this.playersFactory.createPlayer(newEntryId, true);
+        this.updateActiveItems(newPlayer, nextRaptNode);
+      } else {
+        log("log", "pm_switchPlayer", "switch media on main player", {
+          entryId: newEntryId
+        });
+        this.activePlayer.player.loadMedia({
+          entryId: newEntryId
+        });
+      }
     }
-    return arrayToCache;
   }
 
   public execute(command: any) {
     if (!this.raptEngine) {
-      console.log(
+      log(
+        "error",
+        "pm_execute",
         "WARNING: Rapt Media commands received before initialization is complete"
       );
       return;
@@ -368,75 +359,102 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine.execute(command);
   }
 
-  removeListeners() {
-    // todo - implement removeEventsListeners
-  }
+  private handleTextTrackChanged = (event: any) => {
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.captions,
+      event.payload.selectedTextTrack._language,
+      this.activePlayer.player
+    );
+  };
 
-  addListenersToPlayer(player: any) {
-    if (player) {
-      player.addEventListener(player.Event.Core.TEXT_TRACK_CHANGED, event => {
-        this.playersBufferManager.applyToPlayers(
-          PersistencyType.captions,
-          event.payload.selectedTextTrack._language,
-          player
-        );
-      });
-      player.addEventListener(player.Event.Core.AUDIO_TRACK_CHANGED, event => {
-        this.playersBufferManager.applyToPlayers(
-          PersistencyType.audioTrack,
-          event.payload.selectedAudioTrack._language,
-          player
-        );
-      });
-      player.addEventListener(player.Event.Core.RATE_CHANGE, () => {
-        this.playersBufferManager.applyToPlayers(
-          PersistencyType.rate,
-          this.currentPlayer.playbackRate,
-          player
-        );
-      });
-      player.addEventListener(player.Event.Core.VOLUME_CHANGE, () => {
-        this.playersBufferManager.applyToPlayers(
-          PersistencyType.volume,
-          this.currentPlayer.volume,
-          player
-        );
-      });
-      player.addEventListener(player.Event.Core.VIDEO_TRACK_CHANGED, event => {
-        // TODO handle quality later
-        // this.playersBufferManager.applyToPlayers(
-        //   PersistencyType.quality,
-        //   event.payload
-        //     ,player
-        // );
-      });
+  private handleRateChanged = (event: any) => {
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.rate,
+      this.activePlayer.player.playbackRate,
+      this.activePlayer.player
+    );
+  };
+
+  private handleAudiotrackChanged = (event: any) => {
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.audioTrack,
+      event.payload.selectedAudioTrack._language,
+      this.activePlayer.player
+    );
+  };
+  private handleVolumeChanged = (event: any) => {
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.volume,
+      this.activePlayer.player.volume,
+      this.activePlayer.player
+    );
+  };
+
+  removeListeners() {
+    if (this.activePlayer && this.activePlayer.player) {
+      const player: any = this.activePlayer.player;
+      player.removeEventListener(
+        player.Event.Core.TEXT_TRACK_CHANGED,
+        this.handleTextTrackChanged
+      );
+      player.removeEventListener(
+        player.Event.Core.AUDIO_TRACK_CHANGED,
+        this.handleAudiotrackChanged
+      );
+      player.removeEventListener(
+        player.Event.Core.RATE_CHANGE,
+        this.handleRateChanged
+      );
+      player.removeEventListener(
+        player.Event.Core.VOLUME_CHANGE,
+        this.handleVolumeChanged
+      );
     }
   }
 
-  //////////////////////  Rapt delegate functions  ////////////////////////
+  addListenersToPlayer() {
+    if (this.activePlayer && this.activePlayer.player) {
+      const player: any = this.activePlayer.player;
+
+      player.addEventListener(
+        player.Event.Core.TEXT_TRACK_CHANGED,
+        this.handleTextTrackChanged
+      );
+
+      player.addEventListener(
+        player.Event.Core.AUDIO_TRACK_CHANGED,
+        this.handleAudiotrackChanged
+      );
+
+      player.addEventListener(
+        player.Event.Core.RATE_CHANGE,
+        this.handleRateChanged
+      );
+
+      player.addEventListener(
+        player.Event.Core.VOLUME_CHANGE,
+        this.handleVolumeChanged
+      );
+    }
+  }
+
+  // Rapt interface - don't change signature //
+  private element: HTMLElement; // must be called 'element' because rapt delegate implementation
+
+  // Rapt interface - don't change signature //
   load(media: any) {
-    const id = media.sources[0].src;
-    this.switchPlayer(id);
+    this.switchPlayer(media);
   }
 
-  play() {
-    this.playbackState = PlaybackState.PLAYING;
-  }
-
-  pause() {
-    this.playbackState = PlaybackState.PAUSED;
-  }
-
-  seek(time: number) {
-    //window.mainPlayer.currentTime = time;
-  }
-
+  // Rapt interface - don't change signature //
   event(event: any) {
-    if (event.type === "hotspot:click") {
-      let tmpModel = Object.assign({}, this.model);
-      tmpModel.eventType = 44;
-      // this.currentPlayer.plugins.kava.sendAnalytics(tmpModel);
-      this.clickedHotspotId = event.payload.hotspot.id;
+    if (event.type === "browser:open") {
+      // track hotspot click
+      const additionalData = {
+        target: event.payload.href,
+        hotspotId: event.context.payload.hotspot.id
+      };
+      this.sendAnalytics(47, additionalData);
     }
     if (event.type === "project:ready") {
       this.raptEngine.metadata.account = this.config.partnetId;
@@ -444,22 +462,39 @@ export class PlayersManager extends Dispatcher {
     this.dispatch(event);
   }
 
-  tick(currentPlayer: any, raptEngine: any) {
-    if (!currentPlayer) {
+  /**
+   * The function sends an anlytics beacon.
+   * @param eventNumber
+   * @param attributes - an object of attributes to send on top of the event (will override existing attr
+   * @param fieldsToRemove - array of strings that are not required on the event
+   */
+  sendAnalytics(
+    eventNumber: number,
+    attributes?: object,
+    fieldsToRemove?: string[]
+  ) {
+    if (!this.model) {
+      log(
+        "error",
+        "pm_sendAnalytics",
+        "Missing basic event model - cannot send analytics"
+      );
       return;
     }
-    const currentPlayingVideoElement: any = currentPlayer.getVideoElement();
-    if (currentPlayingVideoElement) {
-      raptEngine.update({
-        currentTime: currentPlayingVideoElement.currentTime,
-        duration: currentPlayingVideoElement.duration,
-        ended: currentPlayingVideoElement.ended,
-        videoWidth: currentPlayingVideoElement.videoWidth,
-        videoHeight: currentPlayingVideoElement.videoHeight,
-        paused: currentPlayingVideoElement.paused,
-        readyState: currentPlayingVideoElement.readyState
+    let tmpModel = Object.assign({}, this.model);
+    tmpModel.eventType = eventNumber;
+
+    if (attributes) {
+      Object.keys(attributes).forEach(item => {
+        tmpModel[item] = attributes[item];
       });
     }
+
+    if (fieldsToRemove) {
+      fieldsToRemove.forEach(field => {
+        delete tmpModel[field];
+      });
+    }
+    this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
   }
-  /////////////////////////////////////////////////////////////////////////
 }
