@@ -199,7 +199,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   private toggleFullscreenState() {
-    const doc: any = document; // todo handle more elegantly
+    const doc: any = document;
     if (doc.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
         doc.exitFullscreen();
