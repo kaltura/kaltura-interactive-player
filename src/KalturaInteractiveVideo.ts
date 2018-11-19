@@ -72,7 +72,8 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.isInitialized = true;
 
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
-    this.mainDiv = this.playerDomManager.tempGetElement();
+    this.mainDiv = this.playerDomManager.getContainer();
+
 
     let ks: string =
       this.config.session && this.config.session.ks

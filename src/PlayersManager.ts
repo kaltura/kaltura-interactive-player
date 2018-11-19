@@ -4,6 +4,7 @@ import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
 import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { log } from "./helpers/logger";
+import { debounce } from "./helpers/Debounce";
 
 declare var Rapt: any;
 
@@ -46,6 +47,9 @@ export class PlayersManager extends Dispatcher {
   private model: any = undefined;
   readonly isAvailable: boolean;
 
+  private playerWidth: number = NaN;
+  private playerHeight: number = NaN;
+
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -60,13 +64,6 @@ export class PlayersManager extends Dispatcher {
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
-    }
-
-    if (this.isAvailable) {
-      document.addEventListener("fullscreenchange", () => this.exitHandler());
-      document.addEventListener("webkitfullscreenchange", () =>
-        this.exitHandler()
-      );
     }
   }
 
@@ -177,6 +174,21 @@ export class PlayersManager extends Dispatcher {
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
 
+    // register to resize to support responsiveness. wrap with a debouncer
+    // TODO - clear onresize if we implement destroy to the player.
+    window.onresize = debounce(() => {
+      // onResize is a window event - make sure we run this only when we change the player div
+      const currentWidth = this.domManager.getContainer().offsetWidth;
+      const currentHeight = this.domManager.getContainer().offsetHeight;
+      if (
+        currentWidth !== this.playerWidth ||
+        currentHeight !== this.playerHeight
+      ) {
+        this.playerWidth = currentWidth;
+        this.playerHeight = currentHeight;
+        this.resizeEngine();
+      }
+    }, 50);
     return true;
   }
 
@@ -209,19 +221,9 @@ export class PlayersManager extends Dispatcher {
     } else {
       this.domManager.requestFullscreen();
     }
-
-    setTimeout(() => {
-      this.resizeEngine();
-    }, 100); // todo - optimize / dom-event
   }
 
-  private exitHandler() {
-    const doc: any = document;
-    if (!doc.fullscreenElement && !doc.webkitIsFullScreen) {
-      this.toggleFullscreenState();
-    }
-  }
-
+  // re-render the rapt engine according to current dimension of the main container
   private resizeEngine() {
     const raptContainer = this.domManager.getContainer();
     this.raptEngine.resize({
