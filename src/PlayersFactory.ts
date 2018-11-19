@@ -78,6 +78,10 @@ export class PlayersFactory extends Dispatcher {
       if (persistencyObject.rate) {
         // todo - find how to initiate this
       }
+      // only if this was set, change the logic. If this is not defined leave it as-is
+      if (persistencyObject.mute !== undefined) {
+        conf.playback.muted = persistencyObject.mute;
+      }
     }
 
     const newPlayer = this.playerLibrary.setup(conf);
@@ -109,8 +113,11 @@ export class PlayersFactory extends Dispatcher {
     newConf.plugins.kava = {};
     newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
     newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
+
+    let playback = newConf.playback ? newConf.playback : {};
+
     if (!playImmediate) {
-      newConf.playback = {
+      playback = {
         autoplay: false,
         preload: "auto",
         options: {
@@ -122,10 +129,11 @@ export class PlayersFactory extends Dispatcher {
         }
       };
     } else {
-      newConf.playback = {
+      playback = {
         autoplay: true
       };
     }
+    newConf.playback = playback;
 
     try {
       let uis = [

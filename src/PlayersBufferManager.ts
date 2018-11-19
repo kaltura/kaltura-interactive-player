@@ -26,6 +26,7 @@ export class PlayersBufferManager extends Dispatcher {
   readonly secondsToBuffer: number;
   private bufferList: BufferItem[] = [];
   private persistenceObj: {
+    muted?: boolean;
     rate?: number;
     captions?: string;
     volume?: number;
@@ -138,7 +139,6 @@ export class PlayersBufferManager extends Dispatcher {
     });
 
     // TODO [eitan] for persistancy - apply async info
-
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
@@ -357,7 +357,7 @@ export class PlayersBufferManager extends Dispatcher {
 
   public syncPlayersStatus(
     attribute: Persistency,
-    value: number | string,
+    value: number | string | boolean,
     currentPlayer: any
   ) {
     log("log", "pbm_applyToPlayers", "executed", {
@@ -417,6 +417,9 @@ export class PlayersBufferManager extends Dispatcher {
           break;
         case Persistency.volume:
           player.volume = this.persistenceObj.volume;
+          break;
+        case Persistency.mute:
+          player.muted = value;
           break;
       }
     });

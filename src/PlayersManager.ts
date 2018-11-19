@@ -23,7 +23,7 @@ export interface RaptNode {
 }
 
 export enum Persistency {
-  bbb = "bbb",
+  mute = "mute",
   captions = "captions",
   volume = "volume",
   audioTrack = "audioTrack",
@@ -385,6 +385,14 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
+  private handleMuteChanged = (event: any) => {
+    const isMuted = event.payload.mute;
+    this.playersBufferManager.syncPlayersStatus(
+      Persistency.mute,
+      isMuted,
+      this.activePlayer.player
+    );
+  };
 
   removeListeners() {
     if (this.activePlayer && this.activePlayer.player) {
@@ -404,6 +412,10 @@ export class PlayersManager extends Dispatcher {
       player.removeEventListener(
         player.Event.Core.VOLUME_CHANGE,
         this.handleVolumeChanged
+      );
+      player.removeEventListener(
+        player.Event.Core.MUTE_CHANGE,
+        this.handleMuteChanged
       );
     }
   }
@@ -430,6 +442,10 @@ export class PlayersManager extends Dispatcher {
       player.addEventListener(
         player.Event.Core.VOLUME_CHANGE,
         this.handleVolumeChanged
+      );
+      player.addEventListener(
+        player.Event.Core.MUTE_CHANGE,
+        this.handleMuteChanged
       );
     }
   }
