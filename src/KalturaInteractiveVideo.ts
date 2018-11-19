@@ -53,6 +53,11 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   private isInitialized = false;
 
+  // enable log-open externally
+  public enableLog() {
+    enableLog();
+  }
+
   loadMedia(obj: any): void {
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
@@ -73,7 +78,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.config.session && this.config.session.ks
         ? this.config.session.ks
         : "";
-    let envUrl = "http://www.kaltura.com";
+    let envUrl = "https://cdnapisec.kaltura.com";
     if (
       this.config.provider &&
       this.config.provider.env &&
