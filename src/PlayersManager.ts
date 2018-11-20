@@ -55,13 +55,15 @@ export class PlayersManager extends Dispatcher {
     private domManager: PlayersDomManager
   ) {
     super();
-
     this.isAvailable =
       this.initPlayersFactory() && this.initPlayersBufferManager();
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
     }
+    // register to resize to support responsiveness. wrap with a debouncer
+    this.handleResizeRef = debounce(this.handleWindowResized.bind(this));
+    window.addEventListener("resize", this.handleResizeRef);
   }
 
   private initPlayersBufferManager(): boolean {
@@ -170,9 +172,6 @@ export class PlayersManager extends Dispatcher {
     this.resizeEngine();
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
-    // // register to resize to support responsiveness. wrap with a debouncer
-    this.handleResizeRef = debounce(this.handleWindowResized.bind(this));
-    window.addEventListener("resize", this.handleResizeRef);
     return true;
   }
   private handleWindowResized() {
