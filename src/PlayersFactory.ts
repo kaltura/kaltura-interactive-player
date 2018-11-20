@@ -109,29 +109,25 @@ export class PlayersFactory extends Dispatcher {
     let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = divName;
     // > v 0.35
-    newConf.plugins = {};
-    newConf.plugins.kava = {};
+    newConf.plugins = newConf.plugins ? newConf.plugins : {};
+    newConf.plugins.kava = newConf.plugins.kava ? newConf.plugins.kava : {};
     newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
     newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
 
     let playback = newConf.playback ? newConf.playback : {};
 
     if (!playImmediate) {
-      playback = {
-        autoplay: false,
-        preload: "auto",
-        options: {
-          html5: {
-            hls: {
-              maxMaxBufferLength: this.secondsToBuffer
-            }
+      playback.autoplay = false;
+      playback.preload = "auto";
+      playback.options = {
+        html5: {
+          hls: {
+            maxMaxBufferLength: this.secondsToBuffer
           }
         }
       };
     } else {
-      playback = {
-        autoplay: true
-      };
+      playback.autoplay = true;
     }
     newConf.playback = playback;
 
