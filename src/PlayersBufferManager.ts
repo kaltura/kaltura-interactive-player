@@ -393,18 +393,18 @@ export class PlayersBufferManager extends Dispatcher {
 
       switch (attribute) {
         case Persistency.captions:
-          // iterate all buffered players
+          // get current player text-tracks
           const textTracks = player.getTracks(
             this.playersFactory.playerLibrary.core.TrackType.TEXT
           );
+          // find the track that has the language that the user selected
           const textTrack = textTracks.find(
             track => track.language === this.persistenceObj.captions
           );
-
           if (textTrack && textTrack._language !== "off") {
             player.selectTrack(textTrack);
           } else {
-            // if we did not find a track or if _language is "off" - turn off the captions track.
+            // if we did not find a track or if user selected "off" - turn off the captions
             player.hideTextTrack();
           }
           break;
