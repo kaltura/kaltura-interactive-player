@@ -174,24 +174,26 @@ export class PlayersManager extends Dispatcher {
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
 
-    // register to resize to support responsiveness. wrap with a debouncer
-    // TODO - clear onresize if we implement destroy to the player.
-    window.onresize = debounce(() => {
-      // onResize is a window event - make sure we run this only when we change the player div
-      const currentWidth = this.domManager.getContainer().offsetWidth;
-      const currentHeight = this.domManager.getContainer().offsetHeight;
-      if (
-        currentWidth !== this.playerWidth ||
-        currentHeight !== this.playerHeight
-      ) {
-        this.playerWidth = currentWidth;
-        this.playerHeight = currentHeight;
-        this.resizeEngine();
-      }
-    }, 50);
+    // // register to resize to support responsiveness. wrap with a debouncer
+    window.addEventListener(
+      "resize",
+      debounce(this.handleWindowResized.bind(this))
+    );
     return true;
   }
-
+  private handleWindowResized() {
+    // onResize is a window event - make sure we run this only when we change the player div
+    const currentWidth = this.domManager.getContainer().offsetWidth;
+    const currentHeight = this.domManager.getContainer().offsetHeight;
+    if (
+      currentWidth !== this.playerWidth ||
+      currentHeight !== this.playerHeight
+    ) {
+      this.playerWidth = currentWidth;
+      this.playerHeight = currentHeight;
+      this.resizeEngine();
+    }
+  }
   private syncRaptStatus() {
     if (!this.activePlayer) {
       return;
