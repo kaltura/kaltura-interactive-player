@@ -40,16 +40,13 @@ export class PlayersManager extends Dispatcher {
   private playersFactory: PlayersFactory;
   private activePlayer: KalturaPlayer = null;
   private activeNode: RaptNode = null;
-
   static playerTickInterval: number = 250;
-
   public raptEngine: any;
   private model: any = undefined;
   readonly isAvailable: boolean;
-
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
-
+  private handleResizeRef: () => void = null;
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -173,12 +170,9 @@ export class PlayersManager extends Dispatcher {
     this.resizeEngine();
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
-
     // // register to resize to support responsiveness. wrap with a debouncer
-    window.addEventListener(
-      "resize",
-      debounce(this.handleWindowResized.bind(this))
-    );
+    this.handleResizeRef = debounce(this.handleWindowResized.bind(this));
+    window.addEventListener("resize", this.handleResizeRef);
     return true;
   }
   private handleWindowResized() {
@@ -236,10 +230,8 @@ export class PlayersManager extends Dispatcher {
 
   public destroy() {
     this.removeListeners();
-    window.removeEventListener(
-      "resize",
-      debounce(this.handleWindowResized.bind(this))
-    );
+    window.removeEventListener("resize", this.handleResizeRef);
+    this.handleResizeRef = null;
   }
 
   ////////////////////////////////////////////
