@@ -234,6 +234,14 @@ export class PlayersManager extends Dispatcher {
     });
   }
 
+  public destroy() {
+    this.removeListeners();
+    window.removeEventListener(
+      "resize",
+      debounce(this.handleWindowResized.bind(this))
+    );
+  }
+
   ////////////////////////////////////////////
   // store the player and the node
   private updateActiveItems(
