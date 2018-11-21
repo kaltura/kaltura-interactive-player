@@ -47,7 +47,8 @@ export class PlayersFactory extends Dispatcher {
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
-      () => this.toggleFullscreen() // TODO - check if can be taken out?
+      () => this.toggleFullscreen(), // TODO - check if can be taken out?
+      config.rapt
     ).preset;
   }
 
@@ -86,11 +87,11 @@ export class PlayersFactory extends Dispatcher {
 
     const newPlayer = this.playerLibrary.setup(conf);
 
-    // @ts-ignore
-    newPlayer._uiWrapper._uiManager.store.dispatch({
-      type: "shell/UPDATE_PRE_PLAYBACK",
-      prePlayback: false
-    });
+    // This is for players pre 0.35
+    // newPlayer._uiWrapper._uiManager.store.dispatch({
+    //   type: "shell/UPDATE_PRE_PLAYBACK",
+    //   prePlayback: false
+    // });
 
     newPlayer.loadMedia({ entryId: entryId });
     return new KalturaPlayer(newPlayer, playerContainer);

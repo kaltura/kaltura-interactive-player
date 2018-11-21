@@ -54,10 +54,7 @@ export class PlayersManager extends Dispatcher {
     private domManager: PlayersDomManager
   ) {
     super();
-    this.isAvailable =
-      this.initPlayersFactory() && this.initPlayersBufferManager();
-
-    // merge local and remote data
+    // merge local and uiconf rapt data
     if (window.hasOwnProperty("__kalturaplayerdata")) {
       const uiconfId = Object.keys(window["__kalturaplayerdata"]["UIConf"])[0];
       const uiconfData = window["__kalturaplayerdata"].UIConf[uiconfId];
@@ -66,6 +63,9 @@ export class PlayersManager extends Dispatcher {
         this.config.rapt = Object.assign(uiconfRaptData, config.rapt);
       }
     }
+    this.isAvailable =
+      this.initPlayersFactory() && this.initPlayersBufferManager();
+
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();

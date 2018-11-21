@@ -41,7 +41,6 @@
 		{
 			name: "Multi Audio" ,
 			id: "1_q94de4ui" ,
-			selected: true
 		},
 		{
 			name: "CL1" ,
@@ -92,8 +91,9 @@
 			id: "0_dl86knxb",
 		} ,
 		{
-			name: "QA BE " ,
+			name: "QA BE " , // pid 5885
 			id: "0_3ifwiywl",
+			selected: true
 		} ,
 	];
 
@@ -114,17 +114,21 @@
 
 		provider: {
             // ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
-			partnerId: 27017 , // 2413351 - balconet 0_dl86knxb // QA -5885
+			partnerId: 5885 , // 2413351 - balconet 0_dl86knxb // QA -5885
 			env : {
-			    // serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
-			    // cdnUrl: "//qa-apache-php7.dev.kaltura.com"
-		    }
+			    serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
+			    cdnUrl: "//qa-apache-php7.dev.kaltura.com"
+		    },
+            uiconf : 15219530
 		},
 
 		rapt:{
 			debug:false,
 			bufferNextNodes: true,
-			bufferTime: 10
+			bufferTime: 10,
+            showScrubber: false,
+            showTimers: false,
+            showSetting: false
 		}
 
 	};
