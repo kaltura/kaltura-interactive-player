@@ -47,7 +47,7 @@ export class PlayersFactory extends Dispatcher {
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
-      () => this.toggleFullscreen() // TODO - check if can be taken out?
+      () => this.toggleFullscreen()
     ).preset;
   }
 

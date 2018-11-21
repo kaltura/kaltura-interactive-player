@@ -9,11 +9,6 @@ export class PlayersDomManager {
   private namespace: string;
   private raptContainer: HTMLElement;
 
-  public tempGetElement() {
-    // TODO remove when you complete refactoring
-    return this.raptContainer;
-  }
-
   public getContainer() {
     return this.raptContainer;
   }
