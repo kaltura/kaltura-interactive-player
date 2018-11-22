@@ -4,7 +4,6 @@ import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
 import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { log } from "./helpers/logger";
-import { debounce } from "./helpers/Debounce";
 
 declare var Rapt: any;
 
@@ -46,7 +45,7 @@ export class PlayersManager extends Dispatcher {
   readonly isAvailable: boolean;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
-  private handleResizeRef: () => void = null;
+  private resizeInterval: number = NaN;
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -61,9 +60,6 @@ export class PlayersManager extends Dispatcher {
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
     }
-    // register to resize to support responsiveness. wrap with a debouncer
-    this.handleResizeRef = debounce(this.handleWindowResized.bind(this));
-    window.addEventListener("resize", this.handleResizeRef);
   }
 
   private initPlayersBufferManager(): boolean {
@@ -136,6 +132,8 @@ export class PlayersManager extends Dispatcher {
       analyticsInterruptFunc,
       this.config
     );
+    // responsiveness resize support
+    this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
 
     // listen to fullscreen events from the players
     this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
@@ -229,8 +227,7 @@ export class PlayersManager extends Dispatcher {
 
   public destroy() {
     this.removeListeners();
-    window.removeEventListener("resize", this.handleResizeRef);
-    this.handleResizeRef = null;
+    clearInterval(this.resizeInterval);
   }
 
   ////////////////////////////////////////////
