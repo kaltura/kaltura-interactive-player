@@ -74,7 +74,6 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
     this.mainDiv = this.playerDomManager.getContainer();
 
-
     let ks: string =
       this.config.session && this.config.session.ks
         ? this.config.session.ks
@@ -182,7 +181,7 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public seek(n: number) {
-    this.playerManager.getActiveKalturaPlayer().currentTime = n;
+    this.playerManager.seek(n);
   }
 
   public replay() {

@@ -468,6 +468,12 @@ export class PlayersManager extends Dispatcher {
     }
   }
 
+  public seek(n) {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.currentTime = n;
+    }
+  }
+
   load(media: any) {
     this.switchPlayer(media);
   }
