@@ -275,7 +275,9 @@ class KalturaInteractiveVideo extends Dispatcher {
         return o;
       });
       return dataCopy;
-    } else if (this.data[key]) {
+    } else if(key === "{raptMedia.status}"){
+        return this.playerManager.getStatus();
+    }else if (this.data[key]) {
       return this.data[key];
     }
   }
