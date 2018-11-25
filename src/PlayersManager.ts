@@ -59,6 +59,8 @@ export class PlayersManager extends Dispatcher {
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
+      // responsiveness resize support
+      this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
     }
   }
 
@@ -132,9 +134,6 @@ export class PlayersManager extends Dispatcher {
       analyticsInterruptFunc,
       this.config
     );
-    // responsiveness resize support
-    this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
-
     // listen to fullscreen events from the players
     this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
       this.toggleFullscreenState();
