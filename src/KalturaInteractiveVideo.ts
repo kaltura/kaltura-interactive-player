@@ -69,11 +69,11 @@ class KalturaInteractiveVideo extends Dispatcher {
         'currently cannot load media twice to the same instance. Please use "setup" method again'
       );
     }
+    this.dispatchApi({ type: "project:load", payload: obj.playlistId });
     this.isInitialized = true;
 
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
     this.mainDiv = this.playerDomManager.getContainer();
-
 
     let ks: string =
       this.config.session && this.config.session.ks

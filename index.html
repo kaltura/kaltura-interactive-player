@@ -130,7 +130,7 @@
 	};
 
 	var kip = PathKalturaPlayer.setup(config);
-	kip.loadMedia({playlistId: selectedItem.id});
+
 	var allEvents = [
 		"browser:hidden",
 		"browser:open",
@@ -163,7 +163,7 @@
 	kip.kBind('raptMedia_event', function(data) {
 		// console.log(">>>>> raptMedia_event",data);
 	});
-
+	kip.loadMedia({playlistId: selectedItem.id});
 	// logger - debug mode !
 	function logDebugMsg(event){
 		var oneLine = document.createElement("div");
