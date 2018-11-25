@@ -10,17 +10,6 @@ interface BufferItem {
   bufferingTimeoutToken: number;
   entryId: string;
 }
-
-export const BufferEvent = {
-  BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
-  DESTROYING: "destroying", // about to destroy a specific player - argument will be the entry id
-  DESTROYED: "destroyed", // done with destroying a specific player - argument will be the entry id
-  DONE_BUFFERING: "doneBuffering", // Done buffering a specific entry - argument will be the entry id
-  CATCHUP: "catchup", // When an unbuffered video was requested to play is loaded and first played
-  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
-  ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
-};
-
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
   readonly secondsToBuffer: number;
@@ -323,15 +312,7 @@ export class PlayersBufferManager extends Dispatcher {
           "remove entry from buffer queue",
           { entryId: item.entryId }
         );
-        this.dispatch({
-          type: BufferEvent.DESTROYING,
-          payload: { entryId: item.entryId }
-        });
         item.player.destroy();
-        this.dispatch({
-          type: BufferEvent.DESTROYED,
-          payload: { entryId: item.entryId }
-        });
       }
 
       if (item.bufferingTimeoutToken) {

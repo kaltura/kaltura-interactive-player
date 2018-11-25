@@ -1,7 +1,7 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
 import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
-import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
+import { PlayersBufferManager } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { log } from "./helpers/logger";
 import { debounce } from "./helpers/Debounce";
@@ -72,13 +72,6 @@ export class PlayersManager extends Dispatcher {
       this.raptData,
       this.playersFactory
     );
-    // listen to all BufferEvent types from PlayersBufferManager
-    for (let o of Object.values(BufferEvent)) {
-      this.playersBufferManager.addListener(o, (event: any) => {
-        // bubble up all events
-        this.dispatch(event);
-      });
-    }
     if (
       this.config.rapt &&
       this.config.rapt.hasOwnProperty("bufferNextNodes") &&
