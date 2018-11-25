@@ -35,10 +35,9 @@ export class PlayersBufferManager extends Dispatcher {
     // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
     // const os = this.playersFactory.playerLibrary.core.Env.os.name;
     // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
-
     this._isAvailable = true;
     // Safari - disable;
-    if (browser === "Safari") {
+    if (browser.indexOf("Safari") > -1) {
       this._isAvailable = false;
     }
   }
