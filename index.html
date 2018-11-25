@@ -258,8 +258,7 @@
 
 	function evaluateKip(key){
 		var output = kip.evaluate(key);
-		console.log("Evaluated :",key);
-		console.log(output);
+		console.log("evaluate :"+key+" > " +output);
     }
 
 </script>
@@ -294,6 +293,7 @@
     <br/>
     <br/>
     <button onclick="evaluateKip('nodes')" style="background: #f4Fd98" >player.data.nodes</button>
+    <button onclick="evaluateKip('{raptMedia.status}')">Status</button>
     <button onclick="evaluateKip('account')" style="background: #f4Fd98" >account</button>
     <button onclick="evaluateKip('{raptMedia.info}')" style="background: #f4Fd98" >{raptMedia.info}</button>
     <br/>
