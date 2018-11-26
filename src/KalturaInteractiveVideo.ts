@@ -254,11 +254,12 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public evaluate(key: string): any {
+    // prepare the info object with legacy data structure
     if (key === "{raptMedia.info}") {
       let dataCopy = Object.assign({}, this._data);
       dataCopy.player = {
-        currentPlayer: this.playerManager.getActiveKalturaPlayer(),
         currentNode: this.playerManager.getActiveNode(),
+        currentTime: this.playerManager.getActiveKalturaPlayer().currentTime,
         currentVideo: this.playerManager.getActiveNode().entryId
       };
       dataCopy.project = {
