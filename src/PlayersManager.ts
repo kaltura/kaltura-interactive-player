@@ -31,7 +31,7 @@ export enum Persistency {
   rate = "rate"
 }
 
-export enum raptProjectStatus {
+export enum RaptProjectStatus {
   loading = "loading",
   ready = "ready",
   error = "error"
@@ -50,7 +50,7 @@ export class PlayersManager extends Dispatcher {
   public raptEngine: any;
   private model: any = undefined;
   readonly isAvailable: boolean;
-  private projectStatus: raptProjectStatus = raptProjectStatus.loading;
+  private projectStatus: RaptProjectStatus = RaptProjectStatus.loading;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
   private handleResizeRef: () => void = null;
@@ -169,7 +169,7 @@ export class PlayersManager extends Dispatcher {
 
     if (!firstNode) {
       this.dispatch({ type: KipEvent.FIRST_PLAY_ERROR });
-      this.projectStatus = raptProjectStatus.error;
+      this.projectStatus = RaptProjectStatus.error;
       return false;
     }
 
@@ -178,7 +178,7 @@ export class PlayersManager extends Dispatcher {
     this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
 
-    this.projectStatus = raptProjectStatus.ready;
+    this.projectStatus = RaptProjectStatus.ready;
 
     this.resizeEngine();
 
@@ -364,7 +364,7 @@ export class PlayersManager extends Dispatcher {
         "pm_execute",
         "WARNING: Rapt Media commands received before initialization is complete"
       );
-      this.projectStatus = raptProjectStatus.error;
+      this.projectStatus = RaptProjectStatus.error;
       return;
     }
     this.raptEngine.execute(command);
