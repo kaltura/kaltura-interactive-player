@@ -174,15 +174,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.getActiveKalturaPlayer().pause();
+    this.playerManager.pause();
   }
 
   public play() {
-    this.playerManager.getActiveKalturaPlayer().play();
+    this.playerManager.play();
   }
 
   public seek(n: number) {
-    this.playerManager.getActiveKalturaPlayer().currentTime = n;
+    this.playerManager.seek(n);
   }
 
   public replay() {

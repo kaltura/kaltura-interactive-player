@@ -445,7 +445,24 @@ export class PlayersManager extends Dispatcher {
   // Rapt interface - don't change signature //
   private element: HTMLElement; // must be called 'element' because rapt delegate implementation
 
-  // Rapt interface - don't change signature //
+  public pause() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.pause();
+    }
+  }
+
+  public play() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.play();
+    }
+  }
+
+  public seek(n) {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.currentTime = n;
+    }
+  }
+
   load(media: any) {
     this.switchPlayer(media);
   }
