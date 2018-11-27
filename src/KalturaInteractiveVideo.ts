@@ -2,7 +2,6 @@ import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
-import { BufferEvent } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { enable as enableLog, log } from "./helpers/logger";
 import { VERSION } from "../version";
@@ -120,15 +119,6 @@ class KalturaInteractiveVideo extends Dispatcher {
       raptGraphData,
       this.playerDomManager
     );
-
-    // reflect all buffering evnets to the API
-    for (let o of Object.values(BufferEvent)) {
-      this.playerManager.addListener(o, (event: KivEvent) => {
-        // translate to
-        this.dispatchApi(event);
-      });
-    }
-
     for (let eventName of API_EVENTS) {
       this.playerManager.addListener(eventName, (event: KivEvent) => {
         this.dispatchApi(event);
