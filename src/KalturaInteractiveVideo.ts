@@ -57,6 +57,11 @@ class KalturaInteractiveVideo extends Dispatcher {
     enableLog();
   }
 
+  // expose version
+  public get version() {
+    return VERSION;
+  }
+
   loadMedia(obj: any): void {
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
