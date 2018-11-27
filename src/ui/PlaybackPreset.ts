@@ -1,6 +1,6 @@
 export class PlaybackPreset {
   preset: (props: any) => any;
-
+  // TODO - when we have more time - switch to JSX
   constructor(
     h: any,
     c: any,
@@ -70,7 +70,7 @@ export class PlaybackPreset {
       };
     }
 
-    const customControllers: any = function(props: any) {
+    const customControllers = function(props: any) {
       return h(
         c.BottomBar,
         null,
@@ -81,7 +81,7 @@ export class PlaybackPreset {
     };
 
     // define the app fullscreen button
-    const customFullScreenButton: any = function() {
+    const customFullScreenButton = function() {
       return h(
         "div",
         {
