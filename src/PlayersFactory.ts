@@ -47,7 +47,8 @@ export class PlayersFactory extends Dispatcher {
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
-      () => this.toggleFullscreen()
+      () => this.toggleFullscreen(),
+      config.rapt
     ).preset;
   }
 

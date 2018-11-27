@@ -134,28 +134,7 @@
 		// mark buffering event in green
 		var printStr = event.type;
 		var payload = event.payload;
-		if( bufferingEvents.some( a => a ===event.type) ){
-			// this is a buffering event
-			oneLine.style.cssText = "color: green";
-			switch (event.type) {
-				case "allBuffered":
-					printStr+='<span style="color: purple"> ['+payload+'] ✿ ✿ ✿</span>';
-					break;
-				case "catchup":
-					debugger;
-					printStr+='<span style="color: #227a15"> ['+payload.toString()+'] ➥</span>';
-					break;
-				case "buffering":
-					printStr+='<span style="color: #4398a8"> ['+payload+'] ⬇︎ </span>';
-					break;
-				case "doneBuffering":
-					printStr+='<span style="color: brown"> ['+payload+'] ✔︎︎</span>';
-					break;
-				default:
-					printStr+='<span style="color: #c78f35"> ['+payload+']</span>' ;
 
-			}
-		}else{
 			oneLine.style.cssText = "color: blue";
 			switch (event.type) {
 				case "player:timeupdate":
@@ -183,7 +162,7 @@
 						printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
 					}
 
-			}
+
 			// this is a Rapt event
 		}
 		oneLine.innerHTML = printStr;
