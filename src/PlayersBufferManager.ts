@@ -10,17 +10,6 @@ interface BufferItem {
   bufferingTimeoutToken: number;
   entryId: string;
 }
-
-export const BufferEvent = {
-  BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
-  DESTROYING: "destroying", // about to destroy a specific player - argument will be the entry id
-  DESTROYED: "destroyed", // done with destroying a specific player - argument will be the entry id
-  DONE_BUFFERING: "doneBuffering", // Done buffering a specific entry - argument will be the entry id
-  CATCHUP: "catchup", // When an unbuffered video was requested to play is loaded and first played
-  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
-  ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
-};
-
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
   readonly secondsToBuffer: number;
@@ -46,10 +35,9 @@ export class PlayersBufferManager extends Dispatcher {
     // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
     // const os = this.playersFactory.playerLibrary.core.Env.os.name;
     // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
-
     this._isAvailable = true;
     // Safari - disable;
-    if (browser === "Safari") {
+    if (browser.indexOf("Safari") > -1) {
       this._isAvailable = false;
     }
   }
@@ -323,15 +311,7 @@ export class PlayersBufferManager extends Dispatcher {
           "remove entry from buffer queue",
           { entryId: item.entryId }
         );
-        this.dispatch({
-          type: BufferEvent.DESTROYING,
-          payload: { entryId: item.entryId }
-        });
         item.player.destroy();
-        this.dispatch({
-          type: BufferEvent.DESTROYED,
-          payload: { entryId: item.entryId }
-        });
       }
 
       if (item.bufferingTimeoutToken) {
@@ -385,17 +365,27 @@ export class PlayersBufferManager extends Dispatcher {
 
     availablePlayers.forEach(kalturaPlayer => {
       const player: any = kalturaPlayer.player;
+
+      // no point applying the change to the player that triggered the change - it causes infinite loops
+      if (currentPlayer === player) {
+        return;
+      }
+
       switch (attribute) {
         case Persistency.captions:
-          // iterate all buffered players
+          // get current player text-tracks
           const textTracks = player.getTracks(
             this.playersFactory.playerLibrary.core.TrackType.TEXT
           );
+          // find the track that has the language that the user selected
           const textTrack = textTracks.find(
             track => track.language === this.persistenceObj.captions
           );
-          if (textTrack) {
+          if (textTrack && textTrack._language !== "off") {
             player.selectTrack(textTrack);
+          } else {
+            // if we did not find a track or if user selected "off" - turn off the captions
+            player.hideTextTrack();
           }
           break;
 

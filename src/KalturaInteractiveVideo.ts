@@ -69,10 +69,11 @@ class KalturaInteractiveVideo extends Dispatcher {
         'currently cannot load media twice to the same instance. Please use "setup" method again'
       );
     }
+    this.dispatchApi({ type: "project:load", payload: obj.playlistId });
     this.isInitialized = true;
 
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
-    this.mainDiv = this.playerDomManager.tempGetElement();
+    this.mainDiv = this.playerDomManager.getContainer();
 
     let ks: string =
       this.config.session && this.config.session.ks
@@ -173,15 +174,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.getActiveKalturaPlayer().pause();
+    this.playerManager.pause();
   }
 
   public play() {
-    this.playerManager.getActiveKalturaPlayer().play();
+    this.playerManager.play();
   }
 
   public seek(n: number) {
-    this.playerManager.getActiveKalturaPlayer().currentTime = n;
+    this.playerManager.seek(n);
   }
 
   public replay() {
@@ -253,11 +254,12 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public evaluate(key: string): any {
+    // prepare the info object with legacy data structure
     if (key === "{raptMedia.info}") {
       let dataCopy = Object.assign({}, this._data);
       dataCopy.player = {
-        currentPlayer: this.playerManager.getActiveKalturaPlayer(),
         currentNode: this.playerManager.getActiveNode(),
+        currentTime: this.playerManager.getActiveKalturaPlayer().currentTime,
         currentVideo: this.playerManager.getActiveNode().entryId
       };
       dataCopy.project = {

@@ -39,13 +39,13 @@ export class PlayersManager extends Dispatcher {
   private playersFactory: PlayersFactory;
   private activePlayer: KalturaPlayer = null;
   private activeNode: RaptNode = null;
-
   static playerTickInterval: number = 250;
-
   public raptEngine: any;
   private model: any = undefined;
   readonly isAvailable: boolean;
-
+  private playerWidth: number = NaN;
+  private playerHeight: number = NaN;
+  private resizeInterval: number = NaN;
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -54,28 +54,13 @@ export class PlayersManager extends Dispatcher {
     private domManager: PlayersDomManager
   ) {
     super();
-    // merge local and uiconf rapt data
-    if (window.hasOwnProperty("__kalturaplayerdata")) {
-      const uiconfId = Object.keys(window["__kalturaplayerdata"]["UIConf"])[0];
-      const uiconfData = window["__kalturaplayerdata"].UIConf[uiconfId];
-      const uiconfRaptData = uiconfData.rapt; // might be undefined !
-      if (uiconfRaptData) {
-        this.config.rapt = Object.assign(uiconfRaptData, config.rapt);
-      }
-    }
     this.isAvailable =
       this.initPlayersFactory() && this.initPlayersBufferManager();
 
-
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
-    }
-
-    if (this.isAvailable) {
-      document.addEventListener("fullscreenchange", () => this.exitHandler());
-      document.addEventListener("webkitfullscreenchange", () =>
-        this.exitHandler()
-      );
+      // responsiveness resize support
+      this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
     }
   }
 
@@ -149,7 +134,6 @@ export class PlayersManager extends Dispatcher {
       analyticsInterruptFunc,
       this.config
     );
-
     // listen to fullscreen events from the players
     this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
       this.toggleFullscreenState();
@@ -185,10 +169,21 @@ export class PlayersManager extends Dispatcher {
     this.resizeEngine();
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
-
     return true;
   }
-
+  private handleWindowResized() {
+    // onResize is a window event - make sure we run this only when we change the player div
+    const currentWidth = this.domManager.getContainer().offsetWidth;
+    const currentHeight = this.domManager.getContainer().offsetHeight;
+    if (
+      currentWidth !== this.playerWidth ||
+      currentHeight !== this.playerHeight
+    ) {
+      this.playerWidth = currentWidth;
+      this.playerHeight = currentHeight;
+      this.resizeEngine();
+    }
+  }
   private syncRaptStatus() {
     if (!this.activePlayer) {
       return;
@@ -208,7 +203,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   private toggleFullscreenState() {
-    const doc: any = document; // todo handle more elegantly
+    const doc: any = document;
     if (doc.fullscreenElement || doc.webkitFullscreenElement) {
       if (document.exitFullscreen) {
         doc.exitFullscreen();
@@ -218,25 +213,20 @@ export class PlayersManager extends Dispatcher {
     } else {
       this.domManager.requestFullscreen();
     }
-
-    setTimeout(() => {
-      this.resizeEngine();
-    }, 100); // todo - optimize / dom-event
   }
 
-  private exitHandler() {
-    const doc: any = document;
-    if (!doc.fullscreenElement && !doc.webkitIsFullScreen) {
-      this.toggleFullscreenState();
-    }
-  }
-
+  // re-render the rapt engine according to current dimension of the main container
   private resizeEngine() {
     const raptContainer = this.domManager.getContainer();
     this.raptEngine.resize({
       width: raptContainer.offsetWidth,
       height: raptContainer.offsetHeight
     });
+  }
+
+  public destroy() {
+    this.removeListeners();
+    clearInterval(this.resizeInterval);
   }
 
   ////////////////////////////////////////////
@@ -462,7 +452,24 @@ export class PlayersManager extends Dispatcher {
   // Rapt interface - don't change signature //
   private element: HTMLElement; // must be called 'element' because rapt delegate implementation
 
-  // Rapt interface - don't change signature //
+  public pause() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.pause();
+    }
+  }
+
+  public play() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.play();
+    }
+  }
+
+  public seek(n) {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.currentTime = n;
+    }
+  }
+
   load(media: any) {
     this.switchPlayer(media);
   }
