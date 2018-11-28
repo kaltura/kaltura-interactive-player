@@ -111,6 +111,8 @@ export class PlayersFactory extends Dispatcher {
     // > v 0.35
     newConf.plugins = {};
     newConf.plugins.kava = {};
+    newConf.sources = {};
+    newConf.sources.poster = "";
     newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
     newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
 
