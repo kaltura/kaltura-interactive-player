@@ -15,8 +15,8 @@ export class PlaybackPreset {
     if (raptData.showScrubber) {
       customSeekbarContainer = function(props: any) {
         return h(c.SeekBarPlaybackContainer, {
-          showFramePreview: true,
-          showTimeBubble: true,
+          showFramePreview: false,
+          showTimeBubble: false,
           player: props.player,
           playerContainer: props.playerContainer
         });
