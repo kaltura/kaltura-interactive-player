@@ -47,7 +47,7 @@ export class PlaybackPreset {
         );
       };
     }
-    if (this.raptData.showSetting) {
+    if (this.raptData.showSettings) {
       customRightContainer = function(props: any) {
         return h(
           "div",

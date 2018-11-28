@@ -42,7 +42,7 @@
     padding: 6px 0;
     cursor: pointer;
     position: relative;
-    top: 16px;
+    top: 13px;
     width: calc(100% - 310px);
     left: 45px;
   }
@@ -86,7 +86,8 @@
     }
 
     .playkit-time-display {
-      line-height: 26px;
+      line-height: 22px;
+      font-size: 12px;
     }
     .playkit-volume-control-bar {
       bottom: 20px;
