@@ -61,7 +61,7 @@ export class PlayersFactory extends Dispatcher {
     playImmediate: boolean,
     persistencyObject?: any
   ): KalturaPlayer {
-    // TODO check if the id already exists and if so throw exception
+    // TODO 3 check if the id already exists and if so throw exception
     const {
       id: playerContainerId,
       container: playerContainer
@@ -76,7 +76,7 @@ export class PlayersFactory extends Dispatcher {
         conf.playback.textLanguage = persistencyObject.captions;
       }
       if (persistencyObject.rate) {
-        // todo - find how to initiate this
+        // todo 5 - find how to initiate this
       }
       // only if this was set, change the logic. If this is not defined leave it as-is
       if (persistencyObject.mute !== undefined) {

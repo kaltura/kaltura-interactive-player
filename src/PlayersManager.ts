@@ -244,7 +244,7 @@ export class PlayersManager extends Dispatcher {
         // remove listeners
         this.removeListeners();
         if (!this.playersBufferManager.isAvailable()) {
-          // TODO must destroy active player
+          // TODO 1 must destroy active player
         }
       }
     }
@@ -270,7 +270,7 @@ export class PlayersManager extends Dispatcher {
     if (this.model) {
       this.sendAnalytics(44, { entryId: newEntryId });
     } else {
-      // TODO - handle analytics of first event44 later;
+      // TODO 3 - handle analytics of first event44 later;
     }
 
     if (this.activeNode) {

@@ -157,8 +157,6 @@ export class KipClient extends Dispatcher {
         id +
         "&ks=" +
         this.ks;
-
-      // TODO handle errors
       fetch(urlToLoad)
         .then(response => {
           response

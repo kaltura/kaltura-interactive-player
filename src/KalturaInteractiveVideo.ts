@@ -30,7 +30,7 @@ const API_EVENTS = [
 
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
-  private mainDiv: HTMLElement; // TODO should move all executions to use the playerDomManager and remove this property
+  private mainDiv: HTMLElement; // TODO 6 should move all executions to use the playerDomManager and remove this property
   private playlistId: string = "";
   private client: KipClient; // Backend Client
   private _data: any; // container to data API
