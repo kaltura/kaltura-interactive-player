@@ -328,6 +328,7 @@ export class PlayersManager extends Dispatcher {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
         });
+        this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
           entryId: newEntryId
         });
