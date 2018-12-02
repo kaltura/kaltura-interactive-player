@@ -60,7 +60,10 @@ export class PlayersManager extends Dispatcher {
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
       // responsiveness resize support
-      this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
+      this.resizeInterval = setInterval(
+        this.handleWindowResized.bind(this),
+        250
+      );
     }
   }
 
@@ -328,6 +331,7 @@ export class PlayersManager extends Dispatcher {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
         });
+        this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
           entryId: newEntryId
         });
