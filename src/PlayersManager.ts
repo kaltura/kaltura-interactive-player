@@ -60,7 +60,10 @@ export class PlayersManager extends Dispatcher {
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
       // responsiveness resize support
-      this.resizeInterval = setInterval(this.handleWindowResized.bind(this), 250);
+      this.resizeInterval = setInterval(
+        this.handleWindowResized.bind(this),
+        250
+      );
     }
   }
 

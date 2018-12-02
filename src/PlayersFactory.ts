@@ -109,14 +109,16 @@ export class PlayersFactory extends Dispatcher {
     let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = divName;
     // > v 0.35
-    newConf.plugins = {};
-    newConf.plugins.kava = {};
-    newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
-    newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
+    newConf.plugins = newConf.plugins || {};
+    newConf.plugins.kava = {
+      viewEventCountdown: 5,
+      tamperAnalyticsHandler: this.analyticsInterruptFunc
+    };
 
     let playback = newConf.playback ? newConf.playback : {};
 
     if (!playImmediate) {
+      newConf.sources = { poster: "" }; // for buffering players - we do not need to load the poster
       playback = {
         autoplay: false,
         preload: "auto",
