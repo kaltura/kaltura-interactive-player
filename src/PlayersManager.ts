@@ -106,7 +106,7 @@ export class PlayersManager extends Dispatcher {
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
-      model.entryId = this.activeNode.id;
+      model.entryId = this.activeNode.entryId;
       switch (model.eventType) {
         case 11:
         case 12:
