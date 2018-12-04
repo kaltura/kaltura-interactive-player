@@ -29,6 +29,13 @@ const API_EVENTS = [
   "player:volumechange"
 ];
 
+export enum RaptProjectStatus {
+  preInitialized = "preInitialized", // before loadMedia
+  loading = "loading", // after loadMedia - before data load
+  ready = "ready", // ideal. Project is running
+  error = "error"
+}
+
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
   private mainDiv: HTMLElement; // TODO should move all executions to use the playerDomManager and remove this property
@@ -37,6 +44,7 @@ class KalturaInteractiveVideo extends Dispatcher {
   private _data: any; // container to data API
   private legacyCallback: (event: any) => void; // legacy API generic callback func
   private playerDomManager: PlayersDomManager;
+  private kalturaInteractiveStatus: RaptProjectStatus = RaptProjectStatus.preInitialized;
 
   constructor(private config: any, private playerLibrary: any) {
     super();
@@ -59,8 +67,10 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   loadMedia(obj: any): void {
+    this.kalturaInteractiveStatus = RaptProjectStatus.loading;
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
+      this.kalturaInteractiveStatus = RaptProjectStatus.error;
       return;
     }
 
@@ -73,7 +83,6 @@ class KalturaInteractiveVideo extends Dispatcher {
 
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
     this.mainDiv = this.playerDomManager.getContainer();
-
 
     let ks: string =
       this.config.session && this.config.session.ks
@@ -101,7 +110,8 @@ class KalturaInteractiveVideo extends Dispatcher {
         this.dataLoaded(graphData);
       })
       .catch((err: string) => {
-        this.printMessage("API Error", err);
+        this.kalturaInteractiveStatus = RaptProjectStatus.error;
+        this.printMessage("Error", err);
         this.dispatchApi({ type: "Error" });
       });
   }
@@ -120,6 +130,9 @@ class KalturaInteractiveVideo extends Dispatcher {
       raptGraphData,
       this.playerDomManager
     );
+
+    // if we got here - playerManager constructor code went well - update status
+    this.kalturaInteractiveStatus = RaptProjectStatus.ready;
 
     // reflect all buffering evnets to the API
     for (let o of Object.values(BufferEvent)) {
@@ -275,9 +288,9 @@ class KalturaInteractiveVideo extends Dispatcher {
         return o;
       });
       return dataCopy;
-    } else if(key === "{raptMedia.status}"){
-        return this.playerManager.getStatus();
-    }else if (this.data[key]) {
+    } else if (key === "{raptMedia.status}") {
+      return this.kalturaInteractiveStatus;
+    } else if (this.data[key]) {
       return this.data[key];
     }
   }

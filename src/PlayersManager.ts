@@ -30,13 +30,6 @@ export enum Persistency {
   audioTrack = "audioTrack",
   rate = "rate"
 }
-
-export enum RaptProjectStatus {
-  loading = "loading",
-  ready = "ready",
-  error = "error"
-}
-
 /**
  * This class manages players, and places and interact with the Rapt engine layer
  * This class creates and manages BufferManager
@@ -50,7 +43,6 @@ export class PlayersManager extends Dispatcher {
   public raptEngine: any;
   private model: any = undefined;
   readonly isAvailable: boolean;
-  private projectStatus: RaptProjectStatus = RaptProjectStatus.loading;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
   private handleResizeRef: () => void = null;
@@ -169,7 +161,6 @@ export class PlayersManager extends Dispatcher {
 
     if (!firstNode) {
       this.dispatch({ type: KipEvent.FIRST_PLAY_ERROR });
-      this.projectStatus = RaptProjectStatus.error;
       return false;
     }
 
@@ -177,8 +168,6 @@ export class PlayersManager extends Dispatcher {
     // this.updateActiveItems(null, firstNode);
     this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
-
-    this.projectStatus = RaptProjectStatus.ready;
 
     this.resizeEngine();
 
@@ -362,9 +351,8 @@ export class PlayersManager extends Dispatcher {
       log(
         "error",
         "pm_execute",
-        "WARNING: Rapt Media commands received before initialization is complete"
+        "Error: Rapt Media commands received before initialization is complete"
       );
-      this.projectStatus = RaptProjectStatus.error;
       return;
     }
     this.raptEngine.execute(command);
@@ -385,11 +373,6 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
-
-  public getStatus(){
-      return this.projectStatus;
-  }
-
   private handleAudiotrackChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
       Persistency.audioTrack,
