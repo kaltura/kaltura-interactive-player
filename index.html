@@ -50,7 +50,6 @@
 		{
 			name: "Links " ,
 			id: "1_sktk76eq" ,
-			selected: true
 		},
 		{
 			name: "CL1" ,
@@ -99,10 +98,19 @@
 		{
 			name: "balconette " ,
 			id: "0_dl86knxb",
+            pid : 2413351
+		} ,
+		{
+			name: "Deloitte " ,
+			id: "1_t9w32b41",
+            pid : 2421271,
+			selected: true
 		} ,
 		{
 			name: "QA BE " ,
 			id: "0_3ifwiywl",
+            pid : 5885,
+            isQA: true
 		} ,
 	];
 
@@ -113,6 +121,20 @@
 			selectedItem = 	optionalPlaylists[j];
 		}
 	}
+    var env = {};
+	if(selectedItem.isQA){
+		env = {
+			serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
+			cdnUrl: "//qa-apache-php7.dev.kaltura.com"
+		}
+    }
+    var pid = 27017; // default
+
+	if(selectedItem.pid){
+		pid = selectedItem.pid
+    }
+
+
 	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
 	var config = {
 		targetId: 'player',
@@ -122,12 +144,9 @@
 		},
 
 		provider: {
-            // ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
-			partnerId: 27017 , // 2413351 - balconet 0_dl86knxb // QA -5885
-			env : {
-			    // serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
-			    // cdnUrl: "//qa-apache-php7.dev.kaltura.com"
-		    }
+			// ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
+			partnerId: 2421271 , // 2413351 - balconet 0_dl86knxb // QA -5885
+			env : env
 		},
 
 		rapt:{
@@ -179,32 +198,32 @@
 		// mark buffering event in green
 		var printStr = event.type;
 		var payload = event.payload;
-			oneLine.style.cssText = "color: blue";
-			switch (event.type) {
-				case "player:timeupdate":
-					return; // we do not want to print this - it junks the log
-				case "cue:forward":
-				case "cue:revere":
-					printStr+='<span style="color: #8b227c"> ['+payload.cue.customData+']</span>' ;
-					break;
-				case "hotspot:click":
-					printStr+='<span style="color: #648b24"> ['+payload.hotspot.name+']</span>' ;
-					break;
-				case "node:enter":
-				case "node:ended":
-				case "node:exit":
-					printStr+='<span style="color: #24468b"> ['+payload.node.name+']</span>' ;
-					break;
-				case "player:progress":
-					printStr+='<span style="color: #8b2136"> ['+payload.progress+']</span>' ;
-					break;
-				case "browser:open":
-					printStr+='<span style="color: #648b24"> ['+payload.href+']</span>' ;
-					break;
-				default:
-					if(!isEmpty(payload)){
-						printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
-					}
+		oneLine.style.cssText = "color: blue";
+		switch (event.type) {
+			case "player:timeupdate":
+				return; // we do not want to print this - it junks the log
+			case "cue:forward":
+			case "cue:revere":
+				printStr+='<span style="color: #8b227c"> ['+payload.cue.customData+']</span>' ;
+				break;
+			case "hotspot:click":
+				printStr+='<span style="color: #648b24"> ['+payload.hotspot.name+']</span>' ;
+				break;
+			case "node:enter":
+			case "node:ended":
+			case "node:exit":
+				printStr+='<span style="color: #24468b"> ['+payload.node.name+']</span>' ;
+				break;
+			case "player:progress":
+				printStr+='<span style="color: #8b2136"> ['+payload.progress+']</span>' ;
+				break;
+			case "browser:open":
+				printStr+='<span style="color: #648b24"> ['+payload.href+']</span>' ;
+				break;
+			default:
+				if(!isEmpty(payload)){
+					printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
+				}
 
 
 			// this is a Rapt event
@@ -277,7 +296,7 @@
 	function evaluateKip(key){
 		var output = kip.evaluate(key);
 		console.log("evaluate :"+key+" > " +output);
-    }
+	}
 
 </script>
 <br/>
