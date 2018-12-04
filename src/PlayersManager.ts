@@ -279,8 +279,8 @@ export class PlayersManager extends Dispatcher {
     if (this.activeNode) {
       this.sendAnalytics(48, {
         entryId: newEntryId,
-        fromNodeId: this.activeNode.entryId,
-        toNodeId: newEntryId
+        fromNodeId: this.activeNode.id,
+        toNodeId: nextRaptNode.id
       });
     }
 
