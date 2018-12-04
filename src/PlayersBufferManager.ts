@@ -10,17 +10,6 @@ interface BufferItem {
   bufferingTimeoutToken: number;
   entryId: string;
 }
-
-export const BufferEvent = {
-  BUFFERING: "buffering", // buffered a specific entry - argument will be the entry id
-  DESTROYING: "destroying", // about to destroy a specific player - argument will be the entry id
-  DESTROYED: "destroyed", // done with destroying a specific player - argument will be the entry id
-  DONE_BUFFERING: "doneBuffering", // Done buffering a specific entry - argument will be the entry id
-  CATCHUP: "catchup", // When an unbuffered video was requested to play is loaded and first played
-  ALL_BUFFERED: "allBuffered", // Done buffering all relevant entries of a given node argument will be the node entry id
-  ALL_UNBUFFERED: "allUnbuffered" // when no need to buffer use this event to declare of readiness of players.
-};
-
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
   readonly secondsToBuffer: number;
@@ -42,14 +31,13 @@ export class PlayersBufferManager extends Dispatcher {
   private initializeAvailablity(): void {
     // prevent caching on Safari and IE11-Win7 and if config set to no-cache
     const browser = this.playersFactory.playerLibrary.core.Env.browser.name;
-    // TODO will be used later to exclude other OS & browsers
+    // TODO 9 will be used later to exclude other OS & browsers
     // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
     // const os = this.playersFactory.playerLibrary.core.Env.os.name;
     // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
-
     this._isAvailable = true;
     // Safari - disable;
-    if (browser === "Safari") {
+    if (browser.indexOf("Safari") > -1) {
       this._isAvailable = false;
     }
   }
@@ -78,7 +66,7 @@ export class PlayersBufferManager extends Dispatcher {
           result.player.currentTime = 0;
         }
 
-        // TODO [eitan] for persistancy - assign only synced persistancy
+        // TODO 3 [eitan] for persistancy - assign only synced persistancy
 
         if (playImmediate && !result.player.isPlaying) {
           log("log", "pbm_getPlayer", "execute play command", { entryId });
@@ -138,7 +126,7 @@ export class PlayersBufferManager extends Dispatcher {
       playImmediate
     });
 
-    // TODO [eitan] for persistancy - apply async info
+    // TODO 3 [eitan] for persistancy - apply async info
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
@@ -205,7 +193,7 @@ export class PlayersBufferManager extends Dispatcher {
     } else {
       this.destroyBufferedItems(this.bufferList);
     }
-    // remove duplicity items //todo - prefer items that are better ready (has players, has token or isReady / isRunning
+    // remove duplicity items //todo 4 - prefer items that are better ready (has players, has token or isReady / isRunning
     this.bufferList = this.bufferList.reduce((acc, item) => {
       if (
         !acc.some(
@@ -323,15 +311,7 @@ export class PlayersBufferManager extends Dispatcher {
           "remove entry from buffer queue",
           { entryId: item.entryId }
         );
-        this.dispatch({
-          type: BufferEvent.DESTROYING,
-          payload: { entryId: item.entryId }
-        });
         item.player.destroy();
-        this.dispatch({
-          type: BufferEvent.DESTROYED,
-          payload: { entryId: item.entryId }
-        });
       }
 
       if (item.bufferingTimeoutToken) {
@@ -344,15 +324,6 @@ export class PlayersBufferManager extends Dispatcher {
         clearTimeout(item.bufferingTimeoutToken);
       }
     });
-  }
-
-  public applyToPlayers(arg) {
-    // TODO [eitan] for persistancy
-    // store new persistance info
-    // if changing async info
-    // 3. re-run buffering logic
-    //
-    // if a-synced issue,
   }
 
   public syncPlayersStatus(

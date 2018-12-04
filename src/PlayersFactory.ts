@@ -61,7 +61,7 @@ export class PlayersFactory extends Dispatcher {
     playImmediate: boolean,
     persistencyObject?: any
   ): KalturaPlayer {
-    // TODO check if the id already exists and if so throw exception
+    // TODO 3 check if the id already exists and if so throw exception
     const {
       id: playerContainerId,
       container: playerContainer
@@ -76,7 +76,7 @@ export class PlayersFactory extends Dispatcher {
         conf.playback.textLanguage = persistencyObject.captions;
       }
       if (persistencyObject.rate) {
-        // todo - find how to initiate this
+        // todo 5 - find how to initiate this
       }
       // only if this was set, change the logic. If this is not defined leave it as-is
       if (persistencyObject.mute !== undefined) {
@@ -109,14 +109,16 @@ export class PlayersFactory extends Dispatcher {
     let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = divName;
     // > v 0.35
-    newConf.plugins = {};
-    newConf.plugins.kava = {};
-    newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
-    newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
+    newConf.plugins = newConf.plugins || {};
+    newConf.plugins.kava = {
+      viewEventCountdown: 5,
+      tamperAnalyticsHandler: this.analyticsInterruptFunc
+    };
 
     let playback = newConf.playback ? newConf.playback : {};
 
     if (!playImmediate) {
+      newConf.sources = { poster: "" }; // for buffering players - we do not need to load the poster
       playback = {
         autoplay: false,
         preload: "auto",

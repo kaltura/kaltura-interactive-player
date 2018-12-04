@@ -2,7 +2,6 @@ import { PlayersManager, RaptNode } from "./PlayersManager";
 import { KipClient } from "./KipClient";
 import { createElement } from "./helpers/CreateElement";
 import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
-import { BufferEvent } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { enable as enableLog, log } from "./helpers/logger";
 import { VERSION } from "../version";
@@ -38,7 +37,7 @@ export enum RaptProjectStatus {
 
 class KalturaInteractiveVideo extends Dispatcher {
   private playerManager: PlayersManager;
-  private mainDiv: HTMLElement; // TODO should move all executions to use the playerDomManager and remove this property
+  private mainDiv: HTMLElement; // TODO 6 should move all executions to use the playerDomManager and remove this property
   private playlistId: string = "";
   private client: KipClient; // Backend Client
   private _data: any; // container to data API
@@ -66,6 +65,11 @@ class KalturaInteractiveVideo extends Dispatcher {
     enableLog();
   }
 
+  // expose version
+  public get version() {
+    return VERSION;
+  }
+
   loadMedia(obj: any): void {
     this.kalturaInteractiveStatus = RaptProjectStatus.loading;
     if (!obj || (!obj.entryId && !obj.playlistId)) {
@@ -79,6 +83,7 @@ class KalturaInteractiveVideo extends Dispatcher {
         'currently cannot load media twice to the same instance. Please use "setup" method again'
       );
     }
+    this.dispatchApi({ type: "project:load", payload: obj.playlistId });
     this.isInitialized = true;
 
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
@@ -131,16 +136,9 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerDomManager
     );
 
+
     // if we got here - playerManager constructor code went well - update status
     this.kalturaInteractiveStatus = RaptProjectStatus.ready;
-
-    // reflect all buffering evnets to the API
-    for (let o of Object.values(BufferEvent)) {
-      this.playerManager.addListener(o, (event: KivEvent) => {
-        // translate to
-        this.dispatchApi(event);
-      });
-    }
 
     for (let eventName of API_EVENTS) {
       this.playerManager.addListener(eventName, (event: KivEvent) => {
@@ -187,15 +185,15 @@ class KalturaInteractiveVideo extends Dispatcher {
    * Legacy API support
    */
   public pause() {
-    this.playerManager.getActiveKalturaPlayer().pause();
+    this.playerManager.pause();
   }
 
   public play() {
-    this.playerManager.getActiveKalturaPlayer().play();
+    this.playerManager.play();
   }
 
   public seek(n: number) {
-    this.playerManager.getActiveKalturaPlayer().currentTime = n;
+    this.playerManager.seek(n);
   }
 
   public replay() {
@@ -267,11 +265,12 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   public evaluate(key: string): any {
+    // prepare the info object with legacy data structure
     if (key === "{raptMedia.info}") {
       let dataCopy = Object.assign({}, this._data);
       dataCopy.player = {
-        currentPlayer: this.playerManager.getActiveKalturaPlayer(),
         currentNode: this.playerManager.getActiveNode(),
+        currentTime: this.playerManager.getActiveKalturaPlayer().currentTime,
         currentVideo: this.playerManager.getActiveNode().entryId
       };
       dataCopy.project = {

@@ -16,7 +16,7 @@
   display: none;
 }
 .kiv-rapt-engine {
-  z-index: 1000;
+  z-index: 200;
   position: absolute;
 }
 .kiv-container {
@@ -76,7 +76,7 @@
 
   .playkit-player {
     .playkit-bottom-bar {
-      padding: 0 16px;
+      padding: 0 8px;
       height: 28px;
     }
     .playkit-control-button,
@@ -89,7 +89,7 @@
       line-height: 26px;
     }
     .playkit-volume-control-bar {
-      bottom: 20px;
+      bottom: 24px;
       left: -8px;
     }
   }

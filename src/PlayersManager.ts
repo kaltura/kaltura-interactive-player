@@ -1,10 +1,9 @@
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipEvent } from "./helpers/KipEvents";
 import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
-import { BufferEvent, PlayersBufferManager } from "./PlayersBufferManager";
+import { PlayersBufferManager } from "./PlayersBufferManager";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { log } from "./helpers/logger";
-import { debounce } from "./helpers/Debounce";
 
 declare var Rapt: any;
 
@@ -45,7 +44,7 @@ export class PlayersManager extends Dispatcher {
   readonly isAvailable: boolean;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
-  private handleResizeRef: () => void = null;
+  private resizeInterval: number = NaN;
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -59,10 +58,12 @@ export class PlayersManager extends Dispatcher {
 
     if (this.isAvailable) {
       this.isAvailable = this.initRaptEngine();
+      // responsiveness resize support
+      this.resizeInterval = setInterval(
+        this.handleWindowResized.bind(this),
+        250
+      );
     }
-    // register to resize to support responsiveness. wrap with a debouncer
-    this.handleResizeRef = debounce(this.handleWindowResized.bind(this));
-    window.addEventListener("resize", this.handleResizeRef);
   }
 
   private initPlayersBufferManager(): boolean {
@@ -71,13 +72,6 @@ export class PlayersManager extends Dispatcher {
       this.raptData,
       this.playersFactory
     );
-    // listen to all BufferEvent types from PlayersBufferManager
-    for (let o of Object.values(BufferEvent)) {
-      this.playersBufferManager.addListener(o, (event: any) => {
-        // bubble up all events
-        this.dispatch(event);
-      });
-    }
     if (
       this.config.rapt &&
       this.config.rapt.hasOwnProperty("bufferNextNodes") &&
@@ -111,7 +105,7 @@ export class PlayersManager extends Dispatcher {
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
-      model.entryId = this.activeNode.id;
+      model.entryId = this.activeNode.entryId;
       switch (model.eventType) {
         case 11:
         case 12:
@@ -135,7 +129,6 @@ export class PlayersManager extends Dispatcher {
       analyticsInterruptFunc,
       this.config
     );
-
     // listen to fullscreen events from the players
     this.playersFactory.addListener(KipFullscreen.FULL_SCREEN_CLICKED, () => {
       this.toggleFullscreenState();
@@ -229,8 +222,7 @@ export class PlayersManager extends Dispatcher {
 
   public destroy() {
     this.removeListeners();
-    window.removeEventListener("resize", this.handleResizeRef);
-    this.handleResizeRef = null;
+    clearInterval(this.resizeInterval);
   }
 
   ////////////////////////////////////////////
@@ -255,7 +247,7 @@ export class PlayersManager extends Dispatcher {
         // remove listeners
         this.removeListeners();
         if (!this.playersBufferManager.isAvailable()) {
-          // TODO must destroy active player
+          // TODO 1 must destroy active player
         }
       }
     }
@@ -281,7 +273,7 @@ export class PlayersManager extends Dispatcher {
     if (this.model) {
       this.sendAnalytics(44, { entryId: newEntryId });
     } else {
-      // TODO - handle analytics of first event44 later;
+      // TODO 3 - handle analytics of first event44 later;
     }
 
     if (this.activeNode) {
@@ -339,6 +331,7 @@ export class PlayersManager extends Dispatcher {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
         });
+        this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
           entryId: newEntryId
         });
@@ -455,7 +448,24 @@ export class PlayersManager extends Dispatcher {
   // Rapt interface - don't change signature //
   private element: HTMLElement; // must be called 'element' because rapt delegate implementation
 
-  // Rapt interface - don't change signature //
+  public pause() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.pause();
+    }
+  }
+
+  public play() {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.play();
+    }
+  }
+
+  public seek(n) {
+    if (this.activePlayer && this.activePlayer.player) {
+      this.activePlayer.player.currentTime = n;
+    }
+  }
+
   load(media: any) {
     this.switchPlayer(media);
   }
