@@ -29,7 +29,6 @@ export enum Persistency {
   audioTrack = "audioTrack",
   rate = "rate"
 }
-
 /**
  * This class manages players, and places and interact with the Rapt engine layer
  * This class creates and manages BufferManager
@@ -162,6 +161,7 @@ export class PlayersManager extends Dispatcher {
     // this.updateActiveItems(null, firstNode);
     this.raptEngine = new Rapt.Engine(this);
     this.raptEngine.load(this.raptData);
+
     this.resizeEngine();
 
     setInterval(() => this.syncRaptStatus(), PlayersManager.playerTickInterval);
@@ -344,7 +344,7 @@ export class PlayersManager extends Dispatcher {
       log(
         "error",
         "pm_execute",
-        "WARNING: Rapt Media commands received before initialization is complete"
+        "Error: Rapt Media commands received before initialization is complete"
       );
       return;
     }
@@ -366,7 +366,6 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
-
   private handleAudiotrackChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
       Persistency.audioTrack,
