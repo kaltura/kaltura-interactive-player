@@ -47,7 +47,8 @@ export class PlayersFactory extends Dispatcher {
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
-      () => this.toggleFullscreen()
+      () => this.toggleFullscreen(),
+      config.rapt
     ).preset;
   }
 
@@ -109,11 +110,10 @@ export class PlayersFactory extends Dispatcher {
     let newConf: RaptConfig = Object.assign({}, this.config);
     newConf.targetId = divName;
     // > v 0.35
-    newConf.plugins = newConf.plugins || {};
-    newConf.plugins.kava = {
-      viewEventCountdown: 5,
-      tamperAnalyticsHandler: this.analyticsInterruptFunc
-    };
+    newConf.plugins = newConf.plugins ? newConf.plugins : {};
+    newConf.plugins.kava = newConf.plugins.kava ? newConf.plugins.kava : {};
+    newConf.plugins.kava.viewEventCountdown = 5; // rapt will send interval every 5 sec (vs 10 default)
+    newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
 
     let playback = newConf.playback ? newConf.playback : {};
 
@@ -131,9 +131,7 @@ export class PlayersFactory extends Dispatcher {
         }
       };
     } else {
-      playback = {
-        autoplay: true
-      };
+      playback.autoplay = true;
     }
     newConf.playback = playback;
 
