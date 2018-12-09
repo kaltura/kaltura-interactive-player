@@ -11,6 +11,7 @@ export interface RaptConfig {
   rapt: any;
   targetId: string;
   playback?: any;
+  sources?: { poster?: any };
   provider?: any;
   plugins?: any;
 }

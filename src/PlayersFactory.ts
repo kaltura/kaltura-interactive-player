@@ -62,7 +62,7 @@ export class PlayersFactory extends Dispatcher {
     playImmediate: boolean,
     persistencyObject?: any
   ): KalturaPlayer {
-    // TODO check if the id already exists and if so throw exception
+    // TODO 3 check if the id already exists and if so throw exception
     const {
       id: playerContainerId,
       container: playerContainer
@@ -77,7 +77,7 @@ export class PlayersFactory extends Dispatcher {
         conf.playback.textLanguage = persistencyObject.captions;
       }
       if (persistencyObject.rate) {
-        // todo - find how to initiate this
+        // todo 5 - find how to initiate this
       }
       // only if this was set, change the logic. If this is not defined leave it as-is
       if (persistencyObject.mute !== undefined) {
@@ -118,12 +118,15 @@ export class PlayersFactory extends Dispatcher {
     let playback = newConf.playback ? newConf.playback : {};
 
     if (!playImmediate) {
-      playback.autoplay = false;
-      playback.preload = "auto";
-      playback.options = {
-        html5: {
-          hls: {
-            maxMaxBufferLength: this.secondsToBuffer
+      newConf.sources = { poster: "" }; // for buffering players - we do not need to load the poster
+      playback = {
+        autoplay: false,
+        preload: "auto",
+        options: {
+          html5: {
+            hls: {
+              maxMaxBufferLength: this.secondsToBuffer
+            }
           }
         }
       };

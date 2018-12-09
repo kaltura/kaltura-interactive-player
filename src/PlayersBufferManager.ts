@@ -31,7 +31,7 @@ export class PlayersBufferManager extends Dispatcher {
   private initializeAvailablity(): void {
     // prevent caching on Safari and IE11-Win7 and if config set to no-cache
     const browser = this.playersFactory.playerLibrary.core.Env.browser.name;
-    // TODO will be used later to exclude other OS & browsers
+    // TODO 9 will be used later to exclude other OS & browsers
     // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
     // const os = this.playersFactory.playerLibrary.core.Env.os.name;
     // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
@@ -66,7 +66,7 @@ export class PlayersBufferManager extends Dispatcher {
           result.player.currentTime = 0;
         }
 
-        // TODO [eitan] for persistancy - assign only synced persistancy
+        // TODO 3 [eitan] for persistancy - assign only synced persistancy
 
         if (playImmediate && !result.player.isPlaying) {
           log("log", "pbm_getPlayer", "execute play command", { entryId });
@@ -126,7 +126,7 @@ export class PlayersBufferManager extends Dispatcher {
       playImmediate
     });
 
-    // TODO [eitan] for persistancy - apply async info
+    // TODO 3 [eitan] for persistancy - apply async info
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
@@ -193,7 +193,7 @@ export class PlayersBufferManager extends Dispatcher {
     } else {
       this.destroyBufferedItems(this.bufferList);
     }
-    // remove duplicity items //todo - prefer items that are better ready (has players, has token or isReady / isRunning
+    // remove duplicity items //todo 4 - prefer items that are better ready (has players, has token or isReady / isRunning
     this.bufferList = this.bufferList.reduce((acc, item) => {
       if (
         !acc.some(
@@ -324,15 +324,6 @@ export class PlayersBufferManager extends Dispatcher {
         clearTimeout(item.bufferingTimeoutToken);
       }
     });
-  }
-
-  public applyToPlayers(arg) {
-    // TODO [eitan] for persistancy
-    // store new persistance info
-    // if changing async info
-    // 3. re-run buffering logic
-    //
-    // if a-synced issue,
   }
 
   public syncPlayersStatus(
