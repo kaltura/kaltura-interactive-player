@@ -2,6 +2,7 @@ import KalturaInteractiveVideo from "./KalturaInteractiveVideo";
 import "./Kip.scss";
 import "script-loader!../libs/engineWithNodeId.min.js";
 import { VERSION } from "../version";
+import { log } from "./helpers/logger";
 
 declare var KalturaPlayer: any;
 declare var __kalturaplayerdata: any;
@@ -22,14 +23,18 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
   // merge uiconf rapt data with current config (priority is local config) - this is a one-level object
   config.rapt = config.rapt || {};
   // extract the uiconf JSON
-  const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0]; // todo - see core team answer on this matter
-  const uiconfRaptData: any = uiconfData.rapt || {};
-  // apply attributes from uiconf to local config, only if they do not exist in the local config
-  Object.keys(uiconfRaptData).forEach(key => {
-    if (!config.rapt.hasOwnProperty(key)) {
-      config.rapt[key] = uiconfRaptData[key];
-    }
-  });
+  try {
+    const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
+    const uiconfRaptData: any = uiconfData.rapt || {};
+    // apply attributes from uiconf to local config, only if they do not exist in the local config
+    Object.keys(uiconfRaptData).forEach(key => {
+      if (!config.rapt.hasOwnProperty(key)) {
+        config.rapt[key] = uiconfRaptData[key];
+      }
+    });
+  } catch (error) {
+    log("log", "Kip", "Fail to merge local config and uiconf", error);
+  }
   return new KalturaInteractiveVideo(config, KalturaPlayer);
 }
 export { setup };
