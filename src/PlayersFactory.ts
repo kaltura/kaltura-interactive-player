@@ -44,11 +44,14 @@ export class PlayersFactory extends Dispatcher {
     if (config.rapt && config.rapt.bufferTime) {
       this.secondsToBuffer = parseInt(config.rapt.bufferTime);
     }
+    const deviceModel =
+      playerLibrary.core.Env.device && playerLibrary.core.Env.device.model; // desktops will be undefined
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
       () => this.toggleFullscreen(),
-      config.rapt
+      config.rapt,
+      deviceModel
     ).preset;
   }
 
