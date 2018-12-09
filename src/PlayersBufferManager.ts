@@ -34,11 +34,17 @@ export class PlayersBufferManager extends Dispatcher {
     // TODO 9 will be used later to exclude other OS & browsers
     // const browserVersion = this.playersFactory.playerLibrary.core.Env.major;
     // const os = this.playersFactory.playerLibrary.core.Env.os.name;
-    // const osVersion = this.playersFactory.playerLibrary.core.Env.os.version;
+    const model =
+      this.playersFactory.playerLibrary.core.Env.device &&
+      this.playersFactory.playerLibrary.core.Env.device.model; // desktops will be undefined
     this._isAvailable = true;
-    // Safari - disable;
-    if (browser.indexOf("Safari") > -1) {
+    // On Safari desktop use pre-buffer, on ipad and iphone - don't because autoplay (defaultPath) needs user-gesture
+    if (
+      browser.indexOf("Safari") > -1 &&
+      (model === "iPad" || model === "iPhone")
+    ) {
       this._isAvailable = false;
+      log("log", "pbm_initializeAvailablity", "disabling prefetch", model);
     }
   }
   /**
