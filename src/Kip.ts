@@ -27,11 +27,10 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
     const uiconfRaptData: any = uiconfData.rapt || {};
     // apply attributes from uiconf to local config, only if they do not exist in the local config
-    Object.keys(uiconfRaptData).forEach(key => {
-      if (!config.rapt.hasOwnProperty(key)) {
-        config.rapt[key] = uiconfRaptData[key];
-      }
-    });
+    config.rapt = {
+      ...uiconfRaptData,
+      ...config.rapt
+    };
   } catch (error) {
     log("log", "Kip", "Fail to merge local config and uiconf", error);
   }

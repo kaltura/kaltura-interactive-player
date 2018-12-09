@@ -1,6 +1,6 @@
 export class PlaybackPreset {
   preset: (props: any) => any;
-  // TODO - when we have more time - switch to JSX
+  // TODO - when we have more time - switch to TSX
   constructor(
     h: any,
     c: any,
