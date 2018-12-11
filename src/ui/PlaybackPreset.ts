@@ -5,7 +5,8 @@ export class PlaybackPreset {
     h: any,
     c: any,
     fullscreenCallback: () => void,
-    private raptData: any
+    private raptData: any,
+    private deviceModel: string | undefined
   ) {
     let customSeekbarContainer: any;
     let customLeftContainer: any;
@@ -81,34 +82,42 @@ export class PlaybackPreset {
     };
 
     // define the app fullscreen button
-    const customFullScreenButton = function() {
-      return h(
-        "div",
-        {
-          className:
-            "playkit-control-button-container playkit-control-fullscreen"
-        },
-        h(
-          "button",
+    let customFullScreenButton;
+
+    if (this.deviceModel === "iPhone") {
+      customFullScreenButton = function() {
+        return null;
+      };
+    } else {
+      customFullScreenButton = function() {
+        return h(
+          "div",
           {
-            tabIndex: "0",
-            "aria-label": "controls.fullscreen",
-            className: "playkit-control-button",
-            onClick: () => {
-              fullscreenCallback();
-            }
+            className:
+              "playkit-control-button-container playkit-control-fullscreen"
           },
-          h("icon", {
-            className: "playkit-icon playkit-icon-maximize",
-            style: "transform: rotate(90deg)"
-          }),
-          h("icon", {
-            className: "playkit-icon playkit-icon-minimize",
-            style: "transform: rotate(90deg)"
-          })
-        )
-      );
-    };
+          h(
+            "button",
+            {
+              tabIndex: "0",
+              "aria-label": "controls.fullscreen",
+              className: "playkit-control-button",
+              onClick: () => {
+                fullscreenCallback();
+              }
+            },
+            h("icon", {
+              className: "playkit-icon playkit-icon-maximize",
+              style: "transform: rotate(90deg)"
+            }),
+            h("icon", {
+              className: "playkit-icon playkit-icon-minimize",
+              style: "transform: rotate(90deg)"
+            })
+          )
+        );
+      };
+    }
     this.preset = function(props: any) {
       return h(
         "div",
