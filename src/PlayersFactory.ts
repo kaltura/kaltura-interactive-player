@@ -3,6 +3,7 @@ import { PlaybackPreset } from "./ui/PlaybackPreset";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { KipFullscreen } from "./PlayersManager";
 import { PlayersDomManager } from "./PlayersDomManager";
+import { log } from "./helpers/logger";
 
 export class KalturaPlayer {
   private static instanceCounter = 1;
@@ -44,11 +45,19 @@ export class PlayersFactory extends Dispatcher {
     if (config.rapt && config.rapt.bufferTime) {
       this.secondsToBuffer = parseInt(config.rapt.bufferTime);
     }
+    let deviceModel = undefined;
+    try {
+      deviceModel =
+        playerLibrary.core.Env.device && playerLibrary.core.Env.device.model; // desktops will be undefined
+    } catch (error) {
+      log("log", "pf_constructor", "could not get device model");
+    }
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
       () => this.toggleFullscreen(),
-      config.rapt
+      config.rapt,
+      deviceModel
     ).preset;
   }
 
@@ -144,7 +153,7 @@ export class PlayersFactory extends Dispatcher {
       newConf.ui = newConf.ui || {};
       newConf.ui.customPreset = uis;
     } catch (e) {
-      console.log("error in applying V3 custom preset");
+      log("log", "pf_getPlayerConf", "failed applying V3 custom preset");
     }
     delete newConf.rapt;
     return newConf;
