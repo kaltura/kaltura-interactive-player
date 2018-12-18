@@ -45,6 +45,7 @@ export class PlayersManager extends Dispatcher {
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
   private resizeInterval: number = NaN;
+  private firstNodeId: string = undefined;
   constructor(
     private config: any,
     private playerLibrary: any,
@@ -262,6 +263,21 @@ export class PlayersManager extends Dispatcher {
       this.addListenersToPlayer();
     }
   }
+
+  /**
+   * This will send the first nodePlay event only if it has this.firstNodeId and analytics model.
+   * If it doesn't have a model it will try again later.
+   */
+  private trySendingFirstEvent() {
+    setTimeout(() => {
+      if (this.firstNodeId && this.model) {
+        this.sendAnalytics(44, { entryId: this.firstNodeId });
+        this.firstNodeId = undefined;
+      } else {
+        this.trySendingFirstEvent();
+      }
+    }, 250);
+  }
   ////////////////////////////////////////////
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
@@ -273,7 +289,10 @@ export class PlayersManager extends Dispatcher {
     if (this.model) {
       this.sendAnalytics(44, { entryId: newEntryId });
     } else {
-      // TODO 3 - handle analytics of first event44 later;
+      // At this point we do not have the 1st player nor analytics model. This will make sure to send the 44 event when
+      // we have a model.
+      this.firstNodeId = newEntryId;
+      this.trySendingFirstEvent();
     }
 
     if (this.activeNode) {
