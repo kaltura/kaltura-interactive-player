@@ -89,10 +89,7 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.playerDomManager = new PlayersDomManager(this.config.targetId);
     this.mainDiv = this.playerDomManager.getContainer();
 
-    let ks: string =
-      this.config.session && this.config.session.ks
-        ? this.config.session.ks
-        : "";
+    let ks: string = this.config.provider.ks ? this.config.provider.ks : "";
     let envUrl = "https://cdnapisec.kaltura.com";
     if (
       this.config.provider &&
@@ -135,7 +132,6 @@ class KalturaInteractiveVideo extends Dispatcher {
       raptGraphData,
       this.playerDomManager
     );
-
 
     // if we got here - playerManager constructor code went well - update status
     this.kalturaInteractiveStatus = RaptProjectStatus.ready;
