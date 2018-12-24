@@ -15,6 +15,7 @@ export interface RaptConfig {
   sources?: { poster?: any };
   provider?: any;
   plugins?: any;
+  gaTrackId?: string;
 }
 function setup(config: RaptConfig): KalturaInteractiveVideo {
   if (console && console.log) {
@@ -31,6 +32,15 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
       ...uiconfRaptData,
       ...config.rapt
     };
+    // detect Google Analytics
+    if (
+      uiconfData.player.plugins.googleAnalytics &&
+      uiconfData.player.plugins.googleAnalytics.trackingId
+    ) {
+      config.gaTrackId =
+        uiconfData.player.plugins.googleAnalytics.trackingId;
+      log("log", "Kip", "Google Analytics exists ");
+    }
   } catch (error) {
     log("log", "Kip", "Fail to merge local config and uiconf", error);
   }
