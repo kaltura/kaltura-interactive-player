@@ -157,9 +157,12 @@ export class PlayersManager extends Dispatcher {
       return false;
     }
 
-    // load the 1st media
-    // this.updateActiveItems(null, firstNode);
-    this.raptEngine = new Rapt.Engine(this);
+    // extract google analytics key from player if exist
+    const options: any = {};
+    if (this.config.googleAnalyticsTrackingId) {
+      options.$ga = this.config.googleAnalyticsTrackingId;
+    }
+    this.raptEngine = new Rapt.Engine(this, options);
     this.raptEngine.load(this.raptData);
 
     this.resizeEngine();
