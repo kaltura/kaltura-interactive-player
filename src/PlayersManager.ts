@@ -40,7 +40,7 @@ export class PlayersManager extends Dispatcher {
   private activeNode: RaptNode = null;
   static playerTickInterval: number = 250;
   public raptEngine: any;
-  private model: any = undefined;
+  private analyticsModel: any = undefined;
   readonly isAvailable: boolean;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
@@ -100,8 +100,8 @@ export class PlayersManager extends Dispatcher {
      * @param model
      */
     const analyticsInterruptFunc = (model: any): boolean => {
-      if (!this.model) {
-        this.model = model; // store model data for future use of Rapt sending data
+      if (!this.analyticsModel) {
+        this.analyticsModel = model; // store model data for future use of Rapt sending data
       }
       model.rootEntryId = this.raptProjectId;
       model.nodeId = this.activeNode.id;
@@ -265,6 +265,20 @@ export class PlayersManager extends Dispatcher {
       this.addListenersToPlayer();
     }
   }
+
+  /**
+   * This will send the first nodePlay event only if it has analytics model.
+   * If it doesn't have a model it will try again later.
+   */
+  private trySendingFirstEvent(entryId: string) {
+    setTimeout(() => {
+      if (this.analyticsModel) {
+        this.sendAnalytics(44, { entryId: entryId });
+      } else {
+        this.trySendingFirstEvent(entryId);
+      }
+    }, 250);
+  }
   ////////////////////////////////////////////
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
@@ -273,10 +287,12 @@ export class PlayersManager extends Dispatcher {
     const nextRaptNode: RaptNode = media.node;
 
     // send analytics of nodePlay - event44
-    if (this.model) {
+    if (this.analyticsModel) {
       this.sendAnalytics(44, { entryId: newEntryId });
     } else {
-      // TODO 3 - handle analytics of first event44 later;
+      // At this point we do not have the 1st player nor analytics model. This will make sure to send the 44 event when
+      // we have a model.
+      this.trySendingFirstEvent(newEntryId);
     }
 
     if (this.activeNode) {
@@ -500,7 +516,7 @@ export class PlayersManager extends Dispatcher {
     attributes?: object,
     fieldsToRemove?: string[]
   ) {
-    if (!this.model) {
+    if (!this.analyticsModel) {
       log(
         "error",
         "pm_sendAnalytics",
@@ -508,7 +524,7 @@ export class PlayersManager extends Dispatcher {
       );
       return;
     }
-    let tmpModel = Object.assign({}, this.model);
+    let tmpModel = Object.assign({}, this.analyticsModel);
     tmpModel.eventType = eventNumber;
 
     if (attributes) {
