@@ -15,7 +15,7 @@ export interface RaptConfig {
   sources?: { poster?: any };
   provider?: any;
   plugins?: any;
-  googleAnalyticsTrackingId?: string;
+  gaTrackId?: string;
 }
 function setup(config: RaptConfig): KalturaInteractiveVideo {
   if (console && console.log) {
@@ -37,7 +37,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
       uiconfData.player.plugins.googleAnalytics &&
       uiconfData.player.plugins.googleAnalytics.trackingId
     ) {
-      config.googleAnalyticsTrackingId =
+      config.gaTrackId =
         uiconfData.player.plugins.googleAnalytics.trackingId;
       log("log", "Kip", "Google Analytics exists ");
     }

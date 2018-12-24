@@ -157,10 +157,10 @@ export class PlayersManager extends Dispatcher {
       return false;
     }
 
-    // extract google analytics key from player if exist
+    // apply google-analytics track id if exist
     const options: any = {};
-    if (this.config.googleAnalyticsTrackingId) {
-      options.$ga = this.config.googleAnalyticsTrackingId;
+    if (this.config.gaTrackId) {
+      options.$ga = this.config.gaTrackId;
     }
     this.raptEngine = new Rapt.Engine(this, options);
     this.raptEngine.load(this.raptData);
