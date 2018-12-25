@@ -43,22 +43,21 @@ This library will be bundled inside the Kaltura playkit-js library and served by
 <script>
     // Rapt config
     var config = {
-		session:{
-			ks: "Zjk0YmQwZTRkZDFjOTE1MGEwMWYwMmEzYzE4ODI4ZTA1YzFkNjRjNHwyNzAxNzsyNzAxNzsxNTM1NzE5NTAyOzI7NzU0MztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
-		},
 		targetId: 'player',
 		playback:{
 			autoplay:true,
 			preload:"auto"
 		},
 		provider: {
-			partnerId: 27017
+			partnerId: 27017,
+			uiConfId: 43533251,
+			ks: "Zjk0YmQwZTRkZDFjOTE1MGEwMWYwMmEzYzE4ODI4ZTA1YzFkNjRjNHwyNzAxNzsyNzAxNzsxNTM1NzE5NTAyOzI7NzU0MztfX0FETUlOX18yNjY4NzsqLGRpc2FibGVlbnRpdGxlbWVudA=="
 		},
         rapt:{}
 	};
-	var kalturaPlayer = KalturaPlayer;
-    var rapt = Rapt.setup(config , kalturaPlayer , this);
-	rapt.loadMedia({entryId: '1_4377j2jl'});
+
+    	var rapt = var kalturaPlayer = PathKalturaPlayer.setup(config);
+	rapt.loadMedia({playlistId: '1_4377j2jl'});
 
 </script>
 ```
