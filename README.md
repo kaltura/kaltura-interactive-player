@@ -55,8 +55,8 @@ This library will be bundled inside the Kaltura playkit-js library and served by
 		},
         rapt:{}
 	};
-	var rapt = var kalturaPlayer = PathKalturaPlayer.setup(config);
-	rapt.loadMedia({playlistId: '1_4377j2jl'});
+	var raptPlayer = PathKalturaPlayer.setup(config);
+	raptPlayer.loadMedia({playlistId: '1_4377j2jl'});
 
 </script>
 ```
