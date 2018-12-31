@@ -37,6 +37,7 @@ export class PlayersManager extends Dispatcher {
   private playersBufferManager: PlayersBufferManager;
   private playersFactory: PlayersFactory;
   private activePlayer: KalturaPlayer = null;
+  private clickedHotspotId: string = undefined;
   private activeNode: RaptNode = null;
   static playerTickInterval: number = 250;
   public raptEngine: any;
@@ -296,11 +297,17 @@ export class PlayersManager extends Dispatcher {
     }
 
     if (this.activeNode) {
-      this.sendAnalytics(48, {
+      let params: any = {
         entryId: newEntryId,
         fromNodeId: this.activeNode.id,
         toNodeId: nextRaptNode.id
-      });
+      };
+      if (this.clickedHotspotId) {
+        params.hotspotId = this.clickedHotspotId;
+        // clear saved hotspotId
+        this.clickedHotspotId = undefined;
+      }
+      this.sendAnalytics(48, params);
     }
 
     log("log", "pm_switchPlayer", "executed", {
@@ -491,6 +498,10 @@ export class PlayersManager extends Dispatcher {
 
   // Rapt interface - don't change signature //
   event(event: any) {
+    if (event.type === "hotspot:click") {
+      // save the hotspot id so we can send it to analytics
+      this.clickedHotspotId = event.payload.hotspot.id;
+    }
     if (event.type === "browser:open") {
       // track hotspot click
       const additionalData = {
