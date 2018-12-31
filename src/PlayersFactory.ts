@@ -152,7 +152,7 @@ export class PlayersFactory extends Dispatcher {
       log(
         "log",
         "pf_getPlayerConf",
-        "force bitmap to min" + this.initialBitrate
+        "force bitmap to min " + this.initialBitrate
       );
       newConf.abr = {
         restrictions: {
