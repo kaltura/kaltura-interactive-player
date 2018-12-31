@@ -9,6 +9,7 @@ declare var __kalturaplayerdata: any;
 
 export interface RaptConfig {
   ui?: any;
+  abr?: any;
   rapt: any;
   targetId: string;
   playback?: any;
@@ -37,8 +38,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
       uiconfData.player.plugins.googleAnalytics &&
       uiconfData.player.plugins.googleAnalytics.trackingId
     ) {
-      config.gaTrackId =
-        uiconfData.player.plugins.googleAnalytics.trackingId;
+      config.gaTrackId = uiconfData.player.plugins.googleAnalytics.trackingId;
       log("log", "Kip", "Google Analytics exists ");
     }
   } catch (error) {

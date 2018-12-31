@@ -33,6 +33,8 @@ export class KalturaPlayer {
 export class PlayersFactory extends Dispatcher {
   readonly secondsToBuffer: number = 6;
   readonly playbackPreset: any;
+  private deviceModel = undefined;
+  private initialBitrate = undefined;
 
   constructor(
     readonly domManager: PlayersDomManager,
@@ -45,9 +47,12 @@ export class PlayersFactory extends Dispatcher {
     if (config.rapt && config.rapt.bufferTime) {
       this.secondsToBuffer = parseInt(config.rapt.bufferTime);
     }
-    let deviceModel = undefined;
+    if (config.rapt && config.rapt.initialBitrate) {
+      this.initialBitrate = parseInt(config.rapt.initialBitrate);
+    }
+
     try {
-      deviceModel =
+      this.deviceModel =
         playerLibrary.core.Env.device && playerLibrary.core.Env.device.model; // desktops will be undefined
     } catch (error) {
       log("log", "pf_constructor", "could not get device model");
@@ -57,7 +62,7 @@ export class PlayersFactory extends Dispatcher {
       this.playerLibrary.ui.Components,
       () => this.toggleFullscreen(),
       config.rapt,
-      deviceModel
+      this.deviceModel
     ).preset;
   }
 
@@ -142,6 +147,19 @@ export class PlayersFactory extends Dispatcher {
       playback.autoplay = true;
     }
     newConf.playback = playback;
+
+    if (this.deviceModel === undefined && this.initialBitrate) {
+      log(
+        "log",
+        "pf_getPlayerConf",
+        "force bitmap to min" + this.initialBitrate
+      );
+      newConf.abr = {
+        restrictions: {
+          minBitrate: this.initialBitrate
+        }
+      };
+    }
 
     try {
       let uis = [
