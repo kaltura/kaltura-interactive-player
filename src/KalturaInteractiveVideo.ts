@@ -43,7 +43,8 @@ class KalturaInteractiveVideo extends Dispatcher {
   private _data: any; // container to data API
   private legacyCallback: (event: any) => void; // legacy API generic callback func
   private playerDomManager: PlayersDomManager;
-  private kalturaInteractiveStatus: RaptProjectStatus = RaptProjectStatus.preInitialized;
+  private kalturaInteractiveStatus: RaptProjectStatus =
+    RaptProjectStatus.preInitialized;
 
   constructor(private config: any, private playerLibrary: any) {
     super();
@@ -218,6 +219,10 @@ class KalturaInteractiveVideo extends Dispatcher {
 
   public get currentNode(): RaptNode {
     return this.playerManager.getActiveKalturaPlayer().node;
+  }
+
+  public get player(): RaptNode {
+    return this.playerManager.getActiveKalturaPlayer();
   }
 
   public get volume(): number {

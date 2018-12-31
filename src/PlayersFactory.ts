@@ -148,15 +148,31 @@ export class PlayersFactory extends Dispatcher {
     }
     newConf.playback = playback;
 
+    let bandwidth = this.initialBitrate;
+    const currentPlayer = this.domManager.getActivePlayer();
+    if (currentPlayer && currentPlayer.player) {
+      try {
+        // bandwidth = currentPlayer.player.getActiveTracks().video.clone()._bandwidth;
+        log(
+          "log",
+          "pf_getPlayerConf",
+          "sampeled bandwidth from current player - " + this.initialBitrate
+        );
+      } catch (error) {
+        log(
+          "log",
+          "pf_getPlayerConf",
+          "Couldn't sample the current bandwidth :",
+          error
+        );
+      }
+    }
+
     if (this.deviceModel === undefined && this.initialBitrate) {
-      log(
-        "log",
-        "pf_getPlayerConf",
-        "force bitmap to min " + this.initialBitrate
-      );
+      log("log", "pf_getPlayerConf", "force bitmap of to min " + bandwidth);
       newConf.abr = {
         restrictions: {
-          minBitrate: this.initialBitrate
+          minBitrate: bandwidth
         }
       };
     }

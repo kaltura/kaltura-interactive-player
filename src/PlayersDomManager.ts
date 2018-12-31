@@ -8,6 +8,7 @@ export class PlayersDomManager {
 
   private namespace: string;
   private raptContainer: HTMLElement;
+  private activePlayer: KalturaPlayer;
 
   public getContainer() {
     return this.raptContainer;
@@ -55,8 +56,13 @@ export class PlayersDomManager {
       div.classList.remove("current-playing");
     });
     if (player) {
+      this.activePlayer = player;
       player.container.classList.add("current-playing");
     }
+  }
+
+  public getActivePlayer(): KalturaPlayer {
+    return this.activePlayer;
   }
 
   public createKalturaPlayerContainer(): {
