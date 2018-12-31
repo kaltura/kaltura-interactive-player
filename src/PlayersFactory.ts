@@ -169,7 +169,7 @@ export class PlayersFactory extends Dispatcher {
     }
 
     if (this.deviceModel === undefined && this.initialBitrate) {
-      log("log", "pf_getPlayerConf", "force bitmap of to min " + bandwidth);
+      log("log", "pf_getPlayerConf", "force bandwidth of to min " + bandwidth);
       newConf.abr = {
         restrictions: {
           minBitrate: bandwidth

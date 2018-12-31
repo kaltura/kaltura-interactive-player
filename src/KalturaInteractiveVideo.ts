@@ -221,10 +221,6 @@ class KalturaInteractiveVideo extends Dispatcher {
     return this.playerManager.getActiveKalturaPlayer().node;
   }
 
-  public get player(): RaptNode {
-    return this.playerManager.getActiveKalturaPlayer();
-  }
-
   public get volume(): number {
     return this.playerManager.getActiveKalturaPlayer().player.player.volume;
   }
