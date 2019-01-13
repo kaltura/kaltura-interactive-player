@@ -30,7 +30,14 @@ npm start
 ```
 
 ## Embed: 
-This library will be bundled inside the Kaltura playkit-js library and served by it. This next snippet will show a typical embed code of a rapt player
+This library will be bundled inside the Kaltura playkit-js library and served by it. 
+In most cases, KMS will generate the player uiconf for you, in case you create the player maually, you will need to make sure that the player V3 version incluses the Rapt V3 "plugin". You do that by setting the 'Additional flashvars' field to something that looks like this template:
+```
+{"kaltura-ovp-player":"V3_PLAYER_VERSION","path" : "PATH_VERSION"}
+```
+E.G. {"kaltura-ovp-player":"0.37.2","path" : "0.1.5"}
+
+This next snippet will show a typical embed code of a rapt player
 
  ```
 <!-- playkit-js library code and Rapt  -->
