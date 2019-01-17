@@ -55,6 +55,7 @@ export class PlayersFactory extends Dispatcher {
       this.deviceModel =
         playerLibrary.core.Env.device && playerLibrary.core.Env.device.model; // desktops will be undefined
     } catch (error) {
+      this.deviceModel = "unknown"; // in case we failed detecting the device we rather not increse the initial bitrate
       log("log", "pf_constructor", "could not get device model");
     }
     this.playbackPreset = new PlaybackPreset(
@@ -111,6 +112,10 @@ export class PlayersFactory extends Dispatcher {
     return new KalturaPlayer(newPlayer, playerContainer);
   }
 
+  public setNewBitrate(n: number) {
+    this.initialBitrate = n;
+  }
+
   /**
    * Extract the player configuration from the KIV generic config: remove the rapt element and add specific target id
    * @param entryId
@@ -152,7 +157,8 @@ export class PlayersFactory extends Dispatcher {
     const currentPlayer = this.domManager.getActivePlayer();
     if (currentPlayer && currentPlayer.player) {
       try {
-        // bandwidth = currentPlayer.player.getActiveTracks().video.clone()._bandwidth;
+        bandwidth = currentPlayer.player.getActiveTracks().video.clone()
+          ._bandwidth;
         log(
           "log",
           "pf_getPlayerConf",
@@ -169,11 +175,19 @@ export class PlayersFactory extends Dispatcher {
     }
 
     if (this.deviceModel === undefined && this.initialBitrate) {
-      log("log", "pf_getPlayerConf", "force bandwidth of to min " + bandwidth);
+      let factor = Math.round(1.1 * bandwidth);
+
+      console.log(">>>> load next video with bandwidth of " + factor);
+      log(
+        "log",
+        "pf_getPlayerConf",
+        "load next video with bandwidth of " + factor
+      );
       newConf.abr = {
         restrictions: {
-          minBitrate: bandwidth
-        }
+          minBitrate: factor
+        },
+        defaultBandwidthEstimate: factor
       };
     }
 
