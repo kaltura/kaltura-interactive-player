@@ -1,369 +1,429 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Kaltura Interactive Player </title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kaltura Interactive Player</title>
     <script
-            src="https://code.jquery.com/jquery-3.3.1.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-            crossorigin="anonymous"></script>
-</head>
-<body>
+      src="https://code.jquery.com/jquery-3.3.1.min.js"
+      integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <!-- relevant for development only! -->
+    <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43596191"></script>
+    <!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script>-->
+    <!-- THIS UICONF HAS GA -->
+    <!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219991"></script>-->
+    <script src="dist/path-kaltura-player.js" type="text/javascript"></script>
+    <script src="http://localhost:35729/livereload.js"></script>
+    <!-- end of relevant for development only! -->
+    <!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
+    <style>
+      #player {
+        width: 500px;
+        height: 281px;
+      }
+    </style>
+    <h3>test.template.html</h3>
+    <h4 id="projDetails"></h4>
+    <div id="player"></div>
+    <div
+      id="logDiv"
+      style="width: 450px;height: 100%;position: absolute;left:650px;top:0"
+    ></div>
+    <script>
+      var optionalPlaylists = [
+        {
+          name: "links and hotspots",
+          id: "1_pdnk89fb"
+        },
+        {
+          name: "a-bb-a",
+          id: "1_o9h3609b"
+        },
+        {
+          name: "3 by 4",
+          id: "1_tltksr4c"
+        },
+        {
+          name: "9 by 16",
+          id: "1_st9lvajb"
+        },
+        {
+          name: "short",
+          id: "1_91tbi9q8"
+        },
+        {
+          name: "Multi Audio",
+          id: "1_q94de4ui"
+        },
+        {
+          name: "Quality",
+          id: "1_znyzxk11",
+          selected: true ///////////////////////
+        },
+        {
+          name: "Links ",
+          id: "1_sktk76eq"
+        },
+        {
+          name: "CL1",
+          id: "0_ugurmytu"
+        },
+        {
+          name: "CL2",
+          id: "0_5huki1y3"
+        },
+        {
+          name: "Animals",
+          id: "1_60y5a49y"
+        },
+        {
+          name: "Complex",
+          id: "1_51tet0hy"
+        },
+        {
+          name: "Empty",
+          id: "1_sxcxb5e2"
+        },
+        {
+          name: "Start 2 Start",
+          id: "1_guuku0l9"
+        },
+        {
+          name: "1 to 2,3,4",
+          id: "1_4sjm8veb"
+        },
+        {
+          name: "Same-node",
+          id: "1_4weuna20"
+        },
+        {
+          name: "defaultPath",
+          id: "1_r33krd2s"
+        },
+        {
+          name: "self-loop",
+          id: "1_s0d8kump"
+        },
+        {
+          name: "split same",
+          id: "1_a2m8w1pi"
+        },
+        {
+          name: "balconette ",
+          id: "0_dl86knxb",
+          pid: 2413351
+        },
+        {
+          name: "Deloitte ",
+          id: "1_t9w32b41",
+          pid: 2421271
+        },
+        {
+          name: "QA BE ",
+          id: "0_3ifwiywl",
+          pid: 5885,
+          isQA: true
+        }
+      ];
 
-<!-- relevant for development only! -->
-<script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43398051"></script>
-<!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script>-->
-<!-- THIS UICONF HAS GA -->
-<!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219991"></script>-->
-<script src="dist/path-kaltura-player.js" type="text/javascript"></script>
-<script src="http://localhost:35729/livereload.js"></script>
-<!-- end of relevant for development only! -->
-<!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
-<style>
-    #player {
-        width:500px;
-        height:281px;
-    }
-</style>
-<h3>test.template.html</h3>
-<h4 id="projDetails"></h4>
-<div id="player"></div>
-<div id="logDiv" style="width: 450px;height: 100%;position: absolute;left:650px;top:0"></div>
-<script>
+      var selectedItem;
 
-	var optionalPlaylists = [
-		{
-			name: "links and hotspots" ,
-			id: "1_pdnk89fb" ,
-			selected: true ///////////////////////
-		},
-		{
-			name: "a-bb-a" ,
-			id: "1_o9h3609b" ,
-		},
-		{
-			name: "3 by 4" ,
-			id: "1_tltksr4c" ,
-		},
-		{
-			name: "9 by 16" ,
-			id: "1_st9lvajb" ,
-		},
-		{
-			name: "short" ,
-			id: "1_91tbi9q8" ,
-		},
-		{
-			name: "Multi Audio" ,
-			id: "1_q94de4ui" ,
-		},
-		{
-			name: "Links " ,
-			id: "1_sktk76eq" ,
-		},
-		{
-			name: "CL1" ,
-			id: "0_ugurmytu" ,
-		},
-		{
-			name: "CL2" ,
-			id: "0_5huki1y3" ,
-		},
-		{
-			name: "Animals" ,
-			id: "1_60y5a49y" ,
-		},
-		{
-			name: "Complex" ,
-			id: "1_51tet0hy",
-		},
-		{
-			name: "Empty" ,
-			id: "1_sxcxb5e2",
-		} ,
-		{
-			name: "Start 2 Start" ,
-			id: "1_guuku0l9",
-		} ,
-		{
-			name: "1 to 2,3,4" ,
-			id: "1_4sjm8veb",
-		} ,
-		{
-			name: "Same-node" ,
-			id: "1_4weuna20",
-		} ,
-		{
-			name: "defaultPath" ,
-			id: "1_r33krd2s",
-		} ,
-		{
-			name: "self-loop" ,
-			id: "1_s0d8kump",
-		} ,
-		{
-			name: "split same" ,
-			id: "1_a2m8w1pi",
-		} ,
-		{
-			name: "balconette " ,
-			id: "0_dl86knxb",
-			pid : 2413351,
-		} ,
-		{
-			name: "Deloitte " ,
-			id: "1_t9w32b41",
-			pid : 2421271,
-		} ,
-		{
-			name: "QA BE " ,
-			id: "0_3ifwiywl",
-			pid : 5885,
-			isQA: true
-		} ,
-	];
+      for (var j = 0; j < optionalPlaylists.length; j++) {
+        if (optionalPlaylists[j].selected) {
+          selectedItem = optionalPlaylists[j];
+        }
+      }
+      var env = {};
+      if (selectedItem.isQA) {
+        env = {
+          serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
+          cdnUrl: "//qa-apache-php7.dev.kaltura.com"
+        };
+      }
+      var pid = 27017; // default
 
-	var selectedItem ;
+      if (selectedItem.pid) {
+        pid = selectedItem.pid;
+      }
 
-	for (var j = 0 ; j< optionalPlaylists.length; j++){
-		if(optionalPlaylists[j].selected){
-			selectedItem = 	optionalPlaylists[j];
-		}
-	}
-	var env = {};
-	if(selectedItem.isQA){
-		env = {
-			serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
-			cdnUrl: "//qa-apache-php7.dev.kaltura.com"
-		}
-	}
-	var pid = 27017; // default
+      document.getElementById("projDetails").textContent =
+        selectedItem.name + " - " + selectedItem.id;
+      var config = {
+        targetId: "player",
+        playback: {
+          autoplay: true,
+          preload: "auto"
+        },
 
-	if(selectedItem.pid){
-		pid = selectedItem.pid
-	}
+        provider: {
+          // ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
+          partnerId: pid,
+          uiconfId: "15219991",
+          env: env
+        },
 
+        rapt: {
+          initalBitrate: 700000,
+          debug: false,
+          bufferNextNodes: true,
+          bufferTime: 6,
+          showScrubber: true,
+          showTimers: true,
+          showSettings: true
+        }
+      };
 
-	document.getElementById("projDetails").textContent = selectedItem.name + " - " + selectedItem.id;
-	var config = {
-		targetId: 'player',
-		playback:{
-			autoplay:true,
-			preload:"auto"
-		},
+      var kip = PathKalturaPlayer.setup(config);
 
-		provider: {
-			// ks : "djJ8NTg4NXwbTCZ2c42QhJ0fXZZs5qfSaPIYMyKXzJeEQc3MvDnxljyc24Yo5cSYhg1MKhqCbSsHTxHrsEoTEUITaYWbVmBj6A3aOWlj3iFJnBMNZsxEEwcg6bh-bPJN-drxzyMF7LwLZeP3v6ewIvq7T9u-GN61iPJxW3Pny5yO8YZng2H0aaSy0NKXoKatp6GVr2_XiWwf94ziVliqZNPZMcaGolxFgyqx2Cty9hPMJzQdpx0dUevVeeW1OdeBBbl6VvyfPmw=",
-			partnerId: pid ,
-			uiconfId : "15219991" ,
-			env : env
-		},
+      var allEvents = [
+        "browser:hidden",
+        "browser:open",
+        "cue:forward",
+        "cue:reverse",
+        "hotspot:click",
+        "node:enter",
+        "node:ended",
+        "node:exit",
+        "project:load",
+        "project:ready",
+        "project:start",
+        "project:unload",
+        "project:ended",
+        "player:play",
+        "player:pause",
+        "player:progress",
+        "player:ratechange",
+        "player:timeupdate",
+        "player:volumechange"
+      ];
 
-		rapt:{
-			debug:false,
-			bufferNextNodes: true,
-			bufferTime: 6,
-			showScrubber: true,
-			showTimers: true,
-			showSettings: true,
-		}
+      for (var i = 0; i < allEvents.length; i++) {
+        kip.addListener(allEvents[i], function(event) {
+          logDebugMsg(event);
+        });
+      }
 
-	};
+      // Legacy API example
+      kip.kBind("raptMedia_event", function(data) {
+        // console.log(">>>>> raptMedia_event",data);
+      });
+      kip.loadMedia({ playlistId: selectedItem.id });
+      // logger - debug mode !
+      function logDebugMsg(event) {
+        var oneLine = document.createElement("div");
+        // mark buffering event in green
+        var printStr = event.type;
+        var payload = event.payload;
+        oneLine.style.cssText = "color: blue";
+        switch (event.type) {
+          case "player:timeupdate":
+            return; // we do not want to print this - it junks the log
+          case "cue:forward":
+          case "cue:revere":
+            printStr +=
+              '<span style="color: #8b227c"> [' +
+              payload.cue.customData +
+              "]</span>";
+            break;
+          case "hotspot:click":
+            printStr +=
+              '<span style="color: #648b24"> [' +
+              payload.hotspot.name +
+              "]</span>";
+            break;
+          case "node:enter":
+          case "node:ended":
+          case "node:exit":
+            printStr +=
+              '<span style="color: #24468b"> [' +
+              payload.node.name +
+              "]</span>";
+            break;
+          case "player:progress":
+            printStr +=
+              '<span style="color: #8b2136"> [' + payload.progress + "]</span>";
+            break;
+          case "browser:open":
+            printStr +=
+              '<span style="color: #648b24"> [' + payload.href + "]</span>";
+            break;
+          default:
+            if (!isEmpty(payload)) {
+              printStr +=
+                '<span style="color: #9f4e8e"> [' +
+                payload.toString() +
+                "]</span>";
+            }
 
-	var kip = PathKalturaPlayer.setup(config);
+          // this is a Rapt event
+        }
+        oneLine.innerHTML = printStr;
+        document.getElementById("logDiv").appendChild(oneLine);
+      }
 
-	var allEvents = [
-		"browser:hidden",
-		"browser:open",
-		"cue:forward",
-		"cue:reverse",
-		"hotspot:click",
-		"node:enter",
-		"node:ended",
-		"node:exit",
-		"project:load",
-		"project:ready",
-		"project:start",
-		"project:unload",
-		"project:ended",
-		"player:play",
-		"player:pause",
-		"player:progress",
-		"player:ratechange",
-		"player:timeupdate",
-		"player:volumechange"
-	];
+      var playKip = function() {
+        kip.play();
+      };
+      function pauseKip() {
+        kip.pause();
+      }
+      function replayKip() {
+        kip.replay();
+      }
+      function resetKip() {
+        kip.reset();
+      }
+      function jumpToNodeKip(o) {
+        kip.jump(o);
+      }
+      function seekKip(n) {
+        kip.seek(n);
+      }
+      function getNodes() {
+        console.table(kip.data.nodes);
+      }
+      function currentTime() {
+        console.log(kip.currentTime);
+      }
+      function duration() {
+        console.log(kip.duration);
+      }
+      function currentNode() {
+        console.log(kip.currentNode);
+      }
+      function currentVolume() {
+        console.log(kip.volume); // player bug - initial value ?
+      }
+      function setVolume(n) {
+        kip.volume = n;
+      }
+      function muted() {
+        console.log(kip.muted); // player bug
+      }
+      function playbackRate() {
+        console.log(kip.playbackRate); // player bug
+      }
 
-	for (var i = 0 ; i< allEvents.length; i++){
-		kip.addListener(allEvents[i] , function (event) {
-			logDebugMsg(event);
-		});
-	}
+      // helpers
+      function isEmpty(obj) {
+        for (var key in obj) {
+          if (obj.hasOwnProperty(key)) return false;
+        }
+        return true;
+      }
 
-	// Legacy API example
-	kip.kBind('raptMedia_event', function(data) {
-		// console.log(">>>>> raptMedia_event",data);
-	});
-	kip.loadMedia({playlistId: selectedItem.id});
-	// logger - debug mode !
-	function logDebugMsg(event){
-		var oneLine = document.createElement("div");
-		// mark buffering event in green
-		var printStr = event.type;
-		var payload = event.payload;
-		oneLine.style.cssText = "color: blue";
-		switch (event.type) {
-			case "player:timeupdate":
-				return; // we do not want to print this - it junks the log
-			case "cue:forward":
-			case "cue:revere":
-				printStr+='<span style="color: #8b227c"> ['+payload.cue.customData+']</span>' ;
-				break;
-			case "hotspot:click":
-				printStr+='<span style="color: #648b24"> ['+payload.hotspot.name+']</span>' ;
-				break;
-			case "node:enter":
-			case "node:ended":
-			case "node:exit":
-				printStr+='<span style="color: #24468b"> ['+payload.node.name+']</span>' ;
-				break;
-			case "player:progress":
-				printStr+='<span style="color: #8b2136"> ['+payload.progress+']</span>' ;
-				break;
-			case "browser:open":
-				printStr+='<span style="color: #648b24"> ['+payload.href+']</span>' ;
-				break;
-			default:
-				if(!isEmpty(payload)){
-					printStr+='<span style="color: #9f4e8e"> ['+payload.toString()+']</span>' ;
-				}
+      function scaleUp(key) {
+        $("#player").width($("#player").width() * 1.1);
+        $("#player").height($("#player").height() * 1.1);
+      }
+      function scaleDown(key) {
+        $("#player").width($("#player").width() / 1.1);
+        $("#player").height($("#player").height() / 1.1);
+      }
+      function evaluateKip(key) {
+        var output = kip.evaluate(key);
+        console.log("evaluate :" + key + " > " + output);
+      }
+    </script>
+    <br />
+    <div>
+      <button onclick="playKip()">play</button>
+      <button onclick="pauseKip()">pause</button>
+      <button onclick="replayKip()">replay</button>
+      <button onclick="resetKip()">reset</button>
+      <button onclick="seekKip(5)">Seek to 5</button>
+      <button onclick="seekKip(15)">Seek to 15</button>
+      <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">
+        Seek to -3sec
+      </button>
+      <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">
+        Seek to -7sec
+      </button>
+      <br />
+      <br />
+      <button
+        onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:play'})"
+        style="background: #f4cd55"
+      >
+        play
+      </button>
+      <button
+        onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:pause'})"
+        style="background: #f4cd55"
+      >
+        pause
+      </button>
+      <button
+        onclick="kip.sendNotification('raptMedia_doCommand',{type:'project:reset'})"
+        style="background: #f4cd55"
+      >
+        replay
+      </button>
+      <button
+        onclick="kip.execute({type:'project:reset'})"
+        style="background: #f4cd55"
+      >
+        replay1
+      </button>
+      <button
+        onclick="kip.sendNotification('raptMedia_doCommand',{type: 'player:seek', payload: { time: 5 } })"
+        style="background: #f4cd55"
+      >
+        Seek to 5
+      </button>
+      <br />
+      <br />
+      <br />
+      <button onclick="jumpToNodeKip({name:'Start'})">
+        JumpToNode {name:'Start'}
+      </button>
+      <button
+        onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})"
+      >
+        JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}
+      </button>
+      <button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">
+        JumpToNode {ref:'1_4f9mue48'}
+      </button>
+      <!--<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {xref:'1_4f9mue48'}</button>-->
+      <br />
+      <br />
+      <button onclick="getNodes()">player.data.nodes</button>
+      <button onclick="getMetadata()">player.metadata.account</button> <br />
+      <br />
+      <button onclick="evaluateKip('nodes')" style="background: #f4Fd98">
+        player.data.nodes
+      </button>
+      <button onclick="evaluateKip('{raptMedia.status}')">Status</button>
+      <button onclick="evaluateKip('account')" style="background: #f4Fd98">
+        account
+      </button>
+      <button
+        onclick="evaluateKip('{raptMedia.info}')"
+        style="background: #f4Fd98"
+      >
+        {raptMedia.info}
+      </button>
+      <br />
+      <br />
+      <button onclick="currentTime()">player.currentTime</button>
+      <button onclick="duration()">player.duration</button>
+      <button onclick="currentNode()">player.currentNode</button>
+      <button onclick="currentNode()">player.currentNode</button> <br />
+      <br />
+      <button onclick="currentVolume()">player.volume</button>
+      <button onclick="setVolume(0.5)">player.volume = 0.5</button>
+      <button onclick="setVolume(1)">player.volume = 1</button>
+      <button onclick="setVolume(0)">player.volume = 0</button>
+      <button onclick="muted()">player.muted</button>
 
-
-			// this is a Rapt event
-		}
-		oneLine.innerHTML = printStr;
-		document.getElementById("logDiv").appendChild(oneLine);
-	}
-
-	var playKip = function(){
-		kip.play();
-	}
-	function pauseKip(){
-		kip.pause();
-	}
-	function replayKip(){
-		kip.replay();
-	}
-	function resetKip(){
-		kip.reset();
-	}
-	function jumpToNodeKip(o){
-		kip.jump(o);
-	}
-	function seekKip(n){
-		kip.seek(n)
-	}
-	function getNodes() {
-		console.table(kip.data.nodes);
-	}
-	function currentTime(){
-		console.log(kip.currentTime);
-	}
-	function duration(){
-		console.log(kip.duration);
-	}
-	function currentNode(){
-		console.log(kip.currentNode);
-	}
-	function currentVolume(){
-		console.log(kip.volume); // player bug - initial value ?
-	}
-	function setVolume(n){
-		kip.volume = n;
-	}
-	function muted(){
-		console.log(kip.muted); // player bug
-	}
-	function playbackRate(){
-		console.log(kip.playbackRate); // player bug
-	}
-
-	// helpers
-	function isEmpty(obj) {
-		for(var key in obj) {
-			if(obj.hasOwnProperty(key))
-				return false;
-		}
-		return true;
-	}
-
-	function scaleUp(key){
-		$("#player").width($("#player").width() * 1.1);
-		$("#player").height($("#player").height() * 1.1);
-	}
-	function scaleDown(key){
-		$("#player").width($("#player").width() / 1.1);
-		$("#player").height($("#player").height() / 1.1);
-
-	}
-	function evaluateKip(key){
-		var output = kip.evaluate(key);
-		console.log("evaluate :"+key+" > " +output);
-	}
-
-</script>
-<br/>
-<div>
-    <button onclick="playKip()">play</button>
-    <button onclick="pauseKip()">pause</button>
-    <button onclick="replayKip()">replay</button>
-    <button onclick="resetKip()">reset</button>
-    <button onclick="seekKip(5)">Seek to 5</button>
-    <button onclick="seekKip(15)">Seek to 15</button>
-    <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">Seek to -3sec</button>
-    <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">Seek to -7sec</button>
-    <br/>
-    <br/>
-    <button onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:play'})" style="background: #f4cd55">play</button>
-    <button onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:pause'})" style="background: #f4cd55">pause</button>
-    <button onclick="kip.sendNotification('raptMedia_doCommand',{type:'project:reset'})" style="background: #f4cd55">replay</button>
-    <button onclick="kip.execute({type:'project:reset'})" style="background: #f4cd55">replay1</button>
-    <button onclick="kip.sendNotification('raptMedia_doCommand',{type: 'player:seek', payload: { time: 5 } })" style="background: #f4cd55">Seek to 5</button>
-    <br/>
-    <br/>
-    <br/>
-    <button onclick="jumpToNodeKip({name:'Start'})">JumpToNode {name:'Start'}</button>
-    <button onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})">JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}</button>
-    <button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {ref:'1_4f9mue48'}</button>
-    <!--<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {xref:'1_4f9mue48'}</button>-->
-    <br/>
-    <br/>
-    <button onclick="getNodes()">player.data.nodes</button>
-    <button onclick="getMetadata()">player.metadata.account</button>
-    <br/>
-    <br/>
-    <button onclick="evaluateKip('nodes')" style="background: #f4Fd98" >player.data.nodes</button>
-    <button onclick="evaluateKip('{raptMedia.status}')">Status</button>
-    <button onclick="evaluateKip('account')" style="background: #f4Fd98" >account</button>
-    <button onclick="evaluateKip('{raptMedia.info}')" style="background: #f4Fd98" >{raptMedia.info}</button>
-    <br/>
-    <br/>
-    <button onclick="currentTime()">player.currentTime</button>
-    <button onclick="duration()">player.duration</button>
-    <button onclick="currentNode()">player.currentNode</button>
-    <button onclick="currentNode()">player.currentNode</button>
-    <br>
-    <br>
-    <button onclick="currentVolume()">player.volume</button>
-    <button onclick="setVolume(0.5)">player.volume = 0.5</button>
-    <button onclick="setVolume(1)">player.volume = 1</button>
-    <button onclick="setVolume(0)">player.volume = 0</button>
-    <button onclick="muted()">player.muted</button>
-
-    <br>
-    <button onclick="playbackRate()">player.playbackRate</button>
-    <button onclick="scaleUp()"> + </button>
-    <button onclick="scaleDown()"> - </button>
-</div>
-</body>
+      <br />
+      <button onclick="playbackRate()">player.playbackRate</button>
+      <button onclick="scaleUp()">+</button>
+      <button onclick="scaleDown()">-</button>
+    </div>
+  </body>
 </html>

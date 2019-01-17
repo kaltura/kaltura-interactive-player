@@ -142,6 +142,14 @@ export class PlayersFactory extends Dispatcher {
       playback.autoplay = true;
     }
     newConf.playback = playback;
+    if (this.config.rapt.initalBitrate) {
+      newConf.abr = {
+        defaultBandwidthEstimate: this.config.rapt.initalBitrate,
+        restrictions: {
+          minBitrate: this.config.rapt.initalBitrate
+        }
+      };
+    }
 
     try {
       let uis = [
