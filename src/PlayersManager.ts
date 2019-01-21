@@ -328,6 +328,24 @@ export class PlayersManager extends Dispatcher {
       return;
     }
 
+    // autoplay false detection
+    let shouldPlayNow = true;
+    if (
+      this.firstPlay &&
+      this.config.playback &&
+      this.config.playback.autoplay === false
+    ) {
+      shouldPlayNow = false;
+      log(
+        "log",
+        "pm_switchPlayer",
+        "setting autoplay to false on first node with playersBufferManager",
+        {
+          entryId: newEntryId
+        }
+      );
+    }
+
     if (this.playersBufferManager.isAvailable()) {
       log(
         "log",
@@ -335,23 +353,6 @@ export class PlayersManager extends Dispatcher {
         "use buffer manager to get player for entry",
         { entryId: newEntryId }
       );
-      // autoplay false detection
-      let shouldPlayNow = true;
-      if (
-        this.firstPlay &&
-        this.config.playback &&
-        this.config.playback.autoplay === false
-      ) {
-        shouldPlayNow = false;
-        log(
-          "log",
-          "pm_switchPlayer",
-          "setting autoplay to false on first node with playersBufferManager",
-          {
-            entryId: newEntryId
-          }
-        );
-      }
       this.firstPlay = false;
       const bufferedPlayer = this.playersBufferManager.getPlayer(
         newEntryId,
@@ -370,23 +371,7 @@ export class PlayersManager extends Dispatcher {
         log("log", "pm_switchPlayer", "no player found, create main player", {
           entryId: newEntryId
         });
-        // autoplay false detection
-        let shouldPlayNow = true;
-        if (
-          this.firstPlay &&
-          this.config.playback &&
-          this.config.playback.autoplay === false
-        ) {
-          shouldPlayNow = false;
-          log(
-            "log",
-            "pm_switchPlayer",
-            "setting autoplay to false on first node",
-            {
-              entryId: newEntryId
-            }
-          );
-        }
+
         const newPlayer = this.playersFactory.createPlayer(
           newEntryId,
           shouldPlayNow
