@@ -363,8 +363,7 @@ export class PlayersManager extends Dispatcher {
       log(
         "log",
         "pm_switchPlayer",
-        "buffer manager not available, switch media on current player",
-        { entryId: newEntryId }
+        "buffer manager not available, switch media on current player"
       );
 
       if (!this.activePlayer) {
@@ -387,10 +386,7 @@ export class PlayersManager extends Dispatcher {
           log(
             "log",
             "pm_switchPlayer",
-            "setting autoplay to true (after first load)",
-            {
-              entryId: newEntryId
-            }
+            "setting autoplay to true (after first load)"
           );
         }
         this.firstPlay = false;
