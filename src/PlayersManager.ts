@@ -43,6 +43,7 @@ export class PlayersManager extends Dispatcher {
   public raptEngine: any;
   private analyticsModel: any = undefined;
   readonly isAvailable: boolean;
+  private firstPlay: boolean = true;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
   private resizeInterval: number = NaN;
@@ -334,9 +335,27 @@ export class PlayersManager extends Dispatcher {
         "use buffer manager to get player for entry",
         { entryId: newEntryId }
       );
+      // autoplay false detection
+      let shouldPlayNow = true;
+      if (
+        this.firstPlay &&
+        this.config.playback &&
+        this.config.playback.autoplay === false
+      ) {
+        shouldPlayNow = false;
+        log(
+          "log",
+          "pm_switchPlayer",
+          "setting autoplay to false on first node with playersBufferManager",
+          {
+            entryId: newEntryId
+          }
+        );
+      }
+      this.firstPlay = false;
       const bufferedPlayer = this.playersBufferManager.getPlayer(
         newEntryId,
-        true
+        shouldPlayNow
       );
       this.updateActiveItems(bufferedPlayer, nextRaptNode);
     } else {
@@ -351,12 +370,45 @@ export class PlayersManager extends Dispatcher {
         log("log", "pm_switchPlayer", "no player found, create main player", {
           entryId: newEntryId
         });
-        const newPlayer = this.playersFactory.createPlayer(newEntryId, true);
+        // autoplay false detection
+        let shouldPlayNow = true;
+        if (
+          this.firstPlay &&
+          this.config.playback &&
+          this.config.playback.autoplay === false
+        ) {
+          shouldPlayNow = false;
+          log(
+            "log",
+            "pm_switchPlayer",
+            "setting autoplay to false on first node",
+            {
+              entryId: newEntryId
+            }
+          );
+        }
+        const newPlayer = this.playersFactory.createPlayer(
+          newEntryId,
+          shouldPlayNow
+        );
         this.updateActiveItems(newPlayer, nextRaptNode);
       } else {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
         });
+        // Even if autoplay was set to false, any next video must be played automaticaly
+        if (this.firstPlay && this.config.playback.autoplay === false) {
+          this.activePlayer.player.configure({ playback: { autoplay: true } });
+          log(
+            "log",
+            "pm_switchPlayer",
+            "setting autoplay to true (after first load)",
+            {
+              entryId: newEntryId
+            }
+          );
+        }
+        this.firstPlay = false;
         this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
           entryId: newEntryId
