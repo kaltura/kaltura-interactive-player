@@ -95,6 +95,11 @@ export class PlayersFactory extends Dispatcher {
     }
 
     const newPlayer = this.playerLibrary.setup(conf);
+    if (this.config.rapt.initialBitrate) {
+      newPlayer.addEventListener(newPlayer.Event.Core.FIRST_PLAY, e =>
+        this.onFirstPlay(e)
+      );
+    }
 
     // @ts-ignore
     newPlayer._uiWrapper._uiManager.store.dispatch({
@@ -104,6 +109,17 @@ export class PlayersFactory extends Dispatcher {
 
     newPlayer.loadMedia({ entryId: entryId });
     return new KalturaPlayer(newPlayer, playerContainer);
+  }
+
+  private onFirstPlay(e) {
+    try {
+      e.target.removeEventListener(e.target.Event.Core.FIRST_PLAY, e =>
+        this.onFirstPlay(e)
+      );
+      e.target._localPlayer._engine._mediaSourceAdapter.enableAdaptiveBitrate();
+    } catch (e) {
+      log("log", "pf_createPlayer", "couldn't switch to ABR" + e);
+    }
   }
 
   /**
