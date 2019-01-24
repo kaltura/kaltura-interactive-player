@@ -386,10 +386,12 @@ export class PlayersManager extends Dispatcher {
         // Even if autoplay was set to false, any next video must be played automaticaly
         if (this.firstPlay && this.config.playback.autoplay === false) {
           this.activePlayer.player.configure({ playback: { autoplay: true } });
+          // this is a >= 2nd entry - from here on we do not need the poster for nxt entries
+          this.activePlayer.player.configure({ sources: { poster: "" } });
           log(
             "log",
             "pm_switchPlayer",
-            "setting autoplay to true (after first load)"
+            "setting autoplay to true (after first load) and poster to off"
           );
         }
         this.firstPlay = false;
