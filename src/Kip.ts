@@ -27,18 +27,26 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
   try {
     const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
     const uiconfRaptData: any = uiconfData.rapt || {};
-    // apply attributes from uiconf to local config, only if they do not exist in the local config
+    let uiconfPlaybackData: any = uiconfData.player.playback || {};
+
+    // todo - consider global merge and not par-touch
+
     config.rapt = {
       ...uiconfRaptData,
       ...config.rapt
     };
+
+    config.playback = {
+      ...config.playback,
+      ...uiconfPlaybackData
+    };
+
     // detect Google Analytics
     if (
       uiconfData.player.plugins.googleAnalytics &&
       uiconfData.player.plugins.googleAnalytics.trackingId
     ) {
-      config.gaTrackId =
-        uiconfData.player.plugins.googleAnalytics.trackingId;
+      config.gaTrackId = uiconfData.player.plugins.googleAnalytics.trackingId;
       log("log", "Kip", "Google Analytics exists ");
     }
   } catch (error) {
