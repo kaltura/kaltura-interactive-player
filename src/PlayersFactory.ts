@@ -113,7 +113,7 @@ export class PlayersFactory extends Dispatcher {
   }
 
   // Resets the ABR to work as default.
-  private onFirstPlay(e) {
+  public onFirstPlay(e) {
     try {
       e.target.removeEventListener(e.target.Event.Core.FIRST_PLAY, e =>
         this.onFirstPlay(e)
