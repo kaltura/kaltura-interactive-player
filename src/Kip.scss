@@ -3,7 +3,7 @@
   background: #eeeeee;
 }
 .kiv-player.current-playing {
-  z-index: 100;
+  z-index: 1;
 }
 .kiv-player {
   position: absolute;
@@ -12,7 +12,7 @@
   display: none;
 }
 .kiv-rapt-engine {
-  z-index: 200;
+  z-index: 2;
   position: absolute;
 
   html, body, div, span, applet, object, iframe,
