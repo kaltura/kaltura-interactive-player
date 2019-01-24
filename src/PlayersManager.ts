@@ -365,10 +365,11 @@ export class PlayersManager extends Dispatcher {
     }
     // reparenting rapt layer on mobile. If there is a definition of device we are on mobile / tablet
     if (this.playersFactory.playerLibrary.core.Env.device) {
+      const mainContainerId  = this.domManager.getContainer().id;
       const newParent = document.querySelector(
-        ".current-playing .playkit-container"
+        "#"+mainContainerId + " .current-playing .playkit-container"
       );
-      const raptLayer = document.querySelector(".kiv-rapt-engine");
+      const raptLayer = document.querySelector("#"+mainContainerId + " .kiv-rapt-engine");
       newParent.appendChild(raptLayer);
     }
   }
