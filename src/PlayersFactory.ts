@@ -112,12 +112,14 @@ export class PlayersFactory extends Dispatcher {
     return new KalturaPlayer(newPlayer, playerContainer);
   }
 
+  // Resets the ABR to work as default.
   private onFirstPlay(e) {
     try {
       e.target.removeEventListener(e.target.Event.Core.FIRST_PLAY, e =>
         this.onFirstPlay(e)
       );
-      e.target._localPlayer._engine._mediaSourceAdapter.enableAdaptiveBitrate();
+      // TODO - follow up with player team - once they expose this with a method - we will switch this ugly code
+      e.target._localPlayer._engine._mediaSourceAdapter._hls.config.minAutoBitrate = 0;
     } catch (e) {
       log("log", "pf_createPlayer", "couldn't switch to ABR ", e);
     }
