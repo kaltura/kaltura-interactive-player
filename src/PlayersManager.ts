@@ -353,11 +353,12 @@ export class PlayersManager extends Dispatcher {
         "use buffer manager to get player for entry",
         { entryId: newEntryId }
       );
-      this.firstPlay = false;
       const bufferedPlayer = this.playersBufferManager.getPlayer(
         newEntryId,
-        shouldPlayNow
+        shouldPlayNow,
+        this.firstPlay && !shouldPlayNow
       );
+      this.firstPlay = false;
       this.updateActiveItems(bufferedPlayer, nextRaptNode);
     } else {
       log(
@@ -373,7 +374,9 @@ export class PlayersManager extends Dispatcher {
 
         const newPlayer = this.playersFactory.createPlayer(
           newEntryId,
-          shouldPlayNow
+          shouldPlayNow,
+          null,
+          this.firstPlay && !shouldPlayNow
         );
         this.updateActiveItems(newPlayer, nextRaptNode);
       } else {

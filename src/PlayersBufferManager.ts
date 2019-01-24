@@ -51,7 +51,11 @@ export class PlayersBufferManager extends Dispatcher {
    * Look if there is a relevant player that was created already
    * @param playerId
    */
-  public getPlayer(entryId: string, playImmediate: boolean): KalturaPlayer {
+  public getPlayer(
+    entryId: string,
+    playImmediate: boolean,
+    showPoster?: boolean
+  ): KalturaPlayer {
     log("log", "pbm_getPlayer", "executed", { entryId, playImmediate });
     if (!this._isAvailable) {
       throw new Error("BufferManager is not available");
@@ -98,7 +102,7 @@ export class PlayersBufferManager extends Dispatcher {
         "not found in buffer list, create player for entry",
         { entryId }
       );
-      result = this.createPlayer(entryId, playImmediate);
+      result = this.createPlayer(entryId, playImmediate, showPoster);
 
       const newItem = {
         entryId: entryId,
@@ -126,17 +130,23 @@ export class PlayersBufferManager extends Dispatcher {
     this._isAvailable = false;
   }
 
-  private createPlayer(entryId: string, playImmediate: boolean): KalturaPlayer {
+  private createPlayer(
+    entryId: string,
+    playImmediate: boolean,
+    showPoster?: boolean
+  ): KalturaPlayer {
     log("log", "pbm_createPlayer", "create player for entry", {
       entryId,
-      playImmediate
+      playImmediate,
+      showPoster
     });
 
     // TODO 3 [eitan] for persistancy - apply async info
     const kalturaPlayer = this.playersFactory.createPlayer(
       entryId,
       playImmediate,
-      this.persistenceObj
+      this.persistenceObj,
+      showPoster
     );
     return kalturaPlayer;
   }

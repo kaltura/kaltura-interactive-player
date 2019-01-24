@@ -69,14 +69,19 @@ export class PlayersFactory extends Dispatcher {
   public createPlayer(
     entryId: string,
     playImmediate: boolean,
-    persistencyObject?: any
+    persistencyObject?: any,
+    showPoster?: boolean
   ): KalturaPlayer {
     // TODO 3 check if the id already exists and if so throw exception
     const {
       id: playerContainerId,
       container: playerContainer
     } = this.domManager.createKalturaPlayerContainer();
-    let conf: any = this.getPlayerConf(playerContainerId, playImmediate);
+    let conf: any = this.getPlayerConf(
+      playerContainerId,
+      playImmediate,
+      showPoster
+    );
     // persistancy logic of new creation. If a new player is created - push the relevant persistancy attribute to config
     if (persistencyObject) {
       if (persistencyObject) {
@@ -113,7 +118,8 @@ export class PlayersFactory extends Dispatcher {
    */
   private getPlayerConf(
     divName: string,
-    playImmediate: boolean = false
+    playImmediate: boolean = false,
+    showPoster: boolean = false
   ): object {
     // clone the base config
     let newConf: RaptConfig = Object.assign({}, this.config);
@@ -124,9 +130,10 @@ export class PlayersFactory extends Dispatcher {
     newConf.plugins.kava.tamperAnalyticsHandler = this.analyticsInterruptFunc;
 
     let playback = newConf.playback ? newConf.playback : {};
-
-    if (!playImmediate) {
+    if (!showPoster) {
       newConf.sources = { poster: "" }; // for buffering players - we do not need to load the poster
+    }
+    if (!playImmediate) {
       playback = {
         autoplay: false,
         preload: "auto",
