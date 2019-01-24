@@ -370,7 +370,9 @@ export class PlayersManager extends Dispatcher {
         "#"+mainContainerId + " .current-playing .playkit-container"
       );
       const raptLayer = document.querySelector("#"+mainContainerId + " .kiv-rapt-engine");
-      newParent.appendChild(raptLayer);
+      if(newParent){
+        newParent.appendChild(raptLayer);
+      }
     }
   }
 
