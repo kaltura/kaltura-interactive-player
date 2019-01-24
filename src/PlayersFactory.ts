@@ -95,6 +95,12 @@ export class PlayersFactory extends Dispatcher {
     }
 
     const newPlayer = this.playerLibrary.setup(conf);
+    // if initialBitrate was define, switch back to ABR mode
+    if (this.config.rapt.initialBitrate) {
+      newPlayer.addEventListener(newPlayer.Event.Core.FIRST_PLAY, e =>
+        this.onFirstPlay(e)
+      );
+    }
 
     // @ts-ignore
     newPlayer._uiWrapper._uiManager.store.dispatch({
@@ -104,6 +110,19 @@ export class PlayersFactory extends Dispatcher {
 
     newPlayer.loadMedia({ entryId: entryId });
     return new KalturaPlayer(newPlayer, playerContainer);
+  }
+
+  // Resets the ABR to work as default.
+  public onFirstPlay(e) {
+    try {
+      e.target.removeEventListener(e.target.Event.Core.FIRST_PLAY, e =>
+        this.onFirstPlay(e)
+      );
+      // TODO - follow up with player team - once they expose this with a method - we will switch this ugly code
+      e.target._localPlayer._engine._mediaSourceAdapter._hls.config.minAutoBitrate = 0;
+    } catch (e) {
+      log("log", "pf_createPlayer", "couldn't switch to ABR ", e);
+    }
   }
 
   /**
@@ -142,6 +161,19 @@ export class PlayersFactory extends Dispatcher {
       playback.autoplay = true;
     }
     newConf.playback = playback;
+    if (this.config.rapt.initialBitrate) {
+      log(
+        "log",
+        "pf_getPlayerConf",
+        "setting initialBitrate to " + this.config.rapt.initialBitrate
+      );
+      newConf.abr = {
+        defaultBandwidthEstimate: this.config.rapt.initialBitrate,
+        restrictions: {
+          minBitrate: this.config.rapt.initialBitrate
+        }
+      };
+    }
 
     try {
       let uis = [

@@ -317,6 +317,10 @@ export class PlayersBufferManager extends Dispatcher {
           "remove entry from buffer queue",
           { entryId: item.entryId }
         );
+        // TODO - maybe find a better way to unregister this. Consult Eran when we have more time
+        item.player.player.removeEventListener(item.player.player.Event.Core.FIRST_PLAY, e =>
+          this.playersFactory.onFirstPlay(e)
+        );
         item.player.destroy();
       }
 
