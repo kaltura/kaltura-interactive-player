@@ -423,7 +423,6 @@ export class PlayersManager extends Dispatcher {
             "setting autoplay to true (after first load) and poster to off"
           );
         }
-        console.log(">>>> this.firstPlay = false");
         this.firstPlay = false;
         this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
