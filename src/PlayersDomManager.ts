@@ -64,7 +64,6 @@ export class PlayersDomManager {
     const raptLayer = document.querySelector(
       "#" + mainContainerId + " .kiv-rapt-engine"
     );
-    // project had started - unhide the rapt layer now
     raptLayer.classList.remove("kiv-hidden");
   }
   public hideRaptLayer() {
@@ -72,7 +71,6 @@ export class PlayersDomManager {
     const raptLayer = document.querySelector(
       "#" + mainContainerId + " .kiv-rapt-engine"
     );
-    // project had started - unhide the rapt layer now
     raptLayer.classList.add("kiv-hidden");
   }
 
