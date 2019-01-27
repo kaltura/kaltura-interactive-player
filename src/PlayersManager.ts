@@ -409,6 +409,7 @@ export class PlayersManager extends Dispatcher {
           // this is a >= 2nd entry - from here on we do not need the poster for nxt entries
           this.activePlayer.player.configure({ sources: { poster: "" } });
           log(
+            "log",
             "pm_switchPlayer",
             "setting autoplay to true (after first load) and poster to off"
           );
