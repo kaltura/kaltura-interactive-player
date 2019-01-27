@@ -60,6 +60,11 @@
           id: "1_q94de4ui"
         },
         {
+          name: "Quality",
+          id: "1_4nsj0e6n",
+
+        },
+        {
           name: "Links ",
           id: "1_sktk76eq"
         },
@@ -150,7 +155,6 @@
       var config = {
         targetId: "player",
         playback: {
-          autoplay: false,
           preload: "auto"
         },
 
@@ -162,7 +166,8 @@
         },
 
         rapt: {
-          debug: true,
+          initialBitrate: 75e4,
+          debug: false,
           bufferNextNodes: true,
           bufferTime: 6,
           showScrubber: true,

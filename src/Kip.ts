@@ -8,6 +8,7 @@ declare var KalturaPlayer: any;
 declare var __kalturaplayerdata: any;
 
 export interface RaptConfig {
+  abr?: any;
   ui?: any;
   rapt: any;
   targetId: string;

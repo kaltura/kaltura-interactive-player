@@ -421,6 +421,17 @@ export class PlayersManager extends Dispatcher {
         });
       }
     }
+    // reparenting rapt layer on mobile. If there is a definition of device we are on mobile / tablet
+    if (this.playersFactory.playerLibrary.core.Env.device) {
+      const mainContainerId  = this.domManager.getContainer().id;
+      const newParent = document.querySelector(
+        "#"+mainContainerId + " .current-playing .playkit-container"
+      );
+      const raptLayer = document.querySelector("#"+mainContainerId + " .kiv-rapt-engine");
+      if(newParent){
+        newParent.appendChild(raptLayer);
+      }
+    }
   }
 
   public execute(command: any) {
