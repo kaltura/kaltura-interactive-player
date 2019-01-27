@@ -59,6 +59,21 @@ export class PlayersDomManager {
     }
   }
 
+  public showRaptLayer() {
+    const mainContainerId = this.getContainer().id;
+    const raptLayer = document.querySelector(
+      "#" + mainContainerId + " .kiv-rapt-engine"
+    );
+    raptLayer.classList.remove("kiv-hidden");
+  }
+  public hideRaptLayer() {
+    const mainContainerId = this.getContainer().id;
+    const raptLayer = document.querySelector(
+      "#" + mainContainerId + " .kiv-rapt-engine"
+    );
+    raptLayer.classList.add("kiv-hidden");
+  }
+
   public createKalturaPlayerContainer(): {
     id: string;
     container: HTMLElement;

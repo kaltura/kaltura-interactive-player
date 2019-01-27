@@ -11,7 +11,7 @@
   </head>
   <body>
     <!-- relevant for development only! -->
-    <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43596191"></script>
+    <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43398051"></script>
     <!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script>-->
     <!-- THIS UICONF HAS GA -->
     <!--<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219991"></script>-->
@@ -36,7 +36,8 @@
       var optionalPlaylists = [
         {
           name: "links and hotspots",
-          id: "1_pdnk89fb"
+          id: "1_pdnk89fb",
+          selected: true ///////////////////////
         },
         {
           name: "a-bb-a",
@@ -61,7 +62,7 @@
         {
           name: "Quality",
           id: "1_4nsj0e6n",
-          selected: true ///////////////////////
+
         },
         {
           name: "Links ",
@@ -154,7 +155,6 @@
       var config = {
         targetId: "player",
         playback: {
-          autoplay: true,
           preload: "auto"
         },
 
