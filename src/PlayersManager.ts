@@ -284,12 +284,8 @@ export class PlayersManager extends Dispatcher {
   ////////////////////////////////////////////
 
   private projectStarted() {
-    const mainContainerId = this.domManager.getContainer().id;
-    const raptLayer = document.querySelector(
-      "#" + mainContainerId + " .kiv-rapt-engine"
-    );
     // project had started - unhide the rapt layer now
-    raptLayer.classList.remove("kiv-hidden");
+    this.domManager.showRaptLayer();
     this.removeListener("project:start", () => this.projectStarted);
     // make sure we are setting the current player to autoplay. For both non-buffered path and in case we reuse this player as a buffered player
     try {
@@ -362,13 +358,8 @@ export class PlayersManager extends Dispatcher {
       );
     }
     if (!shouldPlayNow && this.firstPlay) {
-      // this is autoplay = false player = hide rapt layer
-      const mainContainerId = this.domManager.getContainer().id;
-      const raptLayer = document.querySelector(
-        "#" + mainContainerId + " .kiv-rapt-engine"
-      );
       // autoplay = false. Hide the rapt layer until the project is started
-      raptLayer.classList.add("kiv-hidden");
+      this.domManager.hideRaptLayer();
       this.addListener("project:start", () => this.projectStarted());
     }
 
@@ -418,7 +409,6 @@ export class PlayersManager extends Dispatcher {
           // this is a >= 2nd entry - from here on we do not need the poster for nxt entries
           this.activePlayer.player.configure({ sources: { poster: "" } });
           log(
-            "log",
             "pm_switchPlayer",
             "setting autoplay to true (after first load) and poster to off"
           );
