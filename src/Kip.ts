@@ -29,7 +29,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     const uiconfRaptData: any = uiconfData.rapt || {};
     const uiconfPlaybackData: any =
       (uiconfData.player && uiconfData.player.playback) || {};
-    // todo - consider global merge and not par-touch
+    // todo - consider global merge and not targeted attributes
     config.rapt = {
       ...uiconfRaptData,
       ...config.rapt
