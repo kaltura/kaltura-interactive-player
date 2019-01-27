@@ -28,7 +28,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     const uiconfRaptData: any = uiconfData.rapt || {};
     const uiconfPlaybackData: any =
       (uiconfData.player && uiconfData.player.playback) || {};
-    // todo - consider global merge and not targeted attributes
+    // local config will override uiconf properties.
     config.rapt = {
       ...config,
       rapt: {
