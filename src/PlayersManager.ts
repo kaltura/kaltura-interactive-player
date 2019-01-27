@@ -288,6 +288,7 @@ export class PlayersManager extends Dispatcher {
     const raptLayer = document.querySelector(
       "#" + mainContainerId + " .kiv-rapt-engine"
     );
+    // project had started - unhide the rapt layer now
     raptLayer.classList.remove("kiv-hidden");
     this.removeListener("project:start", () => this.projectStarted);
     // make sure we are setting the current player to autoplay. For both non-buffered path and in case we reuse this player as a buffered player
@@ -366,6 +367,7 @@ export class PlayersManager extends Dispatcher {
       const raptLayer = document.querySelector(
         "#" + mainContainerId + " .kiv-rapt-engine"
       );
+      // autoplay = false. Hide the rapt layer until the project is started
       raptLayer.classList.add("kiv-hidden");
       this.addListener("project:start", () => this.projectStarted());
     }
