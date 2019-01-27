@@ -283,6 +283,21 @@ export class PlayersManager extends Dispatcher {
   }
   ////////////////////////////////////////////
 
+  private projectStarted() {
+    const mainContainerId = this.domManager.getContainer().id;
+    const raptLayer = document.querySelector(
+      "#" + mainContainerId + " .kiv-rapt-engine"
+    );
+    raptLayer.classList.remove("kiv-hidden");
+    this.removeListener("project:start", () => this.projectStarted);
+    // make sure we are setting the current player to autoplay. For both non-buffered path and in case we reuse this player as a buffered player
+    try {
+      this.activePlayer.player.configure({ playback: { autoplay: true } });
+    } catch (e) {
+      log("log", "pm_projectStarted", "Could not apply autoplay to player", e);
+    }
+  }
+
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   private switchPlayer(media: any): void {
     const newEntryId = media.sources[0].src;
@@ -345,6 +360,15 @@ export class PlayersManager extends Dispatcher {
         }
       );
     }
+    if (!shouldPlayNow && this.firstPlay) {
+      // this is autoplay = false player = hide rapt layer
+      const mainContainerId = this.domManager.getContainer().id;
+      const raptLayer = document.querySelector(
+        "#" + mainContainerId + " .kiv-rapt-engine"
+      );
+      raptLayer.classList.add("kiv-hidden");
+      this.addListener("project:start", () => this.projectStarted());
+    }
 
     if (this.playersBufferManager.isAvailable()) {
       log(
@@ -378,6 +402,9 @@ export class PlayersManager extends Dispatcher {
           null,
           this.firstPlay && !shouldPlayNow
         );
+
+        this.firstPlay = false;
+
         this.updateActiveItems(newPlayer, nextRaptNode);
       } else {
         log("log", "pm_switchPlayer", "switch media on main player", {
@@ -394,6 +421,7 @@ export class PlayersManager extends Dispatcher {
             "setting autoplay to true (after first load) and poster to off"
           );
         }
+        console.log(">>>> this.firstPlay = false");
         this.firstPlay = false;
         this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({

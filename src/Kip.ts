@@ -27,18 +27,16 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
   try {
     const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
     const uiconfRaptData: any = uiconfData.rapt || {};
-    let uiconfPlaybackData: any = uiconfData.player.playback || {};
-
+    const uiconfPlaybackData: any =
+      (uiconfData.player && uiconfData.player.playback) || {};
     // todo - consider global merge and not par-touch
-
     config.rapt = {
       ...uiconfRaptData,
       ...config.rapt
     };
-
     config.playback = {
-      ...config.playback,
-      ...uiconfPlaybackData
+      ...uiconfPlaybackData,
+      ...config.playback
     };
 
     // detect Google Analytics
