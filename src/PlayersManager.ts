@@ -43,6 +43,7 @@ export class PlayersManager extends Dispatcher {
   public raptEngine: any;
   private analyticsModel: any = undefined;
   readonly isAvailable: boolean;
+  private firstPlay: boolean = true;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
   private resizeInterval: number = NaN;
@@ -282,6 +283,18 @@ export class PlayersManager extends Dispatcher {
   }
   ////////////////////////////////////////////
 
+  private projectStarted() {
+    // project had started - unhide the rapt layer now
+    this.domManager.showRaptLayer();
+    this.removeListener("project:start", () => this.projectStarted);
+    // make sure we are setting the current player to autoplay. For both non-buffered path and in case we reuse this player as a buffered player
+    try {
+      this.activePlayer.player.configure({ playback: { autoplay: true } });
+    } catch (e) {
+      log("log", "pm_projectStarted", "Could not apply autoplay to player", e);
+    }
+  }
+
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   private switchPlayer(media: any): void {
     const newEntryId = media.sources[0].src;
@@ -327,6 +340,29 @@ export class PlayersManager extends Dispatcher {
       return;
     }
 
+    // autoplay false detection
+    let shouldPlayNow = true;
+    if (
+      this.firstPlay &&
+      this.config.playback &&
+      this.config.playback.autoplay === false
+    ) {
+      shouldPlayNow = false;
+      log(
+        "log",
+        "pm_switchPlayer",
+        "setting autoplay to false on first node with playersBufferManager",
+        {
+          entryId: newEntryId
+        }
+      );
+    }
+    if (!shouldPlayNow && this.firstPlay) {
+      // autoplay = false. Hide the rapt layer until the project is started
+      this.domManager.hideRaptLayer();
+      this.addListener("project:start", () => this.projectStarted());
+    }
+
     if (this.playersBufferManager.isAvailable()) {
       log(
         "log",
@@ -336,27 +372,49 @@ export class PlayersManager extends Dispatcher {
       );
       const bufferedPlayer = this.playersBufferManager.getPlayer(
         newEntryId,
-        true
+        shouldPlayNow,
+        this.firstPlay && !shouldPlayNow
       );
+      this.firstPlay = false;
       this.updateActiveItems(bufferedPlayer, nextRaptNode);
     } else {
       log(
         "log",
         "pm_switchPlayer",
-        "buffer manager not available, switch media on current player",
-        { entryId: newEntryId }
+        "buffer manager not available, switch media on current player"
       );
 
       if (!this.activePlayer) {
         log("log", "pm_switchPlayer", "no player found, create main player", {
           entryId: newEntryId
         });
-        const newPlayer = this.playersFactory.createPlayer(newEntryId, true);
+
+        const newPlayer = this.playersFactory.createPlayer(
+          newEntryId,
+          shouldPlayNow,
+          null,
+          this.firstPlay && !shouldPlayNow
+        );
+
+        this.firstPlay = false;
+
         this.updateActiveItems(newPlayer, nextRaptNode);
       } else {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
         });
+        // Even if autoplay was set to false, any next video must be played automaticaly
+        if (this.firstPlay && this.config.playback.autoplay === false) {
+          this.activePlayer.player.configure({ playback: { autoplay: true } });
+          // this is a >= 2nd entry - from here on we do not need the poster for nxt entries
+          this.activePlayer.player.configure({ sources: { poster: "" } });
+          log(
+            "log",
+            "pm_switchPlayer",
+            "setting autoplay to true (after first load) and poster to off"
+          );
+        }
+        this.firstPlay = false;
         this.updateActiveItems(this.activePlayer, nextRaptNode);
         this.activePlayer.player.loadMedia({
           entryId: newEntryId

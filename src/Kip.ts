@@ -23,15 +23,23 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     console.log("Path player " + VERSION);
   }
   // merge uiconf rapt data with current config (priority is local config) - this is a one-level object
-  config.rapt = config.rapt || {};
   // extract the uiconf JSON
   try {
     const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
     const uiconfRaptData: any = uiconfData.rapt || {};
-    // apply attributes from uiconf to local config, only if they do not exist in the local config
+    const uiconfPlaybackData: any =
+      (uiconfData.player && uiconfData.player.playback) || {};
+    // local config will override uiconf properties.
     config.rapt = {
-      ...uiconfRaptData,
-      ...config.rapt
+      ...config,
+      rapt: {
+        ...uiconfRaptData,
+        ...config.rapt
+      },
+      playback: {
+        ...uiconfPlaybackData,
+        ...config.playback
+      }
     };
     // detect Google Analytics
     if (
