@@ -33,6 +33,7 @@ export class KalturaPlayer {
 export class PlayersFactory extends Dispatcher {
   readonly secondsToBuffer: number = 6;
   readonly playbackPreset: any;
+  readonly playbackPresetWithPlayButton: any;
 
   constructor(
     readonly domManager: PlayersDomManager,
@@ -52,6 +53,7 @@ export class PlayersFactory extends Dispatcher {
     } catch (error) {
       log("log", "pf_constructor", "could not get device model");
     }
+
     this.playbackPreset = new PlaybackPreset(
       this.playerLibrary.ui.h,
       this.playerLibrary.ui.Components,
@@ -59,6 +61,14 @@ export class PlayersFactory extends Dispatcher {
       config.rapt,
       deviceModel
     ).preset;
+    // this is for autoplay=false. We want to show the large play button
+    this.playbackPresetWithPlayButton = new PlaybackPreset(
+      this.playerLibrary.ui.h,
+      this.playerLibrary.ui.Components,
+      () => this.toggleFullscreen(),
+      config.rapt,
+      deviceModel
+    ).presetWithPlayButton;
   }
 
   /**
@@ -106,12 +116,6 @@ export class PlayersFactory extends Dispatcher {
         this.onFirstPlay(e)
       );
     }
-
-    // @ts-ignore
-    newPlayer._uiWrapper._uiManager.store.dispatch({
-      type: "shell/UPDATE_PRE_PLAYBACK",
-      prePlayback: false
-    });
 
     newPlayer.loadMedia({ entryId: entryId });
     return new KalturaPlayer(newPlayer, playerContainer);
@@ -183,11 +187,21 @@ export class PlayersFactory extends Dispatcher {
     }
 
     try {
-      let uis = [
-        {
-          template: props => this.playbackPreset(props)
-        }
-      ];
+      let uis;
+      if (showPoster) {
+        // this is autoplay=false
+        uis = [
+          {
+            template: props => this.playbackPresetWithPlayButton(props)
+          }
+        ];
+      } else {
+        uis = [
+          {
+            template: props => this.playbackPreset(props)
+          }
+        ];
+      }
       newConf.ui = newConf.ui || {};
       newConf.ui.customPreset = uis;
     } catch (e) {

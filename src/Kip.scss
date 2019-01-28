@@ -3,31 +3,107 @@
   background: #eeeeee;
 }
 .kiv-player.current-playing {
-  z-index: 1;
+  z-index: 6;
 }
+
+.kiv-initiated {
+  .playkit-pre-playback-play-overlay {
+    display: none;
+  }
+}
+
 .kiv-player {
   position: absolute;
 }
+
 .kiv-hidden {
   display: none;
 }
-.kiv-rapt-engine {
-  z-index: 2;
-  position: absolute;
 
-  html, body, div, span, applet, object, iframe,
-  h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-  a, abbr, acronym, address, big, cite, code,
-  del, dfn, em, img, ins, kbd, q, s, samp,
-  small, strike, strong, sub, sup, tt, var,
-  b, u, i, center,
-  dl, dt, dd, ol, ul, li,
-  fieldset, form, label, legend,
-  table, caption, tbody, tfoot, thead, tr, th, td,
-  article, aside, canvas, details, embed,
-  figure, figcaption, footer, header, hgroup,
-  menu, nav, output, ruby, section, summary,
-  time, mark, audio, video {
+.kiv-rapt-engine {
+  z-index: 7;
+  position: absolute;
+  html,
+  body,
+  div,
+  span,
+  applet,
+  object,
+  iframe,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  blockquote,
+  pre,
+  a,
+  abbr,
+  acronym,
+  address,
+  big,
+  cite,
+  code,
+  del,
+  dfn,
+  em,
+  img,
+  ins,
+  kbd,
+  q,
+  s,
+  samp,
+  small,
+  strike,
+  strong,
+  sub,
+  sup,
+  tt,
+  var,
+  b,
+  u,
+  i,
+  center,
+  dl,
+  dt,
+  dd,
+  ol,
+  ul,
+  li,
+  fieldset,
+  form,
+  label,
+  legend,
+  table,
+  caption,
+  tbody,
+  tfoot,
+  thead,
+  tr,
+  th,
+  td,
+  article,
+  aside,
+  canvas,
+  details,
+  embed,
+  figure,
+  figcaption,
+  footer,
+  header,
+  hgroup,
+  menu,
+  nav,
+  output,
+  ruby,
+  section,
+  summary,
+  time,
+  mark,
+  audio,
+  video {
     margin: 0;
     padding: 0;
     border: 0;
@@ -35,22 +111,35 @@
     font: inherit;
     vertical-align: baseline;
   }
-  article, aside, details, figcaption, figure,
-  footer, header, hgroup, menu, nav, section {
+  article,
+  aside,
+  details,
+  figcaption,
+  figure,
+  footer,
+  header,
+  hgroup,
+  menu,
+  nav,
+  section {
     display: block;
   }
   body {
     line-height: 1;
   }
-  ol, ul {
+  ol,
+  ul {
     list-style: none;
   }
-  blockquote, q {
+  blockquote,
+  q {
     quotes: none;
   }
-  blockquote:before, blockquote:after,
-  q:before, q:after {
-    content: '';
+  blockquote:before,
+  blockquote:after,
+  q:before,
+  q:after {
+    content: "";
     content: none;
   }
   table {
@@ -90,23 +179,6 @@
     display: none;
   }
 
-  .playkit-pre-playback-play-button {
-    box-sizing: border-box;
-    display: block;
-    width: 95px;
-    height: 95px;
-    padding-top: 20px;
-    padding-left: 28px;
-    line-height: 20px;
-    border: 6px solid #fff;
-    border-radius: 50%;
-    text-align: center;
-    text-decoration: none;
-    background-color: rgba(0, 0, 0, 0.5);
-    font-size: 20px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-  }
   .playkit-pre-playback-play-button:hover {
     background-color: rgba(0, 0, 0, 0.8);
     box-shadow: 0 0 10px #ffff64;
