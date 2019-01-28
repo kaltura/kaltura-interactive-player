@@ -12,6 +12,34 @@ export class PlayersDomManager {
   public getContainer() {
     return this.raptContainer;
   }
+  // add a class to the main container
+  public addClass(className) {
+    if (this.getContainer()) {
+      this.getContainer().classList.add(className);
+    }
+  }
+  // remove a class from the main container
+  public removeClass(className) {
+    if (this.getContainer()) {
+      this.getContainer().classList.remove(className);
+    }
+  }
+
+  /**
+   * Reparent the rapt layer into the player that is marked as .current-playing
+   */
+  public reparentRaptLayer() {
+    const mainContainerId = this.getContainer().id;
+    const newParent = document.querySelector(
+      "#" + mainContainerId + " .current-playing .playkit-container"
+    );
+    const raptLayer = document.querySelector(
+      "#" + mainContainerId + " .kiv-rapt-engine"
+    );
+    if (newParent) {
+      newParent.appendChild(raptLayer);
+    }
+  }
 
   private createElementName(suffix: string) {
     return `${this.namespace}-${suffix}`;

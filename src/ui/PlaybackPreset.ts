@@ -1,5 +1,6 @@
 export class PlaybackPreset {
   preset: (props: any) => any;
+  presetWithPlayButton: (props: any) => any;
   // TODO - when we have more time - switch to TSX
   constructor(
     h: any,
@@ -118,7 +119,25 @@ export class PlaybackPreset {
         );
       };
     }
+    this.presetWithPlayButton = function(props: any) {
+      //if U change this change the other preset
+      return h(
+        "div",
+        h(c.KeyboardControl, { player: props.player, config: props.config }),
+        h(c.Loading, { player: props.player }),
+        h(
+          "div",
+          { className: "playkit-player-gui", id: "player-gui" },
+          h(c.OverlayPortal, null),
+          h(c.UnmuteIndication, { player: props.player }),
+          h(c.OverlayAction, { player: props.player }),
+          customControllers(props)
+        ),
+        h(c.PrePlaybackPlayOverlay, { player: props.player })
+      );
+    };
     this.preset = function(props: any) {
+      //if U change this change the other preset
       return h(
         "div",
         h(c.KeyboardControl, { player: props.player, config: props.config }),

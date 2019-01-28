@@ -284,8 +284,9 @@ export class PlayersManager extends Dispatcher {
   ////////////////////////////////////////////
 
   private projectStarted() {
-    // project had started - unhide the rapt layer now
+    // project had started - unhide the rapt layer now and hide the large-play-button layer
     this.domManager.showRaptLayer();
+    this.domManager.addClass("kiv-initiated");
     this.removeListener("project:start", () => this.projectStarted);
     // make sure we are setting the current player to autoplay. For both non-buffered path and in case we reuse this player as a buffered player
     try {
@@ -421,16 +422,9 @@ export class PlayersManager extends Dispatcher {
         });
       }
     }
-    // reparenting rapt layer on mobile. If there is a definition of device we are on mobile / tablet
+    // reparenting rapt layer on mobile.
     if (this.playersFactory.playerLibrary.core.Env.device) {
-      const mainContainerId  = this.domManager.getContainer().id;
-      const newParent = document.querySelector(
-        "#"+mainContainerId + " .current-playing .playkit-container"
-      );
-      const raptLayer = document.querySelector("#"+mainContainerId + " .kiv-rapt-engine");
-      if(newParent){
-        newParent.appendChild(raptLayer);
-      }
+      const mainContainerId = this.domManager.reparentRaptLayer();
     }
   }
 
