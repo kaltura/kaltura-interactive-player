@@ -423,7 +423,7 @@ export class PlayersManager extends Dispatcher {
       }
     }
     // reparenting rapt layer on mobile.
-    if (this.playersFactory.playerLibrary.core.Env.device) {
+    if (this.playersFactory.playerLibrary.core.Env.device.model) {
       const mainContainerId = this.domManager.reparentRaptLayer();
     }
   }
