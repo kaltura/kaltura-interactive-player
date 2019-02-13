@@ -39,10 +39,7 @@ export class PlayersBufferManager extends Dispatcher {
       this.playersFactory.playerLibrary.core.Env.device.model; // desktops will be undefined
     this._isAvailable = true;
     // On Safari desktop use pre-buffer, on ipad and iphone - don't because autoplay (defaultPath) needs user-gesture
-    if (
-      browser.indexOf("Safari") > -1 &&
-      (model === "iPad" || model === "iPhone")
-    ) {
+    if (model === "iPad" || model === "iPhone" || model === "Nexus 9" ) {
       this._isAvailable = false;
       log("log", "pbm_initializeAvailablity", "disabling prefetch", model);
     }
@@ -328,8 +325,9 @@ export class PlayersBufferManager extends Dispatcher {
           { entryId: item.entryId }
         );
         // TODO - maybe find a better way to unregister this. Consult Eran when we have more time
-        item.player.player.removeEventListener(item.player.player.Event.Core.FIRST_PLAY, e =>
-          this.playersFactory.onFirstPlay(e)
+        item.player.player.removeEventListener(
+          item.player.player.Event.Core.FIRST_PLAY,
+          e => this.playersFactory.onFirstPlay(e)
         );
         item.player.destroy();
       }
