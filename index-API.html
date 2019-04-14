@@ -190,62 +190,91 @@
       var kip = PathKalturaPlayer.setup(config);
 
       var allEvents = [
-        "browser:hidden",
-        "browser:open",
-        "cue:forward",
-        "cue:reverse",
         "hotspot:click",
         "node:enter",
         "node:ended",
         "node:exit",
         "project:load",
         "project:ready",
+        "buffer:prebuffer",
         "project:start",
-        "project:unload",
-        "project:ended",
-        "player:play",
-        "player:pause",
-        "player:progress",
-        "player:ratechange",
-        "player:timeupdate",
-        "player:volumechange"
       ];
 
       for (var i = 0; i < allEvents.length; i++) {
         kip.addListener(allEvents[i], function(event) {
-          logDebugMsg(event);
+          handleInteractiveEvent(event);
         });
       }
 
-      // Legacy API example
-      kip.kBind("raptMedia_event", function(data) {
-        // console.log(">>>>> raptMedia_event",data);
-      });
       kip.loadMedia({ playlistId: selectedItem.id });
       // logger - debug mode !
-      function logDebugMsg(event) {
+      function handleInteractiveEvent(event) {
         var oneLine = document.createElement("div");
         // mark buffering event in green
         var printStr = event.type;
         var payload = event.payload;
         oneLine.style.cssText = "color: blue";
         switch (event.type) {
-          case "player:timeupdate":
-            return; // we do not want to print this - it junks the log
-          case "cue:forward":
-          case "cue:revere":
-            printStr +=
-              '<span style="color: #8b227c"> [' +
-              payload.cue.customData +
-              "]</span>";
+
+          case "buffer:prebuffer":
+            // payload is an array of the next items  - first element is the item we are switching to, all other are the
+            // next nodes that we will load - by natural order (timeline appearance first, defaultPath later)
+            // hard coded - if we are about to load street-food-main - we will push 3 other nodes before the default path
+            if(payload.length && payload[0].name === "street food main"){
+
+              // alter payload object - add more items. This must be a synchronous code
+              // we can access the nodes from kip.data.nodes and filter by name, id, custom-data or entryId
+              var streetFood1 = kip.data.nodes.find(node => node.name === "street food 1");
+              var streetFood2 = kip.data.nodes.find(node => node.id === "8a8807ee-acdd-42ae-8e33-b85643b22ca2");
+              var streetFood3 = kip.data.nodes.find(node => node.customData === "food3");
+              payload.push(streetFood1 , streetFood2 ,streetFood3);
+              printStr +=
+                    '<span style="color: #648b24"> [' +
+                    'API adding food 1-3'  +
+                    "]</span>";
+            }
+
+
             break;
+
           case "hotspot:click":
             printStr +=
               '<span style="color: #648b24"> [' +
               payload.hotspot.name +
               "]</span>";
+            // If there is a custom-data value it will be in payload.hotspot.customData
+            if(payload.hotspot.customData){
+              switch(payload.hotspot.customData){
+                case "street-food":
+                  printStr += ' CLICKED STREET FOOD';
+                  // jump by node name
+                  kip.jump({name:'street food main'});
+                    break;
+                case "food1":
+                  // jump by node id
+                  kip.jump({id:'076fdbc8-61cd-462f-934c-ac04ba9de28c'});
+                    break;
+                case "food2":
+                  // jump by node id
+                  kip.jump({id:'8a8807ee-acdd-42ae-8e33-b85643b22ca2'});
+                    break;
+                case "food3":
+                  // jump by node id
+                  kip.jump({id:'1ca66c6a-51df-4a73-ba64-cd67210d1148'});
+                    break;
+                }
+
+            }
+
+
             break;
           case "node:enter":
+          console.log(">>>> node enter", payload );
+            // Start node - identified by id
+            if(payload.node.id === "a45ea217-d788-4994-a054-b048cbe49233"){
+
+            }
+
           case "node:ended":
           case "node:exit":
             printStr +=
@@ -275,48 +304,11 @@
         document.getElementById("logDiv").appendChild(oneLine);
       }
 
-      var playKip = function() {
-        kip.play();
-      };
-      function pauseKip() {
-        kip.pause();
-      }
-      function replayKip() {
-        kip.replay();
-      }
-      function resetKip() {
-        kip.reset();
-      }
-      function jumpToNodeKip(o) {
-        kip.jump(o);
-      }
+
       function seekKip(n) {
         kip.seek(n);
       }
-      function getNodes() {
-        console.table(kip.data.nodes);
-      }
-      function currentTime() {
-        console.log(kip.currentTime);
-      }
-      function duration() {
-        console.log(kip.duration);
-      }
-      function currentNode() {
-        console.log(kip.currentNode);
-      }
-      function currentVolume() {
-        console.log(kip.volume); // player bug - initial value ?
-      }
-      function setVolume(n) {
-        kip.volume = n;
-      }
-      function muted() {
-        console.log(kip.muted); // player bug
-      }
-      function playbackRate() {
-        console.log(kip.playbackRate); // player bug
-      }
+
 
       // helpers
       function isEmpty(obj) {
@@ -326,115 +318,20 @@
         return true;
       }
 
-      function scaleUp(key) {
-        $("#player").width($("#player").width() * 1.1);
-        $("#player").height($("#player").height() * 1.1);
-      }
-      function scaleDown(key) {
-        $("#player").width($("#player").width() / 1.1);
-        $("#player").height($("#player").height() / 1.1);
-      }
-      function evaluateKip(key) {
-        var output = kip.evaluate(key);
-        console.log("evaluate :" + key + " > " + output);
-      }
     </script>
     <br />
     <div>
-      <button onclick="playKip()">play</button>
-      <button onclick="pauseKip()">pause</button>
-      <button onclick="replayKip()">replay</button>
-      <button onclick="resetKip()">reset</button>
-      <button onclick="seekKip(5)">Seek to 5</button>
-      <button onclick="seekKip(15)">Seek to 15</button>
+
       <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">
         Seek to -3sec
       </button>
       <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">
         Seek to -7sec
       </button>
-      <br />
-      <br />
-      <button
-        onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:play'})"
-        style="background: #f4cd55"
-      >
-        play
-      </button>
-      <button
-        onclick="kip.sendNotification('raptMedia_doCommand',{type:'player:pause'})"
-        style="background: #f4cd55"
-      >
-        pause
-      </button>
-      <button
-        onclick="kip.sendNotification('raptMedia_doCommand',{type:'project:reset'})"
-        style="background: #f4cd55"
-      >
-        replay
-      </button>
-      <button
-        onclick="kip.execute({type:'project:reset'})"
-        style="background: #f4cd55"
-      >
-        replay1
-      </button>
-      <button
-        onclick="kip.sendNotification('raptMedia_doCommand',{type: 'player:seek', payload: { time: 5 } })"
-        style="background: #f4cd55"
-      >
-        Seek to 5
-      </button>
-      <br />
-      <br />
-      <br />
-      <button onclick="jumpToNodeKip({name:'Start'})">
-        JumpToNode {name:'Start'}
-      </button>
-      <button
-        onclick="jumpToNodeKip({id:'7354fd9b-6401-4c10-b261-99b4d183d07e'})"
-      >
-        JumpToNode {id:'7354fd9b-6401-4c10-b261-99b4d183d07e'}
-      </button>
-      <button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">
-        JumpToNode {ref:'1_4f9mue48'}
-      </button>
-      <!--<button onclick="jumpToNodeKip({ref:'1_4f9mue48'})">JumpToNode {xref:'1_4f9mue48'}</button>-->
-      <br />
-      <br />
-      <button onclick="getNodes()">player.data.nodes</button>
-      <button onclick="getMetadata()">player.metadata.account</button> <br />
-      <br />
-      <button onclick="evaluateKip('nodes')" style="background: #f4Fd98">
-        player.data.nodes
-      </button>
-      <button onclick="evaluateKip('{raptMedia.status}')">Status</button>
-      <button onclick="evaluateKip('account')" style="background: #f4Fd98">
-        account
-      </button>
-      <button
-        onclick="evaluateKip('{raptMedia.info}')"
-        style="background: #f4Fd98"
-      >
-        {raptMedia.info}
-      </button>
-      <br />
-      <br />
-      <button onclick="currentTime()">player.currentTime</button>
-      <button onclick="duration()">player.duration</button>
-      <button onclick="currentNode()">player.currentNode</button>
-      <button onclick="currentNode()">player.currentNode</button> <br />
-      <br />
-      <button onclick="currentVolume()">player.volume</button>
-      <button onclick="setVolume(0.5)">player.volume = 0.5</button>
-      <button onclick="setVolume(1)">player.volume = 1</button>
-      <button onclick="setVolume(0)">player.volume = 0</button>
-      <button onclick="muted()">player.muted</button>
 
-      <br />
-      <button onclick="playbackRate()">player.playbackRate</button>
-      <button onclick="scaleUp()">+</button>
-      <button onclick="scaleDown()">-</button>
+
+
+
     </div>
   </body>
 </html>

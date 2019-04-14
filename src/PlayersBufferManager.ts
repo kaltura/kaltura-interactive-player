@@ -165,10 +165,12 @@ export class PlayersBufferManager extends Dispatcher {
 
     if (nextNode) {
       const nodesToBuffer = [nextNode, ...this.getNextNodes(nextNode)];
+      this.dispatch({ type: "buffer:prebuffer", payload: nodesToBuffer });
       const prevItemsMap = this.bufferList.reduce((acc, item) => {
         acc[item.entryId] = item;
         return acc;
       }, {});
+
       const prevItemsCount = this.bufferList.length;
 
       this.bufferList = [];
@@ -177,6 +179,8 @@ export class PlayersBufferManager extends Dispatcher {
         prevCount: prevItemsCount,
         newCount: nodesToBuffer.length
       });
+
+
 
       nodesToBuffer.forEach(node => {
         const existinItem = prevItemsMap[node.entryId];
@@ -202,6 +206,9 @@ export class PlayersBufferManager extends Dispatcher {
           });
         }
       });
+
+
+
       this.destroyBufferedItems(Object.values(prevItemsMap));
     } else {
       this.destroyBufferedItems(this.bufferList);

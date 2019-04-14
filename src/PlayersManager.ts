@@ -80,6 +80,10 @@ export class PlayersManager extends Dispatcher {
       this.config.rapt.bufferNextNodes === false
     ) {
       this.playersBufferManager.disable();
+    } else {
+      this.playersBufferManager.addListener("buffer:prebuffer" , (event) => {
+        this.dispatch(event);
+      })
     }
     return true;
   }
