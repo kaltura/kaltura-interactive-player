@@ -26,6 +26,9 @@ const API_EVENTS = [
   "player:ratechange",
   "player:timeupdate",
   "buffer:prebuffer",
+  "buffer:bufferend",
+  "buffer:bufferstart",
+  "buffer:allbuffered",
   "player:volumechange"
 ];
 

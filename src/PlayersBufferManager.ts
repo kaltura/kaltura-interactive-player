@@ -72,9 +72,7 @@ export class PlayersBufferManager extends Dispatcher {
           });
           result.player.currentTime = 0;
         }
-
         // TODO 3 [eitan] for persistancy - assign only synced persistancy
-
         if (playImmediate && !result.player.isPlaying) {
           log("log", "pbm_getPlayer", "execute play command", { entryId });
           result.player.play();
@@ -180,8 +178,6 @@ export class PlayersBufferManager extends Dispatcher {
         newCount: nodesToBuffer.length
       });
 
-
-
       nodesToBuffer.forEach(node => {
         const existinItem = prevItemsMap[node.entryId];
         if (existinItem) {
@@ -236,6 +232,7 @@ export class PlayersBufferManager extends Dispatcher {
       log("log", "pbm_handleBufferList", "all items are buffered", {
         count: this.bufferList.length
       });
+      this.dispatch({ type: "buffer:allbuffered"});
       return;
     }
 
@@ -271,6 +268,7 @@ export class PlayersBufferManager extends Dispatcher {
       log("log", "pbm_executeItemBuffering", "start buffering entry", {
         entryId: item.entryId
       });
+      this.dispatch({ type: "buffer:bufferstart", payload: item.entryId });
       item.player = this.createPlayer(item.entryId, false);
       this.trackBufferOfItem(item);
     } else {
@@ -305,6 +303,7 @@ export class PlayersBufferManager extends Dispatcher {
         );
         item.isRunning = false;
         item.isReady = true;
+        this.dispatch({ type: "buffer:bufferend", payload: item.entryId });
         this.handleBufferList();
       } else {
         this.trackBufferOfItem(item);
