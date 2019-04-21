@@ -13,6 +13,12 @@ export class PlaybackPreset {
     let customLeftContainer: any;
     let customRightContainer: any;
 
+
+    let showFullscreenClass = "show-fullscreen";
+    if (this.deviceModel === "iPhone" ) {
+      showFullscreenClass = "hide-fullscreen";
+    }
+
     // switch showScrubber
     if (raptData.showScrubber) {
       customSeekbarContainer = function(props: any) {
@@ -29,38 +35,27 @@ export class PlaybackPreset {
       };
     }
 
-    if (this.raptData.showTimers) {
-      customLeftContainer = function(props: any) {
-        return h(
+
+    customLeftContainer = function(props: any) {
+      return h(
           "div",
-          { className: "playkit-left-controls" },
-          h(c.PlayPauseControl, { player: props.player }),
-          h(c.RewindControl, { player: props.player, step: 10 }),
-          h(c.TimeDisplayPlaybackContainer, { format: "current / total" })
-        );
-      };
-    } else {
-      customLeftContainer = function(props: any) {
-        return h(
-          "div",
-          { className: "playkit-left-controls" },
+          { className: "playkit-left-controls"},
           h(c.PlayPauseControl, { player: props.player }),
           h(c.RewindControl, { player: props.player, step: 10 })
-        );
-      };
-    }
-    if (this.raptData.showSettings) {
+      );
+    };
+    if (this.raptData.showTimers) {
       customRightContainer = function(props: any) {
         return h(
           "div",
           { className: "playkit-right-controls" },
+          h(c.TimeDisplayPlaybackContainer, { format: "current / total" }),
           h(c.VolumeControl, { player: props.player }),
           h(c.LanguageControl, { player: props.player }),
-          h(c.SettingsControl, { player: props.player }),
           h(customFullScreenButton)
         );
       };
-    } else {
+    }else{
       customRightContainer = function(props: any) {
         return h(
           "div",
@@ -127,7 +122,7 @@ export class PlaybackPreset {
         h(c.Loading, { player: props.player }),
         h(
           "div",
-          { className: "playkit-player-gui", id: "player-gui" },
+          { className: "playkit-player-gui " + showFullscreenClass, id: "player-gui" },
           h(c.OverlayPortal, null),
           h(c.UnmuteIndication, { player: props.player }),
           h(c.OverlayAction, { player: props.player }),
@@ -144,7 +139,7 @@ export class PlaybackPreset {
         h(c.Loading, { player: props.player }),
         h(
           "div",
-          { className: "playkit-player-gui", id: "player-gui" },
+          { className: "playkit-player-gui " + showFullscreenClass, id: "player-gui" },
           h(c.OverlayPortal, null),
           h(c.UnmuteIndication, { player: props.player }),
           h(c.OverlayAction, { player: props.player }),

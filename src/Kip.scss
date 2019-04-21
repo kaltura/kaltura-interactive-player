@@ -147,18 +147,16 @@
     border-spacing: 0;
   }
 }
+
 .kiv-container {
   position: relative;
-  .playkit-left-controls {
-    width: calc(100% - 130px);
-  }
 
   .playkit-player-gui {
     font-family: "courier" !important;
   }
 
   .playkit-time-display {
-    float: right;
+    float: left;
     position: relative;
     left: 0;
     font-family: sans-serif;
@@ -171,8 +169,36 @@
     cursor: pointer;
     position: relative;
     top: 13px;
-    width: calc(100% - 275px);
+    width: calc(100% - 96px);
     left: 45px;
+  }
+  /* Scrubber width - with audio-tracks/captions */
+  .has-extra-tracks .playkit-player .playkit-seek-bar {
+    width: calc(100% - 136px) !important;
+  }
+
+  .has-timers {
+
+    /* Scrubber width (when timers are on) - without audio-tracks/captions */
+    .playkit-seek-bar {
+      width: calc(100% - 166px) !important;
+    }
+
+    /* Scrubber width (when timers are on) - with audio-tracks/captions */
+    .has-extra-tracks .playkit-player .playkit-seek-bar {
+      width: calc(100% - 222px) !important;
+    }
+  }
+
+
+  /* Fullscreen exists - reduce the scrubber width by 30px */
+  .playkit-seek-bar{
+    padding-right: 30px;
+  }
+
+  /* lack of fullscreen button adds 30px (or in other words removes the default 30)  */
+  .hide-fullscreen .playkit-seek-bar{
+    padding-right: 0px;
   }
 
   .playkit-icon-rewind-10 {
