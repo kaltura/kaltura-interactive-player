@@ -87,6 +87,12 @@ export class PlayersFactory extends Dispatcher {
       id: playerContainerId,
       container: playerContainer
     } = this.domManager.createKalturaPlayerContainer();
+
+
+    if(this.config.rapt.showTimers){
+      playerContainer.classList.add("has-timers");
+    }
+
     let conf: any = this.getPlayerConf(
       playerContainerId,
       playImmediate,

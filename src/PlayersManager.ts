@@ -508,6 +508,21 @@ export class PlayersManager extends Dispatcher {
     if (this.activePlayer && this.activePlayer.player) {
       const player: any = this.activePlayer.player;
 
+
+      player.addEventListener(
+        // player.Event.Core.PLAYER_STATE_CHANGED,
+        player.Event.Core.PLAYER_STATE_CHANGED,
+          () => {
+          const tracks = player.getTracks();
+          const audioTracks = tracks.find(track => (track._kind !== "subtitles" && !track._bandwidth ));
+          const captionsTracks = tracks.find(track => (track._kind === "subtitles" ))
+          if(audioTracks || captionsTracks){
+            // this video has captions or audio
+            const view = player.getView().parentElement.parentElement.parentElement;
+            view.classList.add("has-extra-tracks")
+          }
+        })
+      ;
       player.addEventListener(
         player.Event.Core.TEXT_TRACK_CHANGED,
         this.handleTextTrackChanged

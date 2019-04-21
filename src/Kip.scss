@@ -147,10 +147,16 @@
     border-spacing: 0;
   }
 }
+
 .kiv-container {
   position: relative;
+  .playkit-right-controls {
+    //background: aliceblue;
+
+  }
   .playkit-left-controls {
-    width: calc(100% - 130px);
+    //background: aquamarine;
+    //width: calc(100% - 170px);
   }
 
   .playkit-player-gui {
@@ -158,7 +164,7 @@
   }
 
   .playkit-time-display {
-    float: right;
+    float: left;
     position: relative;
     left: 0;
     font-family: sans-serif;
@@ -171,8 +177,31 @@
     cursor: pointer;
     position: relative;
     top: 13px;
-    width: calc(100% - 275px);
+    width: calc(100% - 96px);
     left: 45px;
+  }
+
+  .has-extra-tracks .playkit-player .playkit-seek-bar {
+    width: calc(100% - 136px) !important;
+  }
+
+  .has-timers {
+
+    .playkit-seek-bar {
+      width: calc(100% - 166px) !important;
+    }
+
+    .has-extra-tracks .playkit-player .playkit-seek-bar {
+      width: calc(100% - 222px) !important;
+    }
+  }
+
+  .playkit-seek-bar{
+    padding-right: 30px;
+  }
+
+  .hide-fullscreen .playkit-seek-bar{
+    padding-right: 0px;
   }
 
   .playkit-icon-rewind-10 {
