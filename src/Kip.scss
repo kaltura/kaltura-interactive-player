@@ -180,26 +180,31 @@
     width: calc(100% - 96px);
     left: 45px;
   }
-
+  /* Scrubber width - with audio-tracks/captions */
   .has-extra-tracks .playkit-player .playkit-seek-bar {
     width: calc(100% - 136px) !important;
   }
 
   .has-timers {
 
+    /* Scrubber width (when timers are on) - without audio-tracks/captions */
     .playkit-seek-bar {
       width: calc(100% - 166px) !important;
     }
 
+    /* Scrubber width (when timers are on) - with audio-tracks/captions */
     .has-extra-tracks .playkit-player .playkit-seek-bar {
       width: calc(100% - 222px) !important;
     }
   }
 
+
+  /* Fullscreen exists - reduce the scrubber width by 30px */
   .playkit-seek-bar{
     padding-right: 30px;
   }
 
+  /* lack of fullscreen button adds 30px (or in other words removes the default 30)  */
   .hide-fullscreen .playkit-seek-bar{
     padding-right: 0px;
   }
