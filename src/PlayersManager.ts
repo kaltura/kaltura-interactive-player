@@ -507,11 +507,8 @@ export class PlayersManager extends Dispatcher {
   addListenersToPlayer() {
     if (this.activePlayer && this.activePlayer.player) {
       const player: any = this.activePlayer.player;
-
-
       player.addEventListener(
-        // player.Event.Core.PLAYER_STATE_CHANGED,
-        player.Event.Core.PLAYER_STATE_CHANGED,
+        player.Event.Core.PLAY,
           () => {
           const tracks = player.getTracks();
           const audioTracks = tracks.find(track => (track._kind !== "subtitles" && !track._bandwidth ));
