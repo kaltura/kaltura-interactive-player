@@ -42,7 +42,7 @@ export class PlayersManager extends Dispatcher {
   static playerTickInterval: number = 250;
   public raptEngine: any;
   private analyticsModel: any = undefined;
-  readonly isAvailable: boolean;
+  private isAvailable: boolean;
   private firstPlay: boolean = true;
   private playerWidth: number = NaN;
   private playerHeight: number = NaN;
@@ -59,12 +59,14 @@ export class PlayersManager extends Dispatcher {
       this.initPlayersFactory() && this.initPlayersBufferManager();
 
     if (this.isAvailable) {
-      this.isAvailable = this.initRaptEngine();
-      // responsiveness resize support
-      this.resizeInterval = setInterval(
-        this.handleWindowResized.bind(this),
-        250
-      );
+      setTimeout(() => {
+        this.isAvailable = this.initRaptEngine();
+        // responsiveness resize support
+        this.resizeInterval = setInterval(
+          this.handleWindowResized.bind(this),
+          250
+        );
+      });
     }
   }
 
@@ -80,6 +82,13 @@ export class PlayersManager extends Dispatcher {
       this.config.rapt.bufferNextNodes === false
     ) {
       this.playersBufferManager.disable();
+    } else {
+      const bufferingEvents = ["buffer:prebuffer","buffer:bufferend","buffer:bufferstart","buffer:allbuffered"];
+      for (let bufferEvent of bufferingEvents){
+        this.playersBufferManager.addListener(bufferEvent , (event) => {
+          this.dispatch(event);
+        })
+      }
     }
     return true;
   }

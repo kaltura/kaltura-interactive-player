@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Kaltura Interactive Player</title>
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"
+    ></script>
+</head>
+<body>
+<!-- relevant for development only! -->
+<!-- 0.36.6 -->
+<!-- <script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script> -->
+<!-- THIS UICONF HAS GA -->
+<!-- 0.37.3 -->
+<script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15220027"></script>
+<!-- 0.39.0 -->
+<!-- <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43642002"></script> -->
+<script src="dist/path-kaltura-player.js" type="text/javascript"></script>
+<script src="http://localhost:35729/livereload.js"></script>
+<!-- end of relevant for development only! -->
+<!-- 350 x 197 / 260 x 146 / 500 x 281 / 150 x 84 ⬇ ︎-->
+<style>
+    #player {
+        width: 500px;
+        height: 281px;
+    }
+</style>
+<h3>test.template.html</h3>
+<h4 id="projDetails"></h4>
+<div id="player"></div>
+<div
+        id="logDiv"
+        style="width: 450px;height: 100%;position: absolute;left:650px;top:0"
+></div>
+<script>
+    var optionalPlaylists = [
+        {
+            name: "prefetch API",
+            selected: true, ///////////////////////
+            id: "0_vd5gg2z6"
+        }
+    ];
+
+    var selectedItem;
+
+    for (var j = 0; j < optionalPlaylists.length; j++) {
+        if (optionalPlaylists[j].selected) {
+            selectedItem = optionalPlaylists[j];
+        }
+    }
+    var env = {};
+    if (selectedItem.isQA) {
+        env = {
+            serviceUrl: "//qa-apache-php7.dev.kaltura.com/api_v3",
+            cdnUrl: "//qa-apache-php7.dev.kaltura.com"
+        };
+    }
+    var pid = 27017; // default
+
+
+    document.getElementById("projDetails").textContent =
+        selectedItem.name + " - " + selectedItem.id;
+    var config = {
+        targetId: "player",
+        playback: {
+            // autoplay: false,
+            preload: "auto"
+        },
+        provider: {
+            // ks : "djJ8NTgwOXw3pr1EYEVjHHuRis2NzxYDzhyn4RnPuMmUhD4GZGmLDEf4oKfJe8xRiSx77VvInhSq8vrHNKc1cMlIitvfyRMpGBKUXNBamu4Rr2-WBGranp5gldiNWQh6l6cKXu0MP3bgj_1fbNVuZSv1t5vEK1dbJdgdSkDmiuTVc9Xhb2folNWucEQYQDSd72z8eIubs10EGzZU1HC28Yl7yofo05OpEXyfpgo_NdFA5D08hTaPmovwUakED2z7gD5AiS6H_gW0wYu95olXSNIPN0em4M4p",
+            partnerId: pid,
+            uiconfId: "15219991"
+        },
+        rapt: {
+            initialBitrate: 75e4,
+            debug: true,
+            bufferNextNodes: true,
+            bufferTime: 6,
+            showScrubber: true,
+            showTimers: true,
+            showSettings: true
+        }
+    };
+
+    var kip = PathKalturaPlayer.setup(config);
+
+    var allEvents = [
+        "hotspot:click",
+        "node:enter",
+        "node:ended",
+        "node:exit",
+        "project:load",
+        "project:ready",
+        "buffer:prebuffer",
+        "buffer:bufferend",
+        "buffer:bufferstart",
+        "buffer:allbuffered",
+        "project:start",
+    ];
+
+    for (var i = 0; i < allEvents.length; i++) {
+        kip.addListener(allEvents[i], function (event) {
+            handleInteractiveEvent(event);
+        });
+    }
+
+    kip.loadMedia({playlistId: "0_vd5gg2z6"});
+
+    // logger - debug mode !
+    function handleInteractiveEvent(event) {
+        var oneLine = document.createElement("div");
+        // mark buffering event in green
+        var printStr = event.type;
+        var payload = event.payload;
+        oneLine.style.cssText = "color: blue";
+        switch (event.type) {
+
+            case "buffer:prebuffer":
+                // payload is an array of the next items  - first element is the item we are switching to, all other are the
+                // next nodes that we will load - by natural order (timeline appearance first, defaultPath later)
+                // hard coded - if we are about to load street-food-main - we will push 3 other nodes before the default path
+
+                //
+                if (payload.length) {
+                    switch (payload[0].name) {
+
+                        // On the 'start' node we want to add dynamically 'Street food' to pre-buffer list. We will push it to the top
+                        // of the list so it pre-buffers before the 'food' (chocolate video) entry.
+                        case "Start":
+                            // find the node of video we want to add
+                            var streetFoodMainNode = kip.data.nodes.find(node => node.name === "street food main");
+                            // insert it to the 2nd position of the array
+                            payload.splice(1, 0, streetFoodMainNode);
+                            printStr +=
+                                '<span style="color: #648b24"> [' +
+                                'Start - add Street-food ' +
+                                "]</span>";
+                            break;
+
+                        case "street food main":
+                            // Example of finding by node name
+                            var streetFood1 = kip.data.nodes.find(node => node.name === "street food 1");
+                            // Example of finding by node id
+                            var streetFood2 = kip.data.nodes.find(node => node.id === "8a8807ee-acdd-42ae-8e33-b85643b22ca2");
+                            // Example of finding by node customData
+                            var streetFood3 = kip.data.nodes.find(node => node.customData === "food3");
+                            payload.push(streetFood1, streetFood2, streetFood3);
+                            printStr +=
+                                '<span style="color: #648b24"> [' +
+                                'API adding food 1-3' +
+                                "]</span>";
+
+                            break;
+                        case "food main":
+                            // Example of finding by node name
+                            var grapesNode = kip.data.nodes.find(node => node.name === "grapes");
+                            // Example of finding by node id
+                            var coffeeNode = kip.data.nodes.find(node => node.id === "0f92c236-72a8-4d53-844f-0bf612b1b817");
+                            // Example of finding by node customData
+                            var wineNode = kip.data.nodes.find(node => node.customData === "wine");
+                            payload.push(grapesNode, coffeeNode, wineNode);
+                            printStr +=
+                                '<span style="color: #648b24"> [' +
+                                'ChocolatChocolatChocolat' +
+                                "]</span>";
+                            break;
+                        case "food default path":
+                            var food4 = kip.data.nodes.find(node => node.name === "street food 4");
+                            // insert it to the 2nd position of the array
+                            payload.push(food4);
+                            printStr +=
+                                '<span style="color: #648b24"> [' +
+                                'Start - add Street food 4' +
+                                "]</span>";
+                            break;
+                    }
+
+
+                    // alter payload object - add more items. This must be a synchronous code
+                    // we can access the nodes from kip.data.nodes and filter by name, id, custom-data or entryId
+                }
+            break;
+            case "hotspot:click":
+                printStr +=
+                    '<span style="color: #648b24"> [' +
+                    payload.hotspot.name +
+                    "]</span>";
+                // If there is a custom-data value it will be in payload.hotspot.customData
+
+                // sample of detecting the hotspot by custom-data:
+                if (payload.hotspot.customData && (
+                    payload.hotspot.customData === "street-food" ||
+                    payload.hotspot.customData === "food1" ||
+                    payload.hotspot.customData === "food2" ||
+                    payload.hotspot.customData === "food3" ||
+                    payload.hotspot.customData === "food4"
+                )) {
+                    switch (payload.hotspot.customData) {
+                        case "street-food":
+                            // jump by node name
+                            kip.jump({name: 'street food main'});
+                            break;
+                        case "food1":
+                            // jump by node id
+                            kip.jump({id: '076fdbc8-61cd-462f-934c-ac04ba9de28c'});
+                            break;
+                        case "food2":
+                            // jump by node name
+                            kip.jump({name: 'food2'});
+                            break;
+                        case "food3":
+                            // jump by node id
+                            kip.jump({id: '1ca66c6a-51df-4a73-ba64-cd67210d1148'});
+                            break;
+                        case "food4":
+                            // jump by node id
+                            kip.jump({id: 'ccee5b3a-3436-4cbd-ad88-e68d86ca2431'});
+                            break;
+
+                    }
+                }
+                // sample of detecting the hotspot by node name:
+                if (
+                    payload.hotspot.name === "Wine" ||
+                    payload.hotspot.name === "Grapes" ||
+                    payload.hotspot.name === "Coffee"
+                ) {
+                    switch (payload.hotspot.name) {
+                        case "Wine":
+                            // jump by node id
+                            kip.jump({id: 'b7258214-659a-41c6-bc28-e3867d52a0fb'});
+                            break;
+                        case "Grapes":
+                            // jump by node name
+                            kip.jump({name: 'grapes'});
+                            break;
+                        case "Coffee":
+                            // jump by node id
+                            kip.jump({name: 'coffee'});
+                            break;
+                    }
+                }
+
+
+                break;
+            case "node:enter":
+            case "node:ended":
+            case "node:exit":
+                printStr +=
+                    '<span style="color: #24468b"> [' +
+                    payload.node.name +
+                    "]</span>";
+                break;
+            case "player:progress":
+                printStr +=
+                    '<span style="color: #8b2136"> [' + payload.progress + "]</span>";
+                break;
+            case "browser:open":
+                printStr +=
+                    '<span style="color: #648b24"> [' + payload.href + "]</span>";
+                break;
+            default:
+                if (!isEmpty(payload)) {
+                    printStr +=
+                        '<span style="color: #9f4e8e"> [' +
+                        payload.toString() +
+                        "]</span>";
+                }
+
+            // this is a Rapt event
+        }
+        oneLine.innerHTML = printStr;
+        document.getElementById("logDiv").appendChild(oneLine);
+    }
+
+
+    function seekKip(n) {
+        kip.seek(n);
+    }
+
+
+    // helpers
+    function isEmpty(obj) {
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) return false;
+        }
+        return true;
+    }
+
+</script>
+<br/>
+<div>
+
+    <button onclick="seekKip(kip.duration-3)" style="background: #f4cd98">
+        Seek to -3sec
+    </button>
+    <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">
+        Seek to -7sec
+    </button>
+
+
+</div>
+</body>
+</html>
