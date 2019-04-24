@@ -41,6 +41,7 @@
     "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
   },
   "devDependencies": {
+    "archiver": "^3.0.0",
     "@types/core-js": "^2.5.0",
     "core-js": "^2.5.7",
     "css-loader": "^1.0.0",
