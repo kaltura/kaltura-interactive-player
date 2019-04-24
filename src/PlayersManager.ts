@@ -24,6 +24,7 @@ export interface RaptNode {
 
 export enum Persistency {
   mute = "mute",
+  textStyle = "textStyle",
   captions = "captions",
   volume = "volume",
   audioTrack = "audioTrack",
@@ -464,6 +465,15 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
+
+  private handleTrackStyleChanged = (event: any) => {
+    this.playersBufferManager.syncPlayersStatus(
+        Persistency.textStyle,
+        this.activePlayer.player._localPlayer.textStyle.clone(),
+        this.activePlayer.player
+    );
+  };
+
   private handleAudiotrackChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
       Persistency.audioTrack,
@@ -497,6 +507,10 @@ export class PlayersManager extends Dispatcher {
       player.removeEventListener(
         player.Event.Core.AUDIO_TRACK_CHANGED,
         this.handleAudiotrackChanged
+      );
+      player.removeEventListener(
+          player.Event.Core.TEXT_STYLE_CHANGED,
+          this.handleTrackStyleChanged
       );
       player.removeEventListener(
         player.Event.Core.RATE_CHANGE,
@@ -537,6 +551,11 @@ export class PlayersManager extends Dispatcher {
       player.addEventListener(
         player.Event.Core.AUDIO_TRACK_CHANGED,
         this.handleAudiotrackChanged
+      );
+
+      player.addEventListener(
+        player.Event.Core.TEXT_STYLE_CHANGED,
+        this.handleTrackStyleChanged
       );
 
       player.addEventListener(
