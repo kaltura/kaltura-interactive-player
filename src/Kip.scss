@@ -169,31 +169,31 @@
     cursor: pointer;
     position: relative;
     top: 13px;
-    width: calc(100% - 96px);
+    width: calc(100% - 126px);
     left: 45px;
   }
   /* Scrubber width - with audio-tracks/captions */
   .has-extra-tracks .playkit-player .playkit-seek-bar {
-    width: calc(100% - 136px) !important;
+    width: calc(100% - 160px) !important;
   }
 
   .has-timers {
 
     /* Scrubber width (when timers are on) - without audio-tracks/captions */
     .playkit-seek-bar {
-      width: calc(100% - 166px) !important;
+      width: calc(100% - 210px) !important;
     }
 
     /* Scrubber width (when timers are on) - with audio-tracks/captions */
     .has-extra-tracks .playkit-player .playkit-seek-bar {
-      width: calc(100% - 222px) !important;
+      width: calc(100% - 246px) !important;
     }
   }
 
 
   /* Fullscreen exists - reduce the scrubber width by 30px */
   .playkit-seek-bar{
-    padding-right: 30px;
+    //padding-right: 30px;
   }
 
   /* lack of fullscreen button adds 30px (or in other words removes the default 30)  */
