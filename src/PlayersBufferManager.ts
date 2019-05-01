@@ -426,6 +426,9 @@ export class PlayersBufferManager extends Dispatcher {
         case Persistency.mute:
           player.muted = value;
           break;
+        case Persistency.textStyle:
+          player.textStyle = value;
+          break;
       }
     });
   }
