@@ -43,8 +43,12 @@
         },
         {
           name: "prefetch API",
-          selected: true, ///////////////////////
           id: "0_vd5gg2z6"
+        },
+        {
+          name: "defautlPath shorts",
+          selected: true, ///////////////////////
+          id: "0_ogg6ii7b"
         },
         {
           name: "a-bb-a",
@@ -171,7 +175,7 @@
           preload: "auto"
         },
         provider: {
-          // ks : "djJ8NTgwOXw3pr1EYEVjHHuRis2NzxYDzhyn4RnPuMmUhD4GZGmLDEf4oKfJe8xRiSx77VvInhSq8vrHNKc1cMlIitvfyRMpGBKUXNBamu4Rr2-WBGranp5gldiNWQh6l6cKXu0MP3bgj_1fbNVuZSv1t5vEK1dbJdgdSkDmiuTVc9Xhb2folNWucEQYQDSd72z8eIubs10EGzZU1HC28Yl7yofo05OpEXyfpgo_NdFA5D08hTaPmovwUakED2z7gD5AiS6H_gW0wYu95olXSNIPN0em4M4p",
+          // ks : "M2VlODY3Y2VjZTk0ZDcxOTRmM2Q3ODc1OWY1MDc5NTk2N2Y0NzMzOXwyNzAxNzsyNzAxNzsxNTU2NjIzMzk2OzI7MTU1NjUzNjk5Ni4wMTk2O2VpdGFuLmF2Z2lsQGthbHR1cmEuY29tO2Rpc2FibGVlbnRpdGxlbWVudCxhcHBpZDprbWM7Ow==",
           partnerId: pid,
           uiconfId: "15219991",
           env: env
@@ -318,6 +322,21 @@
         console.log(kip.playbackRate); // player bug
       }
 
+      function replaceMe() {
+          var player1Video = $.find("#kaltura-container__1 video")[0];
+          var player2Video = $.find("#kaltura-container__2 video")[0];
+          var player2 = $.find("#kaltura-container__2");
+          var player1 = $.find("#kaltura-container__1");
+
+          player1Video.pause();
+          player2Video.play();
+
+          setTimeout( () => {
+              $(player1).removeClass("current-playing");
+              $(player2).addClass("current-playing");
+          })
+
+      }
       // helpers
       function isEmpty(obj) {
         for (var key in obj) {
@@ -352,6 +371,9 @@
       </button>
       <button onclick="seekKip(kip.duration-7)" style="background: #f4Fd98">
         Seek to -7sec
+      </button>
+      <button onclick="replaceMe()" style="background: #f4FF98">
+        REPLACE
       </button>
       <br />
       <br />

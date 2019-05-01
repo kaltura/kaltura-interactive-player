@@ -151,6 +151,15 @@
 .kiv-container {
   position: relative;
 
+  &.rapt-switching{
+    .playkit-black-cover{
+      background-color: transparent;
+    }
+    .playkit-poster{
+      display: none;
+    }
+  }
+
   .playkit-player-gui {
     font-family: "courier" !important;
   }
