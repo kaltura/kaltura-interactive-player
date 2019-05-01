@@ -28,13 +28,10 @@ export class PlayersDomManager {
   /**
    * Reparent the rapt layer into the player that is marked as .current-playing
    */
-  public reparentRaptLayer() {
+  public reparentRaptLayer(raptLayer:HTMLElement) {
     const mainContainerId = this.getContainer().id;
     const newParent = document.querySelector(
-      "#" + mainContainerId + " .current-playing .playkit-container"
-    );
-    const raptLayer = document.querySelector(
-      "#" + mainContainerId + " .kiv-rapt-engine"
+        "#" + mainContainerId + " .current-playing .playkit-container"
     );
     if (newParent) {
       newParent.appendChild(raptLayer);

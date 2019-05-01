@@ -310,6 +310,7 @@ export class PlayersManager extends Dispatcher {
   private switchPlayer(media: any): void {
     const newEntryId = media.sources[0].src;
     const nextRaptNode: RaptNode = media.node;
+    const raptLayer:HTMLElement = document.querySelector(" .kiv-rapt-engine");
 
     // send analytics of nodePlay - event44
     if (this.analyticsModel) {
@@ -434,7 +435,7 @@ export class PlayersManager extends Dispatcher {
     }
     // reparenting rapt layer on mobile.
     if (this.playersFactory.playerLibrary.core.Env.device.model) {
-      const mainContainerId = this.domManager.reparentRaptLayer();
+      this.domManager.reparentRaptLayer(raptLayer);
     }
   }
 
