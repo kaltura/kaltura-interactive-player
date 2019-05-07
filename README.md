@@ -76,6 +76,14 @@ The Rapt configuration is in fact an extension of the playkit-js configuration w
 The KIV has some unique IV API. These are the events and their payload data: 
 
 
- 
+## Limitations 
+### Locked kaltura player version
+> Kaltura Player must be 0.37.3 (Relies on internal API that might not be guarantee forward comp')
+- [ ] Black-rectangle hides the player when no thumbnail - used CSS to hide it (Rapt-217)
+- [ ] __kalturaplayerdata.UIConf (Kip.ts) to read uiconf data 
+- [ ] Open a pull request
+
+
+  
 
 

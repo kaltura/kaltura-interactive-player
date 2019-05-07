@@ -367,17 +367,6 @@ export class PlayersBufferManager extends Dispatcher {
       .filter(item => item.player)
       .map(item => item.player);
 
-    //if (attribute === Persistency.audioTrack) {
-    // handle async if necessary
-
-    // 1. cancel active buffering (except for the active)
-    // 2. for all players in buffer list which are not the active one:
-    // 2.1 revoke them (remove player and set isReady to false) <--- relevant only if once changing audio etc the player starts to buffer automatically
-    // 2.2 apply async information
-
-    //return;
-    //}
-
     availablePlayers.forEach(kalturaPlayer => {
       const player: any = kalturaPlayer.player;
 

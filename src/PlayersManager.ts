@@ -308,6 +308,10 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   private switchPlayer(media: any): void {
+      this.domManager.getContainer().classList.add("rapt-switching");
+      setTimeout(() => {
+          this.domManager.getContainer().classList.remove("rapt-switching");
+      },269);
     const newEntryId = media.sources[0].src;
     const nextRaptNode: RaptNode = media.node;
     const raptLayer:HTMLElement = document.querySelector(" .kiv-rapt-engine");
@@ -407,10 +411,9 @@ export class PlayersManager extends Dispatcher {
           null,
           this.firstPlay && !shouldPlayNow
         );
-
         this.firstPlay = false;
-
         this.updateActiveItems(newPlayer, nextRaptNode);
+
       } else {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
@@ -470,7 +473,7 @@ export class PlayersManager extends Dispatcher {
   private handleTrackStyleChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
         Persistency.textStyle,
-        this.activePlayer.player._localPlayer.textStyle.clone(),
+        this.activePlayer.player.textStyle,
         this.activePlayer.player
     );
   };
@@ -482,6 +485,7 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
+
   private handleVolumeChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
       Persistency.volume,
@@ -489,6 +493,7 @@ export class PlayersManager extends Dispatcher {
       this.activePlayer.player
     );
   };
+
   private handleMuteChanged = (event: any) => {
     const isMuted = event.payload.mute;
     this.playersBufferManager.syncPlayersStatus(
