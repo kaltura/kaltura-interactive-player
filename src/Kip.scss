@@ -151,6 +151,12 @@
 .kiv-container {
   position: relative;
 
+  .playkit-player.playkit-size-xs .playkit-left-controls .playkit-control-button-container
+  {
+    display: inline-block;
+  }
+
+
   &.rapt-switching{
     .playkit-black-cover{
       background-color: transparent;
