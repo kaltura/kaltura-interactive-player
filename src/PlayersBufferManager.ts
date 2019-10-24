@@ -2,6 +2,7 @@ import { Dispatcher } from "./helpers/Dispatcher";
 import { KalturaPlayer, PlayersFactory } from "./PlayersFactory";
 import { Persistency, RaptNode } from "./PlayersManager";
 import { log } from "./helpers/logger";
+import {getInternetExplorerVersion, isWindows7} from "./helpers/detectIe";
 
 interface BufferItem {
   player: KalturaPlayer;
@@ -12,6 +13,8 @@ interface BufferItem {
 }
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
+  private bufferThreshold: number = 2.5;
+  private isIe11Win7 = getInternetExplorerVersion() === 11 && isWindows7();
   readonly secondsToBuffer: number;
   private bufferList: BufferItem[] = [];
   private persistenceObj: {
@@ -289,22 +292,28 @@ export class PlayersBufferManager extends Dispatcher {
         item.isRunning = false;
         this.handleBufferList();
       } else if (
-        item.isRunning &&
-        player.buffered &&
-        player.buffered.length &&
-        player.buffered.end &&
-        player.buffered.end(0) > this.secondsToBuffer - 1
+          item.isRunning &&
+          player.buffered &&
+          player.buffered.length &&
+          player.buffered.end
       ) {
-        log(
-          "log",
-          "pbm_executeItemBuffering",
-          "buffer completed, mark entry as ready",
-          { entryId: item.entryId }
-        );
-        item.isRunning = false;
-        item.isReady = true;
-        this.dispatch({ type: "buffer:bufferend", payload: item.entryId });
-        this.handleBufferList();
+        // if we reached here we have something in the buffer. Let's check now if that's enough
+        // IE11 on Win7 sometimes has a very low buffer - it gets a special case
+        if(player.buffered.end(0) > this.secondsToBuffer - this.bufferThreshold ||
+            (this.isIe11Win7 && player.buffered.end(0) > 0.8) ){
+          log(
+              "log",
+              "pbm_executeItemBuffering",
+              "buffer completed, mark entry as ready",
+              { entryId: item.entryId }
+          );
+          item.isRunning = false;
+          item.isReady = true;
+          this.dispatch({ type: "buffer:bufferend", payload: item.entryId });
+          this.handleBufferList();
+        } else {
+          this.trackBufferOfItem(item);
+        }
       } else {
         this.trackBufferOfItem(item);
       }
