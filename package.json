@@ -29,6 +29,7 @@
   ],
   "scripts": {
     "start": "webpack --watch & webpack-dev-server --dev",
+    "serve-external": "webpack --watch & webpack-dev-server --host 0.0.0.0 --dev",
     "clean": "rm -rf ./dist && node scripts/setversion.js",
     "tgz": "node scripts/dist-tgz.js",
     "prebuild": "npm run clean",
