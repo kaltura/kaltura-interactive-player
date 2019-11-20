@@ -157,6 +157,7 @@ export class PlayersManager extends Dispatcher {
     );
     // create the rapt-engine layer. We must use this.element because of rapt delegate names
     this.element = domElement;
+    this.element.setAttribute("tabindex", "-1");
     const { nodes, settings } = this.raptData;
     const startNodeId = settings.startNodeId;
     // retrieve the 1st node

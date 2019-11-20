@@ -86,10 +86,11 @@ export class PlayersDomManager {
 
   public showRaptLayer() {
     const mainContainerId = this.getContainer().id;
-    const raptLayer = document.querySelector(
+    const raptLayer: HTMLElement = document.querySelector(
       "#" + mainContainerId + " .kiv-rapt-engine"
     );
     raptLayer.classList.remove("kiv-hidden");
+    raptLayer.focus();
   }
   public hideRaptLayer() {
     const mainContainerId = this.getContainer().id;
