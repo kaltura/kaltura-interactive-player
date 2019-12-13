@@ -319,7 +319,7 @@ export class PlayersManager extends Dispatcher {
 
     // send analytics of nodePlay - event44
     if (this.analyticsModel) {
-      this.sendAnalytics(44, { entryId: newEntryId });
+      this.sendAnalytics(44, { entryId: newEntryId, nodeId: nextRaptNode.id });
     } else {
       // At this point we do not have the 1st player nor analytics model. This will make sure to send the 44 event when
       // we have a model.
