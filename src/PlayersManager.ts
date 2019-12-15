@@ -53,7 +53,8 @@ export class PlayersManager extends Dispatcher {
     private playerLibrary: any,
     readonly raptProjectId: string,
     private raptData: any,
-    private domManager: PlayersDomManager
+    private domManager: PlayersDomManager,
+    private impressionAnalyticEventSent: boolean
   ) {
     super();
     this.isAvailable =
@@ -84,11 +85,16 @@ export class PlayersManager extends Dispatcher {
     ) {
       this.playersBufferManager.disable();
     } else {
-      const bufferingEvents = ["buffer:prebuffer","buffer:bufferend","buffer:bufferstart","buffer:allbuffered"];
-      for (let bufferEvent of bufferingEvents){
-        this.playersBufferManager.addListener(bufferEvent , (event) => {
+      const bufferingEvents = [
+        "buffer:prebuffer",
+        "buffer:bufferend",
+        "buffer:bufferstart",
+        "buffer:allbuffered"
+      ];
+      for (let bufferEvent of bufferingEvents) {
+        this.playersBufferManager.addListener(bufferEvent, event => {
           this.dispatch(event);
-        })
+        });
       }
     }
     return true;
@@ -125,6 +131,11 @@ export class PlayersManager extends Dispatcher {
         case 14:
           return false; // don't send quartiles events
         case 1:
+          if (this.impressionAnalyticEventSent) {
+            return false; // send "playerImpression" analytics event once only for the root entry
+          } else {
+            this.impressionAnalyticEventSent = true;
+          }
         case 2:
         case 3:
           model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
@@ -309,13 +320,13 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   private switchPlayer(media: any): void {
-      this.domManager.getContainer().classList.add("rapt-switching");
-      setTimeout(() => {
-          this.domManager.getContainer().classList.remove("rapt-switching");
-      },269);
+    this.domManager.getContainer().classList.add("rapt-switching");
+    setTimeout(() => {
+      this.domManager.getContainer().classList.remove("rapt-switching");
+    }, 269);
     const newEntryId = media.sources[0].src;
     const nextRaptNode: RaptNode = media.node;
-    const raptLayer:HTMLElement = document.querySelector(" .kiv-rapt-engine");
+    const raptLayer: HTMLElement = document.querySelector(" .kiv-rapt-engine");
 
     // send analytics of nodePlay - event44
     if (this.analyticsModel) {
@@ -414,7 +425,6 @@ export class PlayersManager extends Dispatcher {
         );
         this.firstPlay = false;
         this.updateActiveItems(newPlayer, nextRaptNode);
-
       } else {
         log("log", "pm_switchPlayer", "switch media on main player", {
           entryId: newEntryId
@@ -473,9 +483,9 @@ export class PlayersManager extends Dispatcher {
 
   private handleTrackStyleChanged = (event: any) => {
     this.playersBufferManager.syncPlayersStatus(
-        Persistency.textStyle,
-        this.activePlayer.player.textStyle,
-        this.activePlayer.player
+      Persistency.textStyle,
+      this.activePlayer.player.textStyle,
+      this.activePlayer.player
     );
   };
 
@@ -516,8 +526,8 @@ export class PlayersManager extends Dispatcher {
         this.handleAudiotrackChanged
       );
       player.removeEventListener(
-          player.Event.Core.TEXT_STYLE_CHANGED,
-          this.handleTrackStyleChanged
+        player.Event.Core.TEXT_STYLE_CHANGED,
+        this.handleTrackStyleChanged
       );
       player.removeEventListener(
         player.Event.Core.RATE_CHANGE,
@@ -537,19 +547,26 @@ export class PlayersManager extends Dispatcher {
   addListenersToPlayer() {
     if (this.activePlayer && this.activePlayer.player) {
       const player: any = this.activePlayer.player;
-      player.addEventListener(
-        player.Event.Core.PLAY,
-          () => {
-          const tracks = player.getTracks();
-          const audioTracks = tracks.find(track => (track._kind !== "subtitles" && !track._bandwidth ));
-          const captionsTracks = tracks.find(track => (track._kind === "subtitles" ))
-          if(captionsTracks || (audioTracks && audioTracks._language && audioTracks._language != undefined )){
-            // this video has captions or audio
-            const view = player.getView().parentElement.parentElement.parentElement;
-            view.classList.add("has-extra-tracks")
-          }
-        })
-      ;
+      player.addEventListener(player.Event.Core.PLAY, () => {
+        const tracks = player.getTracks();
+        const audioTracks = tracks.find(
+          track => track._kind !== "subtitles" && !track._bandwidth
+        );
+        const captionsTracks = tracks.find(
+          track => track._kind === "subtitles"
+        );
+        if (
+          captionsTracks ||
+          (audioTracks &&
+            audioTracks._language &&
+            audioTracks._language != undefined)
+        ) {
+          // this video has captions or audio
+          const view = player.getView().parentElement.parentElement
+            .parentElement;
+          view.classList.add("has-extra-tracks");
+        }
+      });
       player.addEventListener(
         player.Event.Core.TEXT_TRACK_CHANGED,
         this.handleTextTrackChanged
