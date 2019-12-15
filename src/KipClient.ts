@@ -92,7 +92,6 @@ export class KipClient extends Dispatcher {
           })
         );
       }
-
       this.kClient.multiRequest(multiRequest).then(
         (data: any) => {
           // API error
@@ -112,7 +111,7 @@ export class KipClient extends Dispatcher {
             }
 
             if (!data[1].result.objects || !data[1].result.objects.length) {
-              reject("API error, check your KS and Playlist data validation 0");
+              reject("Missing data. Could not retrieve attached file assets for playlist "+raptPlaylistId);
             }
 
             this.ks = data[0].result.ks;
