@@ -54,7 +54,9 @@ export class PlayersManager extends Dispatcher {
     readonly raptProjectId: string,
     private raptData: any,
     private domManager: PlayersDomManager,
-    private impressionAnalyticEventSent: boolean
+    private impressionAnalyticEventSent: boolean = false,
+    private playRequestedAnalyticEventSent: boolean = false,
+    private playAnalyticEventSent: boolean = false
   ) {
     super();
     this.isAvailable =
@@ -131,15 +133,32 @@ export class PlayersManager extends Dispatcher {
         case 14:
           return false; // don't send quartiles events
         case 1:
+          // send this once 
           if (this.impressionAnalyticEventSent) {
-            return false; // send "playerImpression" analytics event once only for the root entry
+            return false;
           } else {
             this.impressionAnalyticEventSent = true;
+            model.entryId = this.raptProjectId;
+            break;
           }
         case 2:
+          // send this once 
+          if (this.playRequestedAnalyticEventSent) {
+            return false;
+          } else {
+            this.playRequestedAnalyticEventSent = true;
+            model.entryId = this.raptProjectId;
+            break;
+          }
         case 3:
-          model.entryId = this.raptProjectId; // on these events - send the projectId instead of the entryId
-          break;
+          // send this once 
+          if (this.playAnalyticEventSent) {
+            return false;
+          } else {
+            this.playAnalyticEventSent = true;
+            model.entryId = this.raptProjectId; 
+            break;
+          }
       }
       return true;
     };
