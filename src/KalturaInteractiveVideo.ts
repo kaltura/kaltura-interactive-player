@@ -49,7 +49,6 @@ class KalturaInteractiveVideo extends Dispatcher {
   private playerDomManager: PlayersDomManager;
   private kalturaInteractiveStatus: RaptProjectStatus =
     RaptProjectStatus.preInitialized;
-  private _impressionAnalyticEventSent: boolean = false;
 
   constructor(private config: any, private playerLibrary: any) {
     super();
@@ -62,13 +61,6 @@ class KalturaInteractiveVideo extends Dispatcher {
         "log enabled by config version " + VERSION
       );
     }
-  }
-
-  get impressionAnalyticEventSent(): boolean {
-    return this._impressionAnalyticEventSent;
-  }
-  set impressionAnalyticEventSent(value: boolean) {
-    this._impressionAnalyticEventSent = value;
   }
 
   private isInitialized = false;
@@ -84,7 +76,6 @@ class KalturaInteractiveVideo extends Dispatcher {
   }
 
   loadMedia(obj: any): void {
-    this.impressionAnalyticEventSent = false; // reset flag;
     this.kalturaInteractiveStatus = RaptProjectStatus.loading;
     if (!obj || (!obj.entryId && !obj.playlistId)) {
       this.printMessage("Error", "missing rapt project id");
@@ -144,8 +135,7 @@ class KalturaInteractiveVideo extends Dispatcher {
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
-      this.playerDomManager,
-      this.impressionAnalyticEventSent
+      this.playerDomManager
     );
 
     // if we got here - playerManager constructor code went well - update status
