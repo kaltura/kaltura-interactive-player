@@ -310,12 +310,12 @@ export class PlayersManager extends Dispatcher {
   }
 
   /**
-   * This will send the first nodePlay event only if it has analytics model.
+   * This will send the first nodePlay event only if it has analytics model and after the 1st play 
    * If it doesn't have a model it will try again later.
    */
   private trySendingFirstEvent(entryId: string) {
     setTimeout(() => {
-      if (this.analyticsModel) {
+      if (this.analyticsModel && this.playAnalyticEventSent) {
         this.sendAnalytics(44, { entryId: entryId });
       } else {
         this.trySendingFirstEvent(entryId);
