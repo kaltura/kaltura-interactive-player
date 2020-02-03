@@ -81,9 +81,9 @@ export class PlayersManager extends Dispatcher {
       this.playersFactory
     );
     if (
-      this.config.rapt &&
-      this.config.rapt.hasOwnProperty("bufferNextNodes") &&
-      this.config.rapt.bufferNextNodes === false
+        (this.config.rapt &&
+        this.config.rapt.hasOwnProperty("bufferNextNodes") &&
+        this.config.rapt.bufferNextNodes === false) || this.config.rapt.syncVideos
     ) {
       this.playersBufferManager.disable();
     } else {
@@ -339,6 +339,16 @@ export class PlayersManager extends Dispatcher {
 
   // called by Rapt on first-node, user click, defaultPath and external API "jump"
   private switchPlayer(media: any): void {
+    let currentPlayerPosition = 0; 
+    // check if there is a need to sync videos, that there is a player and that we are not 
+    // switching at the end of the video (might cause an endless loop) 
+    if( this.config.rapt.syncVideos 
+        && this.activePlayer 
+        && this.activePlayer.player 
+        && this.activePlayer.player.currentTime
+        && this.activePlayer.player.duration - this.activePlayer.player.currentTime > 5  ){
+      currentPlayerPosition = this.activePlayer.player.currentTime;
+    }
     this.domManager.getContainer().classList.add("rapt-switching");
     setTimeout(() => {
       this.domManager.getContainer().classList.remove("rapt-switching");
@@ -461,6 +471,9 @@ export class PlayersManager extends Dispatcher {
         }
         this.firstPlay = false;
         this.updateActiveItems(this.activePlayer, nextRaptNode);
+        if(this.config.rapt.syncVideos && currentPlayerPosition){
+          this.activePlayer.player.configure({ playback: { startTime: currentPlayerPosition }});
+        }
         this.activePlayer.player.loadMedia({
           entryId: newEntryId
         });
