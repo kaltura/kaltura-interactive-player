@@ -84,7 +84,7 @@ Set the volume of the player. value need to be between 0 to 1.
 ## Events
 #### project:load
 A new project is loading. Project data will not be available.
-#####payload
+##### payload
 None
 
 #### project:ready
@@ -97,7 +97,7 @@ The project has started. Triggered on the first media play event of a given play
 ##### payload
 None
 
-####project:ended
+#### project:ended
 The project has reached the end of a given branching structure.
 ##### payload
 None
@@ -117,9 +117,9 @@ The project has been reset to the beginning.
 ##### payload
 None
 
-####node:enter
+#### node:enter
 A new node has been loaded.
-#####payload
+##### payload
 kind - only on the 1st node will be "start". All other will be "jump"
 ```
 {
@@ -129,9 +129,9 @@ kind - only on the 1st node will be "start". All other will be "jump"
 }
 ```
 
-####node:exit
+#### node:exit
 The current node will be unloaded.
-#####payload
+##### payload
 ```
 {
  kind:  "jump",
