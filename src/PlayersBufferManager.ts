@@ -71,7 +71,7 @@ export class PlayersBufferManager extends Dispatcher {
         result = bufferedItem.player;
 
         if (result.player.currentTime > 0) {
-          log("log", "pbm_getPlayer", "seek player to the beginning", {
+          log("log", "pbm_getPlayer", "seek player to the beginning or a specific time", {
             entryId
           });
           result.player.currentTime = bufferedItem.startTime ? bufferedItem.startTime : 0; 
@@ -493,23 +493,23 @@ export class PlayersBufferManager extends Dispatcher {
       );
     }
     // if there was a default-path on the current node - make sure it is returned as well
-    const defaultPath: any = givenNode.onEnded.find(
+    const defaultPathData: any = givenNode.onEnded.find(
       (itm: any) => itm.type === "project:jump"
     );
-    if (defaultPath) {
-      const defaultPathNodeId: string = defaultPath.payload.destination;
+    if (defaultPathData) {
+      const defaultPathNodeId: string = defaultPathData.payload.destination;
       const defaultPathNode: RaptNode = this.raptData.nodes.find(
         n => n.id === defaultPathNodeId
       );
       // add startFrom default path
-      if(defaultPath.payload.startFrom){
-        defaultPathNode.startFrom = defaultPath.payload.startFrom
+      if(defaultPathData.payload.startFrom){
+        defaultPathNode.startFrom = defaultPathData.payload.startFrom
       }
       arrayToCache.push(defaultPathNode);
     }
     // add startTime if available 
     if(hotspotsWithStartFrom.length > 0){
-      // fill startFrom 
+      // fill startFrom attributes if they match a hotspot 
       for (const hsWithStartTime of hotspotsWithStartFrom) {
         // find if we have a relevant start hotspot 
         const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.startFrom).payload;
