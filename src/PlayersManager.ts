@@ -20,6 +20,7 @@ export interface RaptNode {
   name: string;
   customData?: any;
   prefetchNodeIds?: string[];
+  startFrom?: number;
 }
 
 export enum Persistency {

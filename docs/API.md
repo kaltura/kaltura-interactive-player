@@ -69,57 +69,57 @@ Example:
 
 ## Commands 
   
-####function play();
+#### function play();
 Play the current video
 
-####function pause();
+#### function pause();
 Pause the current video
 
-####function seek(n);
+#### function seek(n);
 Seek current video to a specific second. 
 
-####function volume(n);
+#### function volume(n);
 Set the volume of the player. value need to be between 0 to 1.
 
 ## Events
-####project:load
+#### project:load
 A new project is loading. Project data will not be available.
-#####payload
+##### payload
 None
 
-####project:ready
+#### project:ready
 A new project has been loaded.
-#####payload
+##### payload
 None
 
-####project:start
+#### project:start
 The project has started. Triggered on the first media play event of a given play through (will re-trigger on replay’s).
-#####payload
+##### payload
 None
 
-####project:ended
+#### project:ended
 The project has reached the end of a given branching structure.
-#####payload
+##### payload
 None
 
-####project:replay
+#### project:replay
 The project is being reset for replay.
-#####payload
+##### payload
 None
 
-####project:unload
+#### project:unload
 The project has been unloaded.
-#####payload
+##### payload
 None
 
-####project:reset
+#### project:reset
 The project has been reset to the beginning.
-#####payload
+##### payload
 None
 
-####node:enter
+#### node:enter
 A new node has been loaded.
-#####payload
+##### payload
 kind - only on the 1st node will be "start". All other will be "jump"
 ```
 {
@@ -129,9 +129,9 @@ kind - only on the 1st node will be "start". All other will be "jump"
 }
 ```
 
-####node:exit
+#### node:exit
 The current node will be unloaded.
-#####payload
+##### payload
 ```
 {
  kind:  "jump",
@@ -140,9 +140,9 @@ The current node will be unloaded.
 }
 ```
 
-####node:ended
+#### node:ended
 The current node has ended.
-#####payload
+##### payload
 ```
 {
  kind: [THE_NODE_NAME],
@@ -151,18 +151,18 @@ The current node has ended.
 }
 ```
 
-####hotspot:click
+#### hotspot:click
 The user has clicked on a hotspot.
-#####payload
+##### payload
 ```
 {
  hotspot: [THE_HOTSPOT_OBJECT] 
 }
 ```
 
-####browser:open
+#### browser:open
 The project has opened a new window.
-#####payload
+##### payload
 ```
 {
  href: [URL_TO_OPEN],
@@ -170,14 +170,14 @@ The project has opened a new window.
 }
 ```
 
-####browser:hidden
+#### browser:hidden
 The browser window has been hidden. The interactive video will be paused.
-#####payload
+##### payload
 None
 
-####cue:forward
+#### cue:forward
 Playback has crossed over a cue point. Cue points are custom api events that can be added using the Rapt Media composer by entering the node editor and turning on the api event timeline. Custom data can be added to each cue point and is passed through in the payloadproperty.
-#####payload
+##### payload
 ```
 {
  cue: {
@@ -187,9 +187,9 @@ Playback has crossed over a cue point. Cue points are custom api events that can
 }
 ```
 
-####cue:reverse
+#### cue:reverse
 Playback has reversed passed a cue point. Cue points are custom api events that can be added using the Rapt Media composer by entering the node editor and turning on the api event timeline. Custom data can be added to each cue point and is passed through in the payload property.
-#####payload
+##### payload
 ```
 {
  cue: {
@@ -199,19 +199,19 @@ Playback has reversed passed a cue point. Cue points are custom api events that 
 }
 ```
 
-####player:play
+#### player:play
 The current video has started playing.
-#####payload
+##### payload
 None
 
-####player:pause
+#### player:pause
 The current video has been paused.
-#####payload
+##### payload
 None
 
-####player:progress
+#### player:progress
 The playhead has crossed a predefined progress point. Event fires at 25%, 50%, 75% and 98% of every node.
-#####payload
+##### payload
 The percentage are in format of decimal fraction (E.G. 0.5 = 50%)
 ```
 {
