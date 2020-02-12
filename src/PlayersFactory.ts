@@ -80,14 +80,14 @@ export class PlayersFactory extends Dispatcher {
     entryId: string,
     playImmediate: boolean,
     persistencyObject?: any,
-    showPoster?: boolean
+    showPoster?: boolean,
+    startTime?: number
   ): KalturaPlayer {
     // TODO 3 check if the id already exists and if so throw exception
     const {
       id: playerContainerId,
       container: playerContainer
     } = this.domManager.createKalturaPlayerContainer();
-
 
     if(this.config.rapt.showTimers){
       playerContainer.classList.add("has-timers");
@@ -98,6 +98,7 @@ export class PlayersFactory extends Dispatcher {
       playImmediate,
       showPoster
     );
+    
     // persistancy logic of new creation. If a new player is created - push the relevant persistancy attribute to config
     if (persistencyObject) {
       if (persistencyObject) {
@@ -114,7 +115,10 @@ export class PlayersFactory extends Dispatcher {
         conf.playback.muted = persistencyObject.mute;
       }
     }
-
+    if(startTime){
+        conf.playback.startTime = startTime;
+    }
+    
     const newPlayer = this.playerLibrary.setup(conf);
     // if initialBitrate was define, switch back to ABR mode
     if (this.config.rapt.initialBitrate) {
@@ -148,7 +152,8 @@ export class PlayersFactory extends Dispatcher {
   private getPlayerConf(
     divName: string,
     playImmediate: boolean = false,
-    showPoster: boolean = false
+    showPoster: boolean = false,
+    startTime?: number 
   ): object {
     // clone the base config
     let newConf: RaptConfig = Object.assign({}, this.config);

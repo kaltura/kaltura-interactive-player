@@ -10,6 +10,7 @@ interface BufferItem {
   isRunning: boolean;
   bufferingTimeoutToken: number;
   entryId: string;
+  startTime?: number;
 }
 export class PlayersBufferManager extends Dispatcher {
   private shortEntryThreshold: number = 6;
@@ -70,10 +71,10 @@ export class PlayersBufferManager extends Dispatcher {
         result = bufferedItem.player;
 
         if (result.player.currentTime > 0) {
-          log("log", "pbm_getPlayer", "seek player to the beginning", {
+          log("log", "pbm_getPlayer", "seek player to the beginning or a specific time", {
             entryId
           });
-          result.player.currentTime = 0;
+          result.player.currentTime = bufferedItem.startTime ? bufferedItem.startTime : 0; 
         }
         // TODO 3 [eitan] for persistancy - assign only synced persistancy
         if (playImmediate && !result.player.isPlaying) {
@@ -131,12 +132,14 @@ export class PlayersBufferManager extends Dispatcher {
   private createPlayer(
     entryId: string,
     playImmediate: boolean,
-    showPoster?: boolean
+    showPoster?: boolean,
+    startTime? : number
   ): KalturaPlayer {
     log("log", "pbm_createPlayer", "create player for entry", {
       entryId,
       playImmediate,
-      showPoster
+      showPoster,
+      startTime
     });
 
     // TODO 3 [eitan] for persistancy - apply async info
@@ -144,7 +147,8 @@ export class PlayersBufferManager extends Dispatcher {
       entryId,
       playImmediate,
       this.persistenceObj,
-      showPoster
+      showPoster,
+      startTime
     );
     return kalturaPlayer;
   }
@@ -163,7 +167,6 @@ export class PlayersBufferManager extends Dispatcher {
       );
       return;
     }
-
     if (nextNode) {
       const nodesToBuffer = [nextNode, ...this.getNextNodes(nextNode)];
       this.dispatch({ type: "buffer:prebuffer", payload: nodesToBuffer });
@@ -180,7 +183,6 @@ export class PlayersBufferManager extends Dispatcher {
         prevCount: prevItemsCount,
         newCount: nodesToBuffer.length
       });
-
       nodesToBuffer.forEach(node => {
         const existinItem = prevItemsMap[node.entryId];
         if (existinItem) {
@@ -201,13 +203,11 @@ export class PlayersBufferManager extends Dispatcher {
             player: null,
             isRunning: false,
             bufferingTimeoutToken: null,
-            isReady: false
+            isReady: false,
+            startTime: node.startFrom
           });
         }
       });
-
-
-
       this.destroyBufferedItems(Object.values(prevItemsMap));
     } else {
       this.destroyBufferedItems(this.bufferList);
@@ -272,7 +272,7 @@ export class PlayersBufferManager extends Dispatcher {
         entryId: item.entryId
       });
       this.dispatch({ type: "buffer:bufferstart", payload: item.entryId });
-      item.player = this.createPlayer(item.entryId, false);
+      item.player = this.createPlayer(item.entryId, false , false , item.startTime);
       this.trackBufferOfItem(item);
     } else {
       // has player ! find if we have duration
@@ -475,6 +475,11 @@ export class PlayersBufferManager extends Dispatcher {
       })
       .sort((a: any, b: any) => a.showAt > b.showAt); // sort by appearance time
 
+
+   // find if there is any hotspot that has a startFrom attribute
+    const hotspotsWithStartFrom =  hotspots.filter((hs:any) => {
+      return hs.onClick && hs.onClick.find((itm: any) => itm.payload.startFrom);
+    });
     const arrayToCache: RaptNode[] = [];
     for (const hotSpot of hotspots) {
       arrayToCache.push(
@@ -488,15 +493,31 @@ export class PlayersBufferManager extends Dispatcher {
       );
     }
     // if there was a default-path on the current node - make sure it is returned as well
-    const defaultPath: any = givenNode.onEnded.find(
+    const defaultPathData: any = givenNode.onEnded.find(
       (itm: any) => itm.type === "project:jump"
     );
-    if (defaultPath) {
-      const defaultPathNodeId: string = defaultPath.payload.destination;
+    if (defaultPathData) {
+      const defaultPathNodeId: string = defaultPathData.payload.destination;
       const defaultPathNode: RaptNode = this.raptData.nodes.find(
         n => n.id === defaultPathNodeId
       );
+      // add startFrom default path
+      if(defaultPathData.payload.startFrom){
+        defaultPathNode.startFrom = defaultPathData.payload.startFrom
+      }
       arrayToCache.push(defaultPathNode);
+    }
+    // add startTime if available 
+    if(hotspotsWithStartFrom.length > 0){
+      // fill startFrom attributes if they match a hotspot 
+      for (const hsWithStartTime of hotspotsWithStartFrom) {
+        // find if we have a relevant start hotspot 
+        const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.startFrom).payload;
+        const matchingItem = arrayToCache.find( (raptNode : RaptNode) => raptNode.id === jumpingToData.destination);
+        if(matchingItem){
+          matchingItem.startFrom = jumpingToData.startFrom;
+        }
+      }
     }
     return arrayToCache;
   }
