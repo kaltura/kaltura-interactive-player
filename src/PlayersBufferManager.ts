@@ -272,7 +272,7 @@ export class PlayersBufferManager extends Dispatcher {
         entryId: item.entryId
       });
       this.dispatch({ type: "buffer:bufferstart", payload: item.entryId });
-      item.player = this.createPlayer(item.entryId, false , null , item.startTime);
+      item.player = this.createPlayer(item.entryId, false , false , item.startTime);
       this.trackBufferOfItem(item);
     } else {
       // has player ! find if we have duration
