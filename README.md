@@ -181,7 +181,7 @@ Iphone cannot buffer less than 30 minutes of video, meaning that it will consume
 For iphone we have disabled the pre-buffering mechanism.  
 
 ### Locked kaltura player version
-> Kaltura Player must be 0.40.7 (Relies on internal API that might not be guarantee forward comp')
+> Kaltura Player must be 0.40.8 (Relies on internal API that might not be guarantee forward comp')
 - [ ] Black-rectangle hides the player when no thumbnail - used CSS to hide it (Rapt-217)
 - [ ] __kalturaplayerdata.UIConf (Kip.ts) to read uiconf data 
 - [ ] Open a pull request
@@ -190,3 +190,4 @@ For iphone we have disabled the pre-buffering mechanism.
   
 
 
+## Licensing
