@@ -43,22 +43,22 @@
     "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
   },
   "devDependencies": {
-    "archiver": "^3.0.0",
     "@types/core-js": "^2.5.0",
+    "archiver": "^3.0.0",
     "core-js": "^2.5.7",
     "css-loader": "^1.0.0",
     "node-fetch": "^2.2.0",
-    "node-sass": "^4.9.4",
+    "node-sass": "^4.13.1",
     "sass-loader": "^7.1.0",
     "script-loader": "^0.7.2",
     "style-loader": "^0.23.1",
     "ts-loader": "^4.4.2",
     "typescript": "^3.0.1",
     "uglifyjs-webpack-plugin": "^2.0.1",
-    "webpack": "^4.20.2",
+    "webpack": "^4.41.6",
     "webpack-cli": "^3.1.0",
     "webpack-concat-plugin": "^3.0.0",
-    "webpack-dev-server": "^3.1.5",
+    "webpack-dev-server": "^3.10.3",
     "webpack-livereload-plugin": "^2.1.1"
   }
 }

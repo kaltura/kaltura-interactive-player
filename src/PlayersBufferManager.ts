@@ -8,7 +8,7 @@ interface BufferItem {
   player: KalturaPlayer;
   isReady: boolean;
   isRunning: boolean;
-  bufferingTimeoutToken: number;
+  bufferingTimeoutToken: number | null;
   entryId: string;
   startTime?: number;
 }
@@ -107,7 +107,7 @@ export class PlayersBufferManager extends Dispatcher {
         entryId: entryId,
         player: result,
         isRunning: playImmediate,
-        bufferingTimeoutToken: null,
+        bufferingTimeoutToken: NaN,
         isReady: false
       };
 
@@ -259,7 +259,7 @@ export class PlayersBufferManager extends Dispatcher {
 
   private trackBufferOfItem(item: BufferItem) {
     item.isRunning = true;
-    item.bufferingTimeoutToken = setTimeout(
+    item.bufferingTimeoutToken = window.setTimeout(
       this.executeItemBuffering.bind(this, item),
       200
     );

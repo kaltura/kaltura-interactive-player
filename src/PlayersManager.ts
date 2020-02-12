@@ -67,7 +67,7 @@ export class PlayersManager extends Dispatcher {
       setTimeout(() => {
         this.isAvailable = this.initRaptEngine();
         // responsiveness resize support
-        this.resizeInterval = setInterval(
+        this.resizeInterval = window.setInterval(
           this.handleWindowResized.bind(this),
           250
         );
