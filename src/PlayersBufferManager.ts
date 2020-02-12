@@ -501,6 +501,10 @@ export class PlayersBufferManager extends Dispatcher {
       const defaultPathNode: RaptNode = this.raptData.nodes.find(
         n => n.id === defaultPathNodeId
       );
+      // add startFrom default path
+      if(defaultPath.payload.startFrom){
+        defaultPathNode.startFrom = defaultPath.payload.startFrom
+      }
       arrayToCache.push(defaultPathNode);
     }
     // add startTime if available 
@@ -515,7 +519,6 @@ export class PlayersBufferManager extends Dispatcher {
         }
       }
     }
-    // TODO - add startFrom default path
     return arrayToCache;
   }
 }
