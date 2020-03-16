@@ -108,7 +108,8 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.client = new KipClient({
       ks: ks,
       partnerId: this.config.provider.partnerId,
-      serviceUrl: envUrl
+      serviceUrl: envUrl,
+      widgetId: this.config.provider.widgetId
     });
     this.playlistId = obj.playlistId || obj.entryId;
     this.client
@@ -128,10 +129,12 @@ class KalturaInteractiveVideo extends Dispatcher {
    * @param raptGraphData
    */
   dataLoaded(raptGraphData: object): void {
+    const config = Object.assign({}, this.config);
+    config.provider.ks = this.client.ks,
     raptGraphData["account"] = { id: this.config.provider.partnerId };
     this._data = raptGraphData;
     this.playerManager = new PlayersManager(
-      Object.assign({}, this.config),
+      config,
       this.playerLibrary,
       this.playlistId,
       raptGraphData,
