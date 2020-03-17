@@ -16,6 +16,7 @@ interface ClientConfig {
   ks?: string;
   serviceUrl?: string;
   partnerId?: string;
+  widgetId?: string;
 }
 
 /**
@@ -29,12 +30,14 @@ export class KipClient extends Dispatcher {
   clientTag: string = "rapt-v3-app";
   config: ClientConfig;
   ks: string;
+  widgetId: string;
 
   constructor(config: ClientConfig) {
     super();
     this.serviceUrl = config.serviceUrl;
     this.ks = config.ks;
     this.partnerId = config.partnerId;
+    this.widgetId = config.widgetId;
     this.config = { ks: this.ks, serviceUrl: this.serviceUrl };
   }
 
@@ -77,7 +80,7 @@ export class KipClient extends Dispatcher {
         // no given KS - we need to add a widget-session request
         multiRequest = new KalturaMultiRequest(
           new SessionStartWidgetSessionAction({
-            widgetId: "_" + this.partnerId
+            widgetId: this.widgetId || "_" + this.partnerId
           }),
           new FileAssetListAction({
             filter: filter
