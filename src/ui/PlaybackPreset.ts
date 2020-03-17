@@ -15,7 +15,7 @@ export class PlaybackPreset {
 
 
     let showFullscreenClass = "show-fullscreen";
-    if (this.deviceModel === "iPhone" ) {
+    if (this.deviceModel === "iPhone" || raptData.showFullscreen === false) {
       showFullscreenClass = "hide-fullscreen";
     }
 
@@ -80,7 +80,8 @@ export class PlaybackPreset {
     // define the app fullscreen button
     let customFullScreenButton;
 
-    if (this.deviceModel === "iPhone") {
+    if (this.deviceModel === "iPhone" || this.raptData.showFullscreen === false) {
+      // do not render the fullscreen button - return null as the button 
       customFullScreenButton = function() {
         return null;
       };
