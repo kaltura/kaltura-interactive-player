@@ -55,7 +55,8 @@ export class PlayersBufferManager extends Dispatcher {
   public getPlayer(
     entryId: string,
     playImmediate: boolean,
-    showPoster?: boolean
+    showPoster?: boolean,
+    seekTo?:number
   ): KalturaPlayer {
     log("log", "pbm_getPlayer", "executed", { entryId, playImmediate });
     if (!this._isAvailable) {
@@ -88,7 +89,7 @@ export class PlayersBufferManager extends Dispatcher {
           "player buffered in pending mode, create player",
           { entryId, trackBuffer: playImmediate }
         );
-        bufferedItem.player = this.createPlayer(entryId, playImmediate);
+        bufferedItem.player = this.createPlayer(entryId, playImmediate,false,seekTo);
         if (playImmediate) {
           this.trackBufferOfItem(bufferedItem);
         }
@@ -101,8 +102,7 @@ export class PlayersBufferManager extends Dispatcher {
         "not found in buffer list, create player for entry",
         { entryId }
       );
-      result = this.createPlayer(entryId, playImmediate, showPoster);
-
+      result = this.createPlayer(entryId, playImmediate, showPoster,seekTo);
       const newItem = {
         entryId: entryId,
         player: result,

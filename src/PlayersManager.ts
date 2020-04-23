@@ -433,10 +433,12 @@ export class PlayersManager extends Dispatcher {
                 "use buffer manager to get player for entry",
                 {entryId: newEntryId}
             );
+            const seekTo = this.checkSeekTo(nextRaptNode,this.activeNode); 
             const bufferedPlayer = this.playersBufferManager.getPlayer(
                 newEntryId,
                 shouldPlayNow,
-                this.firstPlay && !shouldPlayNow
+                this.firstPlay && !shouldPlayNow,
+                seekTo
             );
             this.firstPlay = false;
             this.updateActiveItems(bufferedPlayer, nextRaptNode);
@@ -581,7 +583,48 @@ export class PlayersManager extends Dispatcher {
             );
         }
     }
-
+    // this function checks if the current node that points to the next node is expected to have a seekto 
+    checkSeekTo(nextNode:RaptNode,currentNode:RaptNode){
+        try{
+            if(!currentNode){
+                return;
+            }
+            const onEnded = currentNode.onEnded;
+            if(onEnded){
+                const defaultPathWithSeekTo:any = onEnded.find((item: any) => {
+                    if(item.type === "project:jump" && item.payload &&  item.payload.startFrom){
+                        return true;
+                    }
+                    return false;
+                })
+                if(defaultPathWithSeekTo && nextNode.id === defaultPathWithSeekTo.destination){
+                    return defaultPathWithSeekTo.payload.startFrom;
+                }
+            }
+            // we got here - this is not a defaultPath - we need to find the relevant hotspot and see if it has startFrom 
+            const currentNodeHotspots = this.raptData.hotspots.filter(hotspot => hotspot.nodeId === currentNode.id);
+            
+            // find the hotspot that points to the new node 
+            for(const hs of currentNodeHotspots){
+                const onClick = hs.onClick;
+                if(onClick.length){
+                    // found a click = see of this click has a point to the current
+                    const clickData = onClick.find((item: any) => {
+                        return (item.type === "project:jump" && item.payload && item.payload.startFrom 
+                        && item.payload.destination && item.payload.destination === nextNode.id )
+    
+                    })
+                    if(clickData){
+                        return clickData.payload.startFrom;
+                    }
+                }
+            }
+            return 0;
+        }catch(e){
+            return 0
+        }
+    }
+    
     addListenersToPlayer() {
         if (this.activePlayer && this.activePlayer.player) {
             const player: any = this.activePlayer.player;
