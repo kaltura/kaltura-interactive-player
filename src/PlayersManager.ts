@@ -130,10 +130,12 @@ export class PlayersManager extends Dispatcher {
             model.nodeId = this.activeNode.id;
             model.entryId = this.activeNode.entryId;
             switch (model.eventType) {
+                case 14:
+                    model.eventType = 99; // on event 14 (video-end) convert to event 99. ON RAPT CONTEXT ONLY!            
+                    break;
                 case 11:
                 case 12:
                 case 13:
-                case 14:
                     return false; // don't send quartiles events
                 case 1:
                     // send this once 
