@@ -716,7 +716,12 @@ export class PlayersManager extends Dispatcher {
                 delete tmpModel[field];
             });
         }
-        tmpModel.nodeId = this.activeNode.id;
+        if(this.activeNode.id){
+            tmpModel.nodeId = this.activeNode.id;
+        }
+        if(this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime){
+            tmpModel.position = this.activePlayer.player.currentTime;
+        }
         this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
     }
 }
