@@ -130,10 +130,12 @@ export class PlayersManager extends Dispatcher {
             model.nodeId = this.activeNode.id;
             model.entryId = this.activeNode.entryId;
             switch (model.eventType) {
+                case 14:
+                    model.eventType = 99; // on event 14 (video-end) convert to event 99. ON RAPT CONTEXT ONLY!            
+                    break;
                 case 11:
                 case 12:
                 case 13:
-                case 14:
                     return false; // don't send quartiles events
                 case 1:
                     // send this once 
@@ -382,6 +384,9 @@ export class PlayersManager extends Dispatcher {
                 params.hotspotId = this.clickedHotspotId;
                 // clear saved hotspotId
                 this.clickedHotspotId = undefined;
+            }
+            if(this.activeNode.id){
+                params.nodeId = this.activeNode.id;
             }
             this.sendAnalytics(48, params);
         }
@@ -757,7 +762,9 @@ export class PlayersManager extends Dispatcher {
                 delete tmpModel[field];
             });
         }
-        tmpModel.nodeId = this.activeNode.id;
+        if(this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime){
+            tmpModel.position = this.activePlayer.player.currentTime;
+        }
         this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
     }
 }
