@@ -385,6 +385,9 @@ export class PlayersManager extends Dispatcher {
                 // clear saved hotspotId
                 this.clickedHotspotId = undefined;
             }
+            if(this.activeNode.id){
+                params.nodeId = this.activeNode.id;
+            }
             this.sendAnalytics(48, params);
         }
 
@@ -715,9 +718,6 @@ export class PlayersManager extends Dispatcher {
             fieldsToRemove.forEach(field => {
                 delete tmpModel[field];
             });
-        }
-        if(this.activeNode.id){
-            tmpModel.nodeId = this.activeNode.id;
         }
         if(this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime){
             tmpModel.position = this.activePlayer.player.currentTime;
