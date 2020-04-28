@@ -606,7 +606,7 @@ export class PlayersManager extends Dispatcher {
                 return;
             }
             const onEnded = currentNode.onEnded;
-            if (onEnded) {
+            if (onEnded && this.endFlag) {
                 const defaultPathWithSeekTo: any = onEnded.find((item: any) => {
                     if (item.type === "project:jump" && item.payload && item.payload.startFrom) {
                         return true;
