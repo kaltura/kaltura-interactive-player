@@ -153,7 +153,6 @@ export class PlayersFactory extends Dispatcher {
     divName: string,
     playImmediate: boolean = false,
     showPoster: boolean = false,
-    startTime?: number 
   ): object {
     // clone the base config
     let newConf: RaptConfig = Object.assign({}, this.config);
