@@ -50,6 +50,7 @@ export class PlayersManager extends Dispatcher {
     private playerWidth: number = NaN;
     private playerHeight: number = NaN;
     private resizeInterval: number = NaN;
+    private endFlag: boolean = false;
 
     constructor(
         private config: any,
@@ -385,7 +386,7 @@ export class PlayersManager extends Dispatcher {
                 // clear saved hotspotId
                 this.clickedHotspotId = undefined;
             }
-            if(this.activeNode.id){
+            if (this.activeNode.id) {
                 params.nodeId = this.activeNode.id;
             }
             this.sendAnalytics(48, params);
@@ -438,10 +439,12 @@ export class PlayersManager extends Dispatcher {
                 "use buffer manager to get player for entry",
                 {entryId: newEntryId}
             );
+            const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode);
             const bufferedPlayer = this.playersBufferManager.getPlayer(
                 newEntryId,
                 shouldPlayNow,
-                this.firstPlay && !shouldPlayNow
+                this.firstPlay && !shouldPlayNow,
+                seekTo
             );
             this.firstPlay = false;
             this.updateActiveItems(bufferedPlayer, nextRaptNode);
@@ -481,10 +484,19 @@ export class PlayersManager extends Dispatcher {
                     );
                 }
                 this.firstPlay = false;
+                // grab seekto before updateActiveItems
+                const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode);
                 this.updateActiveItems(this.activePlayer, nextRaptNode);
                 if (this.config.rapt.syncVideos && currentPlayerPosition) {
                     this.activePlayer.player.configure({playback: {startTime: currentPlayerPosition}});
                 }
+                // handle seekTo logic 
+                if (seekTo) {
+                    this.activePlayer.player.configure({playback: {startTime: seekTo}});
+                } else {
+                    this.activePlayer.player.configure({playback: {startTime: 0}});
+                }
+
                 this.activePlayer.player.loadMedia({
                     entryId: newEntryId
                 });
@@ -587,6 +599,48 @@ export class PlayersManager extends Dispatcher {
         }
     }
 
+    // this function checks if the current node that points to the next node is expected to have a seekto 
+    checkSeekTo(nextNode: RaptNode, currentNode: RaptNode) {
+        try {
+            if (!currentNode) {
+                return;
+            }
+            const onEnded = currentNode.onEnded;
+            if (onEnded && this.endFlag) {
+                const defaultPathWithSeekTo: any = onEnded.find((item: any) => {
+                    if (item.type === "project:jump" && item.payload && item.payload.startFrom) {
+                        return true;
+                    }
+                    return false;
+                })
+                if (defaultPathWithSeekTo && nextNode.id === defaultPathWithSeekTo.payload.destination) {
+                    return defaultPathWithSeekTo.payload.startFrom;
+                }
+            }
+            // we got here - this is not a defaultPath - we need to find the relevant hotspot and see if it has startFrom 
+            const currentNodeHotspots = this.raptData.hotspots.filter(hotspot => hotspot.nodeId === currentNode.id);
+
+            // find the hotspot that points to the new node 
+            for (const hs of currentNodeHotspots) {
+                const onClick = hs.onClick;
+                if (onClick.length) {
+                    // found a click = see of this click has a point to the current
+                    const clickData = onClick.find((item: any) => {
+                        return (item.type === "project:jump" && item.payload && item.payload.startFrom
+                            && item.payload.destination && item.payload.destination === nextNode.id)
+
+                    })
+                    if (clickData) {
+                        return clickData.payload.startFrom;
+                    }
+                }
+            }
+            return 0;
+        } catch (e) {
+            return 0
+        }
+    }
+
     addListenersToPlayer() {
         if (this.activePlayer && this.activePlayer.player) {
             const player: any = this.activePlayer.player;
@@ -668,6 +722,14 @@ export class PlayersManager extends Dispatcher {
 
     // Rapt interface - don't change signature //
     event(event: any) {
+
+        if (event.type === "node:ended") {
+            this.endFlag = true;
+        }
+        if (event.type === "node:enter") {
+            this.endFlag = false;
+        }
+
         if (event.type === "hotspot:click") {
             // save the hotspot id so we can send it to analytics
             this.clickedHotspotId = event.payload.hotspot.id;
@@ -719,7 +781,7 @@ export class PlayersManager extends Dispatcher {
                 delete tmpModel[field];
             });
         }
-        if(this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime){
+        if (this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime) {
             tmpModel.position = this.activePlayer.player.currentTime;
         }
         this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
