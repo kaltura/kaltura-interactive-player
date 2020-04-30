@@ -277,7 +277,7 @@ export class PlayersBufferManager extends Dispatcher {
                 {entryId: item.entryId}
             );
             item.isRunning = false;
-            item.isReady = false; 
+            item.isReady = true; 
             item.bufferingTimeoutToken = null;
             this.dispatch({type: "buffer:bufferend", payload: item.entryId});
             this.handleBufferList();
