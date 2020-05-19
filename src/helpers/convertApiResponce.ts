@@ -149,15 +149,15 @@ const makeSkins = () => {
   };
 };
 
-const makeAcconunt = (partnerId) => {
+const makeAcconunt = (newData) => {
   return {
     account: {
-      id: partnerId,
+      id: get(newData, 'account.id', ""),
     },
   };
 };
 
-const convertApiResponce = (newData, partnerId) => {
+const convertApiResponce = (newData) => {
   const [nodes, hotspots] = makeNodesAndHotspots(newData);
   const result = {
     ...makeVersion(),
@@ -165,7 +165,7 @@ const convertApiResponce = (newData, partnerId) => {
     ...makeCues(),
     ...makeFonts(),
     ...makeSkins(),
-    ...makeAcconunt(partnerId),
+    ...makeAcconunt(newData),
     nodes,
     hotspots,
   };

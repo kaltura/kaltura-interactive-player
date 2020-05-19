@@ -5,6 +5,7 @@ import { Dispatcher, KivEvent } from "./helpers/Dispatcher";
 import { PlayersDomManager } from "./PlayersDomManager";
 import { enable as enableLog, log } from "./helpers/logger";
 import { VERSION } from "../version";
+import convertApiResponce from "./helpers/convertApiResponce";
 
 const API_EVENTS = [
   "browser:hidden",
@@ -114,7 +115,11 @@ class KalturaInteractiveVideo extends Dispatcher {
     this.playlistId = obj.playlistId || obj.entryId;
     this.client
       .loadRaptData(this.playlistId)
-      .then(graphData => {
+      .then((graphData) => {
+        const { hotspots }: any = graphData;
+        if (!hotspots) {
+          graphData = convertApiResponce(graphData);
+        }
         this.dataLoaded(graphData);
       })
       .catch((err: string) => {

@@ -11,6 +11,10 @@ import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-clien
 import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
 import { Dispatcher } from "./helpers/Dispatcher";
 import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
+import { PlaylistGetAction } from "../node_modules/kaltura-typescript-client/api/types/PlaylistGetAction";
+import { InteractivityGetAction } from "../node_modules/kaltura-typescript-client/api/types/InteractivityGetAction";
+import { KalturaPlaylist } from "kaltura-typescript-client/api/types/KalturaPlaylist";
+import { KalturaPlaylistType } from "kaltura-typescript-client/api/types/KalturaPlaylistType";
 
 interface ClientConfig {
   ks?: string;
@@ -92,6 +96,9 @@ export class KipClient extends Dispatcher {
         multiRequest = new KalturaMultiRequest(
           new FileAssetListAction({
             filter: filter
+          }),
+          new PlaylistGetAction({
+            id: raptPlaylistId
           })
         );
       }
@@ -103,34 +110,52 @@ export class KipClient extends Dispatcher {
             reject(data[0].error);
             return;
           }
-          let fileAssetObjects: any;
-          if (data.length === 2) {
-            // this was a request with a KS request - extract the KS, set it to the client and then continue with data
-            if (data[0].error) {
-              reject(
-                "Error with generating widget session KS for pid " +
-                  this.partnerId
-              );
-            }
-
-            if (!data[1].result.objects || !data[1].result.objects.length) {
-              reject("Missing data. Could not retrieve attached file assets for playlist "+raptPlaylistId);
-            }
-
-            this.ks = data[0].result.ks;
-            this.kClient.setDefaultRequestOptions({ ks: this.ks });
-            fileAssetObjects = data[1].result.objects;
+          if (data.length === 2 && data[1].result instanceof KalturaPlaylist && data[1].result.playlistType === KalturaPlaylistType.path) {
+            const interactivityRequest = new InteractivityGetAction({
+              entryId: raptPlaylistId
+            });
+            this.kClient.request(interactivityRequest).then(
+              (data: any) => {
+                if (!data.data) {
+                  reject("Missing data. Could not retrieve interactivity data for playlist "+raptPlaylistId);
+                }
+                resolve(JSON.parse(data.data))
+              },
+              () => {
+                reject(
+                  "Got an error during getting interactivity data for playlist "+raptPlaylistId
+                );
+              });
           } else {
-            // Just a FileAssetList request
-            fileAssetObjects = data[0].result.objects;
+            let fileAssetObjects: any;
+            if (data.length === 2 && !(data[1].result instanceof KalturaPlaylist)) {
+              // this was a request with a KS request - extract the KS, set it to the client and then continue with data
+              if (data[0].error) {
+                reject(
+                  "Error with generating widget session KS for pid " +
+                    this.partnerId
+                );
+              }
+  
+              if (!data[1].result.objects || !data[1].result.objects.length) {
+                reject("Missing data. Could not retrieve attached file assets for playlist "+raptPlaylistId);
+              }
+  
+              this.ks = data[0].result.ks;
+              this.kClient.setDefaultRequestOptions({ ks: this.ks });
+              fileAssetObjects = data[1].result.objects;
+            } else {
+              // Just a FileAssetList request
+              fileAssetObjects = data[0].result.objects;
+            }
+            const graphDataFileAsset: any = fileAssetObjects.find(
+              (item: KalturaFileAsset) => item.systemName === "GRAPH_DATA"
+            );
+            // get the graph-data file content
+            this.serveAssetById(graphDataFileAsset.id).then(res => {
+              resolve(JSON.parse(res));
+            });
           }
-          const graphDataFileAsset: any = fileAssetObjects.find(
-            (item: KalturaFileAsset) => item.systemName === "GRAPH_DATA"
-          );
-          // get the graph-data file content
-          this.serveAssetById(graphDataFileAsset.id).then(res => {
-            resolve(JSON.parse(res));
-          });
         },
         err => {
           if (err instanceof KalturaClientException) {
