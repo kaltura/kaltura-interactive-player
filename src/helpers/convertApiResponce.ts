@@ -35,13 +35,14 @@ const makeSettings = (newData) => {
 
 const makeVersion = () => {
   return {
-    version: "1.0.0-rc.4",
+    version: "2.0.0",
   };
 };
 
 const makeNodesAndHotspots = (newData) => {
   const nodes = [];
   const hotspots = [];
+  const cues = [];
   get(newData, "nodes", []).forEach((node) => {
     let onEnded = [
       {
@@ -50,6 +51,7 @@ const makeNodesAndHotspots = (newData) => {
       },
     ];
     const prefetchNodeIds = [];
+    const duration = get(node, 'pathData.duration', 0);
     get(node, "interactions", []).forEach((interaction) => {
       const behavior = get(interaction, "data.behavior", {});
       if (
@@ -66,7 +68,14 @@ const makeNodesAndHotspots = (newData) => {
             },
           },
         ];
-      } else if ("@@core/hotspot") {
+      } else if (interaction.type === "@@core/cue") {
+        cues.push({
+          at: interaction.startTime / duration,
+          customData: get(interaction, 'data.customData', ''),
+          id: interaction.id,
+          nodeId: node.id,
+        });
+      } else if (interaction.type === "@@core/hotspot") {
         const data = get(interaction, "data", {});
         const label = get(data, "text.label", "");
         const hotspot: any = {
@@ -74,8 +83,8 @@ const makeNodesAndHotspots = (newData) => {
           name: label,
           nodeId: node.id,
           label,
-          showAt: interaction.startTime,
-          hideAt: interaction.endTime,
+          showAt: interaction.startTime / duration,
+          hideAt: interaction.endTime / duration,
           style: data.style || {},
           position: data.position || {},
           customData: get(interaction, "pathData.customData", null),
@@ -128,24 +137,22 @@ const makeNodesAndHotspots = (newData) => {
       startFrom: node.startTime
     });
   });
-  return [nodes, hotspots];
+  return [nodes, hotspots, cues];
 };
 
-const makeCues = () => {
+const makeFonts = (newData) => {
   return {
-    cues: [],
+    fonts: get(newData, 'pathData.fonts', []),
   };
 };
 
-const makeFonts = () => {
+const makeSkins = (newData) => {
+  const result = {};
+  get(newData, 'pathData.skins', []).forEach((skin) => {
+    result[skin.id] = skin;
+  });
   return {
-    fonts: [],
-  };
-};
-
-const makeSkins = () => {
-  return {
-    __skins: {},
+    __skins: result,
   };
 };
 
@@ -158,16 +165,16 @@ const makeAcconunt = (newData) => {
 };
 
 const convertApiResponce = (newData) => {
-  const [nodes, hotspots] = makeNodesAndHotspots(newData);
+  const [nodes, hotspots, cues] = makeNodesAndHotspots(newData);
   const result = {
     ...makeVersion(),
     ...makeSettings(newData),
-    ...makeCues(),
-    ...makeFonts(),
-    ...makeSkins(),
+    ...makeFonts(newData),
+    ...makeSkins(newData),
     ...makeAcconunt(newData),
     nodes,
     hotspots,
+    cues
   };
   return result;
 };
