@@ -80,6 +80,7 @@ export class KipClient extends Dispatcher {
 
       let multiRequest: KalturaMultiRequest;
 
+      // NO KS given - build a multi request with 1st action to retrieve a KS 
       if (!this.config.ks) {
         // no given KS - we need to add a widget-session request
         multiRequest = new KalturaMultiRequest(
@@ -110,6 +111,7 @@ export class KipClient extends Dispatcher {
             reject(data[0].error);
             return;
           }
+          // TODO - handle no-ks with new path data later.
           if (data.length === 2 && data[1].result instanceof KalturaPlaylist && data[1].result.playlistType === KalturaPlaylistType.path) {
             const interactivityRequest = new InteractivityGetAction({
               entryId: raptPlaylistId

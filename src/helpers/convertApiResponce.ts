@@ -23,7 +23,7 @@ const get = (
   return current;
 };
 
-const makeSettings = (newData) => {
+const addSettings = (newData) => {
   return {
     settings: {
       startNodeId: get(newData, "pathData.startNodeId", ""),
@@ -33,9 +33,9 @@ const makeSettings = (newData) => {
   };
 };
 
-const makeVersion = () => {
+const addVersion = () => {
   return {
-    version: "2.0.0",
+    version: "1.0.0-rc.4",
   };
 };
 
@@ -140,13 +140,13 @@ const makeNodesAndHotspots = (newData) => {
   return [nodes, hotspots, cues];
 };
 
-const makeFonts = (newData) => {
+const addFonts = (newData) => {
   return {
     fonts: get(newData, 'pathData.fonts', []),
   };
 };
 
-const makeSkins = (newData) => {
+const addSkins = (newData) => {
   const result = {};
   get(newData, 'pathData.skins', []).forEach((skin) => {
     result[skin.id] = skin;
@@ -156,7 +156,7 @@ const makeSkins = (newData) => {
   };
 };
 
-const makeAcconunt = (newData) => {
+const addAcconunt = (newData) => {
   return {
     account: {
       id: get(newData, 'account.id', ""),
@@ -165,18 +165,22 @@ const makeAcconunt = (newData) => {
 };
 
 const convertApiResponce = (newData) => {
-  const [nodes, hotspots, cues] = makeNodesAndHotspots(newData);
-  const result = {
-    ...makeVersion(),
-    ...makeSettings(newData),
-    ...makeFonts(newData),
-    ...makeSkins(newData),
-    ...makeAcconunt(newData),
-    nodes,
-    hotspots,
-    cues
-  };
-  return result;
+  try{
+    const [nodes, hotspots, cues] = makeNodesAndHotspots(newData);
+    const result = {
+      ...addVersion(),
+      ...addSettings(newData),
+      ...addFonts(newData),
+      ...addSkins(newData),
+      ...addAcconunt(newData),
+      nodes,
+      hotspots,
+      cues
+    };
+    return result;
+  }catch(e){
+    console.error("Failed to convert data",e,newData); 
+  }
 };
 
 export default convertApiResponce;
