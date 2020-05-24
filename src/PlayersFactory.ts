@@ -21,7 +21,11 @@ export class KalturaPlayer {
     }
 
     this.isDestroyed = true;
-    this.player.destroy();
+    try {
+      this.player.destroy();
+    }catch(e){
+      log("log", "pf_destroy", "could not destroy ",this.player);
+    }
 
     const parentElement = this.container.parentElement;
     if (parentElement) {
