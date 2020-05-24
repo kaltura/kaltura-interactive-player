@@ -40,7 +40,7 @@
     "build:dev": "webpack"
   },
   "dependencies": {
-    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-14.3.0-v20180717-150817.tgz"
+    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-7.0.1-v20200519-172017.tgz"
   },
   "devDependencies": {
     "@types/core-js": "^2.5.0",
