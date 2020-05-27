@@ -364,7 +364,16 @@ export class PlayersBufferManager extends Dispatcher {
                     item.player.player.Event.Core.FIRST_PLAY,
                     e => this.playersFactory.onFirstPlay(e)
                 );
-                item.player.destroy();
+                try {
+                    item.player.destroy();
+                } catch (e) {
+                    log(
+                    "log",
+                    "pbm_destroyBufferedItems",
+                    "Failed to destroy player ",
+                    {entryId: item.entryId , error : e}
+                );
+                }
             }
 
             if (item.bufferingTimeoutToken) {
