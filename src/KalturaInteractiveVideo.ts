@@ -106,10 +106,15 @@ class KalturaInteractiveVideo extends Dispatcher {
       envUrl = this.config.provider.env.serviceUrl.split("/api_v3")[0];
     }
 
+    if(this.config.rapt && this.config.rapt.capabilityCheck){
+      console.warn("Internal Testing flag of hybrid Rapt entry is enabled in Rapt player");
+    }
+
     this.client = new KipClient({
       ks: ks,
       partnerId: this.config.provider.partnerId,
       serviceUrl: envUrl,
+      capabilityCheck: this.config.rapt.capabilityCheck,
       widgetId: this.config.provider.widgetId
     });
     this.playlistId = obj.playlistId || obj.entryId;
