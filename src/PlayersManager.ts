@@ -389,6 +389,7 @@ export class PlayersManager extends Dispatcher {
             if (this.activeNode.id) {
                 params.nodeId = this.activeNode.id;
             }
+            // node play = event 48!
             this.sendAnalytics(48, params);
         }
 
@@ -722,7 +723,6 @@ export class PlayersManager extends Dispatcher {
 
     // Rapt interface - don't change signature //
     event(event: any) {
-
         if (event.type === "node:ended") {
             this.endFlag = true;
         }

@@ -1,3 +1,5 @@
+import { log } from "../helpers/logger";
+
 const get = (
   obj: Record<string, any>,
   path: string,
@@ -51,7 +53,7 @@ const makeNodesAndHotspots = (newData) => {
       },
     ];
     const prefetchNodeIds = [];
-    const duration = get(node, 'pathData.duration', 0);
+    const duration = get(node, 'pathData.msDuration', 0);
     get(node, "interactions", []).forEach((interaction) => {
       const behavior = get(interaction, "data.behavior", {});
       if (
@@ -64,13 +66,13 @@ const makeNodesAndHotspots = (newData) => {
             type: "project:jump",
             payload: {
               destination: behavior.nodeId,
-              startFrom: behavior.startTime || 0,
+              startFrom: behavior.startTime ? behavior.startTime/1000 : 0,
             },
           },
         ];
       } else if (interaction.type === "@@core/cue") {
         cues.push({
-          at: interaction.startTime / duration,
+          at: interaction.startTime / 1000 / duration,
           customData: get(interaction, 'data.customData', ''),
           id: interaction.id,
           nodeId: node.id,
@@ -78,15 +80,16 @@ const makeNodesAndHotspots = (newData) => {
       } else if (interaction.type === "@@core/hotspot") {
         const data = get(interaction, "data", {});
         const label = get(data, "text.label", "");
+        
         const hotspot: any = {
           id: interaction.id,
           name: label,
           nodeId: node.id,
           label,
-          showAt: interaction.startTime / duration,
-          hideAt: interaction.endTime / duration,
-          style: data.style || {},
-          position: data.position || {},
+          showAt: interaction.startTime ? interaction.startTime / duration : 0,
+          hideAt: interaction.endTime ? interaction.endTime / duration : 0,
+          style: data.styles || {},
+          position: data.position ? convertPosition(data.position) : {},
           customData: get(interaction, "pathData.customData", null),
           onClick: [],
         };
@@ -104,7 +107,7 @@ const makeNodesAndHotspots = (newData) => {
               type: "project:jump",
               payload: {
                 destination: behavior.nodeId,
-                startFrom: behavior.startTime || 0,
+                startFrom: behavior.startTime ? behavior.startTime / 1000  : 0,
               },
             },
           ];
@@ -134,11 +137,22 @@ const makeNodesAndHotspots = (newData) => {
       entryId: node.entryId,
       onEnded,
       prefetchNodeIds,
-      startFrom: node.startTime
+      startFrom: node.startTime / 1000
     });
   });
   return [nodes, hotspots, cues];
 };
+
+
+const convertPosition = (position) => {
+  const newPosition = {...position};
+  newPosition.width = 720 * position.width;
+  newPosition.height = 405 * position.height;
+  newPosition.top = 405 * position.top;
+  newPosition.left = 720 * position.left;
+  return newPosition
+};
+
 
 const addFonts = (newData) => {
   return {
@@ -165,7 +179,9 @@ const addAcconunt = (newData) => {
 };
 
 const convertApiResponce = (newData) => {
+
   try{
+    log("log","Converting Vegiterians ","Original Data:" ,newData );
     const [nodes, hotspots, cues] = makeNodesAndHotspots(newData);
     const result = {
       ...addVersion(),

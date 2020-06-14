@@ -21,6 +21,7 @@ interface ClientConfig {
   serviceUrl?: string;
   partnerId?: string;
   widgetId?: string;
+  capabilityCheck?: boolean;
 }
 
 /**
@@ -35,6 +36,7 @@ export class KipClient extends Dispatcher {
   config: ClientConfig;
   ks: string;
   widgetId: string;
+  capabilityCheck: boolean;
 
   constructor(config: ClientConfig) {
     super();
@@ -42,6 +44,7 @@ export class KipClient extends Dispatcher {
     this.ks = config.ks;
     this.partnerId = config.partnerId;
     this.widgetId = config.widgetId;
+    this.capabilityCheck = config.capabilityCheck;
     this.config = { ks: this.ks, serviceUrl: this.serviceUrl };
   }
 
@@ -108,11 +111,19 @@ export class KipClient extends Dispatcher {
           // API error
           if (data[0].error) {
             console.log(data[0].error);
-            reject(data[0].error);
-            return;
+            reject(data[0].error); 
+            return; 
           }
           // TODO - handle no-ks with new path data later.
-          if (data.length === 2 && data[1].result instanceof KalturaPlaylist && data[1].result.playlistType === KalturaPlaylistType.path) {
+          if ( data.length === 2 && data[1].result instanceof KalturaPlaylist 
+                &&  (data[1].result.playlistType === KalturaPlaylistType.path || // path entry || capabilities check   
+                    (data[1].result.capabilities.includes("interactivity.interactivity") && this.capabilityCheck )  
+              )){
+              // warn if capabilityCheck is set to true
+              if(data[1].result.capabilities.includes("interactivity.interactivity") && this.capabilityCheck){
+                console.warn("Provided entry is hybrid Rapt entry. Running Rapt Player in test mode with interactivities");
+              }
+              
             const interactivityRequest = new InteractivityGetAction({
               entryId: raptPlaylistId
             });
