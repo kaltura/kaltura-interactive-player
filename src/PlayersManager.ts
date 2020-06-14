@@ -738,6 +738,7 @@ export class PlayersManager extends Dispatcher {
             // track hotspot click
             const additionalData = {
                 entryId: this.activeNode.entryId,
+                nodeId: this.activeNode.id,
                 target: event.payload.href,
                 hotspotId: event.context.payload.hotspot.id
             };
@@ -785,7 +786,6 @@ export class PlayersManager extends Dispatcher {
         if (this.activePlayer && this.activePlayer.player && this.activePlayer.player.currentTime) {
             tmpModel.position = this.activePlayer.player.currentTime;
         }
-        console.log(">>>> SENDING",tmpModel);
         this.activePlayer.player.plugins.kava.sendAnalytics(tmpModel);
     }
 }
