@@ -377,7 +377,7 @@ export class PlayersManager extends Dispatcher {
 
         if (this.activeNode) {
             let params: any = {
-                entryId: newEntryId,
+                entryId: this.activeNode.entryId,
                 fromNodeId: this.activeNode.id,
                 toNodeId: nextRaptNode.id
             };
@@ -737,6 +737,8 @@ export class PlayersManager extends Dispatcher {
         if (event.type === "browser:open") {
             // track hotspot click
             const additionalData = {
+                entryId: this.activeNode.entryId,
+                nodeId: this.activeNode.id,
                 target: event.payload.href,
                 hotspotId: event.context.payload.hotspot.id
             };
