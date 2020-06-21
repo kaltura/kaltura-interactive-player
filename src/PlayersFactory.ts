@@ -188,7 +188,7 @@ export class PlayersFactory extends Dispatcher {
     newConf.playback = playback;
     if (this.config.rapt.initialBitrate) {
       log(
-        "log",
+        "error",
         "pf_getPlayerConf",
         "setting initialBitrate to " + this.config.rapt.initialBitrate
       );
@@ -199,7 +199,7 @@ export class PlayersFactory extends Dispatcher {
         }
       };
     }
-
+    
     try {
       let uis;
       if (showPoster) {
@@ -217,9 +217,14 @@ export class PlayersFactory extends Dispatcher {
         ];
       }
       newConf.ui = newConf.ui || {};
+      newConf.ui.components = {
+        fullscreen: {
+          disableDoubleClick: true
+        }
+      },
       newConf.ui.customPreset = uis;
     } catch (e) {
-      log("log", "pf_getPlayerConf", "failed applying V3 custom preset");
+      log("error", "pf_getPlayerConf", "failed applying V3 custom preset");
     }
     delete newConf.rapt;
     return newConf;

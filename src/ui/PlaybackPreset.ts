@@ -118,7 +118,7 @@ export class PlaybackPreset {
     this.presetWithPlayButton = function(props: any) {
       //if U change this change the other preset
       return h(
-        "div",
+        "div", null ,
         h(c.KeyboardControl, { player: props.player, config: props.config }),
         h(c.Loading, { player: props.player }),
         h(
@@ -135,7 +135,7 @@ export class PlaybackPreset {
     this.preset = function(props: any) {
       //if U change this change the other preset
       return h(
-        "div",
+        "div", null,
         h(c.KeyboardControl, { player: props.player, config: props.config }),
         h(c.Loading, { player: props.player }),
         h(
