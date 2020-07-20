@@ -3,7 +3,7 @@ import {
   KalturaClient,
   KalturaClientException,
   KalturaMultiRequest,
-  KalturaRequestOptions
+  KalturaRequestOptions,
 } from "kaltura-typescript-client";
 import { KalturaFileAsset } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAsset";
 import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/api/types/FileAssetListAction";
@@ -15,6 +15,15 @@ import { PlaylistGetAction } from "../node_modules/kaltura-typescript-client/api
 import { InteractivityGetAction } from "../node_modules/kaltura-typescript-client/api/types/InteractivityGetAction";
 import { KalturaPlaylist } from "kaltura-typescript-client/api/types/KalturaPlaylist";
 import { KalturaPlaylistType } from "kaltura-typescript-client/api/types/KalturaPlaylistType";
+import {
+  KalturaInteractivityDataFilter,
+  KalturaInteractivityDataFilterArgs,
+} from "kaltura-typescript-client/api/types/KalturaInteractivityDataFilter";
+import {
+  KalturaInteractivityRootFilter,
+  KalturaInteractivityRootFilterArgs,
+} from "kaltura-typescript-client/api/types/KalturaInteractivityRootFilter";
+import { KalturaInteractivityDataFieldsFilterArgs } from "kaltura-typescript-client/api/types/KalturaInteractivityDataFieldsFilter";
 
 interface ClientConfig {
   ks?: string;
@@ -58,10 +67,10 @@ export class KipClient extends Dispatcher {
     return new KalturaClient(
       {
         endpointUrl: serviceUrl,
-        clientTag: clientTag
+        clientTag: clientTag,
       },
       {
-        ks: ks
+        ks: ks,
       }
     );
   }
@@ -83,15 +92,15 @@ export class KipClient extends Dispatcher {
 
       let multiRequest: KalturaMultiRequest;
 
-      // NO KS given - build a multi request with 1st action to retrieve a KS 
+      // NO KS given - build a multi request with 1st action to retrieve a KS
       if (!this.config.ks) {
         // no given KS - we need to add a widget-session request
         multiRequest = new KalturaMultiRequest(
           new SessionStartWidgetSessionAction({
-            widgetId: this.widgetId || "_" + this.partnerId
+            widgetId: this.widgetId || "_" + this.partnerId,
           }),
           new FileAssetListAction({
-            filter: filter
+            filter: filter,
           }).setRequestOptions(
             new KalturaRequestOptions({}).setDependency(["ks", 0, "ks"])
           )
@@ -99,10 +108,10 @@ export class KipClient extends Dispatcher {
       } else {
         multiRequest = new KalturaMultiRequest(
           new FileAssetListAction({
-            filter: filter
+            filter: filter,
           }),
           new PlaylistGetAction({
-            id: raptPlaylistId
+            id: raptPlaylistId,
           })
         );
       }
@@ -111,37 +120,62 @@ export class KipClient extends Dispatcher {
           // API error
           if (data[0].error) {
             console.log(data[0].error);
-            reject(data[0].error); 
-            return; 
+            reject(data[0].error);
+            return;
           }
           // TODO - handle no-ks with new path data later.
-          if ( data.length === 2 && data[1].result instanceof KalturaPlaylist 
-                &&  (data[1].result.playlistType === KalturaPlaylistType.path || // path entry || capabilities check   
-                    (data[1].result.capabilities.includes("interactivity.interactivity") && this.capabilityCheck )  
-              )){
-              // warn if capabilityCheck is set to true
-              if(data[1].result.capabilities.includes("interactivity.interactivity") && this.capabilityCheck){
-                console.warn("Provided entry is hybrid Rapt entry. Running Rapt Player in test mode with interactivities");
-              }
-              
+          if (
+            data.length === 2 &&
+            data[1].result instanceof KalturaPlaylist &&
+            (data[1].result.playlistType === KalturaPlaylistType.path || // path entry || capabilities check
+              (data[1].result.capabilities.includes(
+                "interactivity.interactivity"
+              ) &&
+                this.capabilityCheck))
+          ) {
+            // warn if capabilityCheck is set to true
+            if (
+              data[1].result.capabilities.includes(
+                "interactivity.interactivity"
+              ) &&
+              this.capabilityCheck
+            ) {
+              console.warn(
+                "Provided entry is hybrid Rapt entry. Running Rapt Player in test mode with interactivities"
+              );
+            }
+
+            const dataFilter = new KalturaInteractivityDataFilter();
+            dataFilter.rootFilter = new KalturaInteractivityRootFilter({
+              fields: "nodes,pathData",
+            });
             const interactivityRequest = new InteractivityGetAction({
-              entryId: raptPlaylistId
+              entryId: raptPlaylistId,
+              dataFilter: dataFilter,
             });
             this.kClient.request(interactivityRequest).then(
               (data: any) => {
                 if (!data.data) {
-                  reject("Missing data. Could not retrieve interactivity data for playlist "+raptPlaylistId);
+                  reject(
+                    "Missing data. Could not retrieve interactivity data for playlist " +
+                      raptPlaylistId
+                  );
                 }
-                resolve(JSON.parse(data.data))
+                resolve(JSON.parse(data.data));
               },
               () => {
                 reject(
-                  "Got an error during getting interactivity data for playlist "+raptPlaylistId
+                  "Got an error during getting interactivity data for playlist " +
+                    raptPlaylistId
                 );
-              });
+              }
+            );
           } else {
             let fileAssetObjects: any;
-            if (data.length === 2 && !(data[1].result instanceof KalturaPlaylist)) {
+            if (
+              data.length === 2 &&
+              !(data[1].result instanceof KalturaPlaylist)
+            ) {
               // this was a request with a KS request - extract the KS, set it to the client and then continue with data
               if (data[0].error) {
                 reject(
@@ -149,11 +183,14 @@ export class KipClient extends Dispatcher {
                     this.partnerId
                 );
               }
-  
+
               if (!data[1].result.objects || !data[1].result.objects.length) {
-                reject("Missing data. Could not retrieve attached file assets for playlist "+raptPlaylistId);
+                reject(
+                  "Missing data. Could not retrieve attached file assets for playlist " +
+                    raptPlaylistId
+                );
               }
-  
+
               this.ks = data[0].result.ks;
               this.kClient.setDefaultRequestOptions({ ks: this.ks });
               fileAssetObjects = data[1].result.objects;
@@ -165,12 +202,12 @@ export class KipClient extends Dispatcher {
               (item: KalturaFileAsset) => item.systemName === "GRAPH_DATA"
             );
             // get the graph-data file content
-            this.serveAssetById(graphDataFileAsset.id).then(res => {
+            this.serveAssetById(graphDataFileAsset.id).then((res) => {
               resolve(JSON.parse(res));
             });
           }
         },
-        err => {
+        (err) => {
           if (err instanceof KalturaClientException) {
             reject("Network/Client error");
           } else if (err instanceof KalturaAPIException) {
@@ -198,17 +235,17 @@ export class KipClient extends Dispatcher {
         "&ks=" +
         this.ks;
       fetch(urlToLoad)
-        .then(response => {
+        .then((response) => {
           response
             .text()
-            .then(text => {
+            .then((text) => {
               resolve(text);
             })
-            .catch(error => {
+            .catch((error) => {
               reject();
             });
         })
-        .catch(error => {
+        .catch((error) => {
           reject();
         });
     });
