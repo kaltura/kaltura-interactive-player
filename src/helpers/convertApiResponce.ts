@@ -52,35 +52,45 @@ const makeNodesAndHotspots = (newData) => {
         payload: {},
       },
     ];
+
     const prefetchNodeIds = [];
-    const duration = get(node, 'pathData.msDuration', 0);
+    const duration = get(node, "pathData.msDuration", 0);
     get(node, "interactions", []).forEach((interaction) => {
       const behavior = get(interaction, "data.behavior", {});
-      if (
-        interaction.type === "@@core/postPlay" &&
-        behavior.type === "GoToNode"
-      ) {
-        prefetchNodeIds.push(behavior.nodeId);
-        onEnded = [
-          {
-            type: "project:jump",
-            payload: {
-              destination: behavior.nodeId,
-              startFrom: behavior.startTime ? behavior.startTime/1000 : 0,
+      if (interaction.type === "@@core/postPlay") {
+        if (behavior.type === "GoToNode") {
+          prefetchNodeIds.push(behavior.nodeId);
+          onEnded = [
+            {
+              type: "project:jump",
+              payload: {
+                destination: behavior.nodeId,
+                startFrom: behavior.startTime ? behavior.startTime / 1000 : 0,
+              },
             },
-          },
-        ];
+          ];
+        }
+        if (behavior.type === "Loop") {
+          onEnded = [
+            {
+              type: "project:jump",
+              payload: {
+                destination: node.id,
+              },
+            },
+          ];
+        }
       } else if (interaction.type === "@@core/cue") {
         cues.push({
           at: interaction.startTime / 1000 / duration,
-          customData: get(interaction, 'data.customData', ''),
+          customData: get(interaction, "data.customData", ""),
           id: interaction.id,
           nodeId: node.id,
         });
       } else if (interaction.type === "@@core/hotspot") {
         const data = get(interaction, "data", {});
         const label = get(data, "text.label", "");
-        
+
         const hotspot: any = {
           id: interaction.id,
           name: label,
@@ -107,7 +117,7 @@ const makeNodesAndHotspots = (newData) => {
               type: "project:jump",
               payload: {
                 destination: behavior.nodeId,
-                startFrom: behavior.startTime ? behavior.startTime / 1000  : 0,
+                startFrom: behavior.startTime ? behavior.startTime / 1000 : 0,
               },
             },
           ];
@@ -137,32 +147,30 @@ const makeNodesAndHotspots = (newData) => {
       entryId: node.entryId,
       onEnded,
       prefetchNodeIds,
-      startFrom: node.startTime / 1000
+      startFrom: node.startTime / 1000,
     });
   });
   return [nodes, hotspots, cues];
 };
 
-
 const convertPosition = (position) => {
-  const newPosition = {...position};
+  const newPosition = { ...position };
   newPosition.width = 720 * position.width;
   newPosition.height = 405 * position.height;
   newPosition.top = 405 * position.top;
   newPosition.left = 720 * position.left;
-  return newPosition
+  return newPosition;
 };
-
 
 const addFonts = (newData) => {
   return {
-    fonts: get(newData, 'pathData.fonts', []),
+    fonts: get(newData, "pathData.fonts", []),
   };
 };
 
 const addSkins = (newData) => {
   const result = {};
-  get(newData, 'pathData.skins', []).forEach((skin) => {
+  get(newData, "pathData.skins", []).forEach((skin) => {
     result[skin.id] = skin;
   });
   return {
@@ -173,15 +181,14 @@ const addSkins = (newData) => {
 const addAcconunt = (newData) => {
   return {
     account: {
-      id: get(newData, 'account.id', ""),
+      id: get(newData, "account.id", ""),
     },
   };
 };
 
 const convertApiResponce = (newData) => {
-
-  try{
-    log("log","Converting Vegiterians ","Original Data:" ,newData );
+  try {
+    log("log", "Converting Vegiterians ", "Original Data:", newData);
     const [nodes, hotspots, cues] = makeNodesAndHotspots(newData);
     const result = {
       ...addVersion(),
@@ -191,11 +198,11 @@ const convertApiResponce = (newData) => {
       ...addAcconunt(newData),
       nodes,
       hotspots,
-      cues
+      cues,
     };
     return result;
-  }catch(e){
-    console.error("Failed to convert data",e,newData); 
+  } catch (e) {
+    console.error("Failed to convert data", e, newData);
   }
 };
 
