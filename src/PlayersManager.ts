@@ -414,8 +414,9 @@ export class PlayersManager extends Dispatcher {
         (item) => item.id === hotspotId
       );
       let startFrom = 0;
-      // check if this is a hotspot and if so - if it has 'startFrom'
+
       if (clickedHotspot) {
+        // this is a hotspot click - find if the hotspot project:jump has startFrom
         let hotspotsJumpData = clickedHotspot.onClick.find(
           (item) => item.type === "project:jump"
         ).payload;
@@ -423,18 +424,16 @@ export class PlayersManager extends Dispatcher {
           startFrom = hotspotsJumpData.startFrom;
         }
       } else {
-        // this must be defaultPath - check if this defaultPath has startFrom value
+        // this is a defaultPath - find if the defaultPath project:jump has startFrom
         if (this.activeNode.onEnded) {
-          const payload = this.activeNode.onEnded.find(
+          const onEnded: any = this.activeNode.onEnded.find(
             (item: any) => item.type === "project:jump"
-            // @ts-ignore
-          ).payload;
-          if (payload && payload.startFrom) {
-            startFrom = payload.startFrom;
+          );
+          if (onEnded && onEnded.payload && onEnded.payload.startFrom) {
+            startFrom = onEnded.payload.startFrom;
           }
         }
       }
-
       this.activePlayer.player.currentTime = startFrom;
       this.activePlayer.player.play();
       return;
