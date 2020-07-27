@@ -5,25 +5,19 @@ import {
   KalturaMultiRequest,
   KalturaRequestOptions,
 } from "kaltura-typescript-client";
-import { KalturaFileAsset } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAsset";
-import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/api/types/FileAssetListAction";
-import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetFilter";
-import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
 import { Dispatcher } from "./helpers/Dispatcher";
-import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
-import { PlaylistGetAction } from "../node_modules/kaltura-typescript-client/api/types/PlaylistGetAction";
-import { InteractivityGetAction } from "../node_modules/kaltura-typescript-client/api/types/InteractivityGetAction";
 import { KalturaPlaylist } from "kaltura-typescript-client/api/types/KalturaPlaylist";
 import { KalturaPlaylistType } from "kaltura-typescript-client/api/types/KalturaPlaylistType";
-import {
-  KalturaInteractivityDataFilter,
-  KalturaInteractivityDataFilterArgs,
-} from "kaltura-typescript-client/api/types/KalturaInteractivityDataFilter";
-import {
-  KalturaInteractivityRootFilter,
-  KalturaInteractivityRootFilterArgs,
-} from "kaltura-typescript-client/api/types/KalturaInteractivityRootFilter";
-import { KalturaInteractivityDataFieldsFilterArgs } from "kaltura-typescript-client/api/types/KalturaInteractivityDataFieldsFilter";
+import { KalturaFileAsset } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAsset";
+import { PlaylistGetAction } from "../node_modules/kaltura-typescript-client/api/types/PlaylistGetAction";
+import { FileAssetListAction } from "../node_modules/kaltura-typescript-client/api/types/FileAssetListAction";
+import { KalturaFileAssetFilter } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetFilter";
+import { KalturaInteractivityNodeFilter } from "kaltura-typescript-client/api/types/KalturaInteractivityNodeFilter";
+import { KalturaInteractivityDataFilter } from "kaltura-typescript-client/api/types/KalturaInteractivityDataFilter";
+import { KalturaInteractivityRootFilter } from "kaltura-typescript-client/api/types/KalturaInteractivityRootFilter";
+import { InteractivityGetAction } from "../node_modules/kaltura-typescript-client/api/types/InteractivityGetAction";
+import { KalturaFileAssetObjectType } from "../node_modules/kaltura-typescript-client/api/types/KalturaFileAssetObjectType";
+import { SessionStartWidgetSessionAction } from "../node_modules/kaltura-typescript-client/api/types/SessionStartWidgetSessionAction";
 
 interface ClientConfig {
   ks?: string;
@@ -148,6 +142,9 @@ export class KipClient extends Dispatcher {
             const dataFilter = new KalturaInteractivityDataFilter();
             dataFilter.rootFilter = new KalturaInteractivityRootFilter({
               fields: "nodes,pathData",
+            });
+            dataFilter.nodeFilter = new KalturaInteractivityNodeFilter({
+              fields: "pathData,name,interactions,id,entryId",
             });
             const interactivityRequest = new InteractivityGetAction({
               entryId: raptPlaylistId,
