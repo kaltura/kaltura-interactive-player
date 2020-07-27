@@ -90,7 +90,6 @@ const makeNodesAndHotspots = (newData) => {
       } else if (interaction.type === "@@core/hotspot") {
         const data = get(interaction, "data", {});
         const label = get(data, "text.label", "");
-
         const hotspot: any = {
           id: interaction.id,
           name: label,
@@ -134,11 +133,12 @@ const makeNodesAndHotspots = (newData) => {
               },
             },
           ];
+        } else if (behavior.type === "GoToTime") {
+          hotspot.clickSeek = behavior.time / 1000;
         }
         hotspots.push(hotspot);
       }
     });
-
     nodes.push({
       id: node.id,
       xref: null,
