@@ -794,6 +794,18 @@ export class PlayersManager extends Dispatcher {
       this.raptEngine.metadata.account = this.config.partnetId;
     }
     this.dispatch(event);
+
+    // handle seeks
+    if (event.type === "hotspot:click") {
+      if (this.raptData.hotspots && this.raptData.hotspots.length) {
+        const hs = this.raptData.hotspots.find(
+          (item) => item.id === event.payload.hotspot.id
+        );
+        if (hs.clickSeek) {
+          this.seek(hs.clickSeek);
+        }
+      }
+    }
   }
 
   /**
