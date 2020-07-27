@@ -794,6 +794,7 @@ export class PlayersManager extends Dispatcher {
       this.raptEngine.metadata.account = this.config.partnetId;
     }
     this.dispatch(event);
+
     // handle seeks
     if (event.type === "hotspot:click") {
       if (this.raptData.hotspots && this.raptData.hotspots.length) {
@@ -806,6 +807,7 @@ export class PlayersManager extends Dispatcher {
       }
     }
   }
+
   /**
    * The function sends an anlytics beacon.
    * @param eventNumber
