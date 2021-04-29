@@ -78,7 +78,7 @@ export class PlayersBufferManager extends Dispatcher {
                     log("log", "pbm_getPlayer", "seek player to the beginning or a specific time", {
                         entryId
                     });
-                    result.player.currentTime = bufferedItem.startTime ? bufferedItem.startTime : 0;
+                    result.player.currentTime = seekTo ? seekTo : 0;
                 }
                 // TODO 3 [eitan] for persistancy - assign only synced persistancy
                 if (playImmediate && !result.player.isPlaying) {
@@ -112,6 +112,7 @@ export class PlayersBufferManager extends Dispatcher {
                 isRunning: playImmediate,
                 bufferingTimeoutToken: NaN,
                 isReady: false
+                //startTime: 10
             };
 
             this.bufferList.push(newItem);
@@ -507,7 +508,7 @@ export class PlayersBufferManager extends Dispatcher {
 
         // find if there is any hotspot that has a startFrom attribute
         const hotspotsWithStartFrom = hotspots.filter((hs: any) => {
-            return hs.onClick && hs.onClick.find((itm: any) => itm.payload.startFrom);
+            return hs.onClick && hs.onClick.find((itm: any) => itm.payload.startFrom >= 0);
         });
         const arrayToCache: RaptNode[] = [];
         for (const hotSpot of hotspots) {
@@ -541,7 +542,7 @@ export class PlayersBufferManager extends Dispatcher {
             // fill startFrom attributes if they match a hotspot 
             for (const hsWithStartTime of hotspotsWithStartFrom) {
                 // find if we have a relevant start hotspot 
-                const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.startFrom).payload;
+                const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.startFrom >= 0).payload;
                 const matchingItem = arrayToCache.find((raptNode: RaptNode) => raptNode.id === jumpingToData.destination);
                 if (matchingItem) {
                     matchingItem.startFrom = jumpingToData.startFrom;
