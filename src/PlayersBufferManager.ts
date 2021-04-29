@@ -112,7 +112,6 @@ export class PlayersBufferManager extends Dispatcher {
                 isRunning: playImmediate,
                 bufferingTimeoutToken: NaN,
                 isReady: false
-                //startTime: 10
             };
 
             this.bufferList.push(newItem);
@@ -508,7 +507,7 @@ export class PlayersBufferManager extends Dispatcher {
 
         // find if there is any hotspot that has a startFrom attribute
         const hotspotsWithStartFrom = hotspots.filter((hs: any) => {
-            return hs.onClick && hs.onClick.find((itm: any) => itm.payload.startFrom >= 0);
+            return hs.onClick && hs.onClick.find((itm: any) => itm.payload.hasOwnProperty("startFrom"));
         });
         const arrayToCache: RaptNode[] = [];
         for (const hotSpot of hotspots) {
@@ -542,7 +541,7 @@ export class PlayersBufferManager extends Dispatcher {
             // fill startFrom attributes if they match a hotspot 
             for (const hsWithStartTime of hotspotsWithStartFrom) {
                 // find if we have a relevant start hotspot 
-                const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.startFrom >= 0).payload;
+                const jumpingToData = hsWithStartTime.onClick.find((itm: any) => itm.payload.hasOwnProperty("startFrom")).payload;
                 const matchingItem = arrayToCache.find((raptNode: RaptNode) => raptNode.id === jumpingToData.destination);
                 if (matchingItem) {
                     matchingItem.startFrom = jumpingToData.startFrom;
