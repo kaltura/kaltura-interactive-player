@@ -191,3 +191,19 @@ For iphone we have disabled the pre-buffering mechanism.
 This project is licensed under the AGPL-3.0 License - see the LICENSE.md file for details
 
 
+## How to Release
+1. Go to package.json file and change the version
+2. Go to version.ts file and change the version
+3. Commit and Push with a message "chore(bump): bump to version $VERSION"
+4. Run  ```
+        npm tag
+        ```
+, or create a new tag via github
+5. Run  ```
+        npm build
+        ```
+6. Run  ```
+        npm tgz
+        ``` 
+, this will output a tar.gz file in dist folder
+7. Go to the new tag in github and click on Edit and add the tar.gz file from dist folder
