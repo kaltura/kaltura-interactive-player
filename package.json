@@ -31,16 +31,17 @@
     "tag": "scripts/tag.sh",
     "start": "webpack --watch & webpack-dev-server --dev",
     "serve-external": "webpack --watch & webpack-dev-server --host 0.0.0.0 --dev",
-    "clean": "rm -rf ./dist && node scripts/setversion.js",
+    "clean": "node scripts/setversion.js",
     "tgz": "node scripts/dist-tgz.js",
     "prebuild": "npm run clean",
     "prebuild:dev": "npm run clean",
     "prestart": "npm run clean",
-    "build": "NODE_ENV=production webpack",
+    "build": "set NODE_ENV=production&&webpack",
     "build:dev": "webpack"
   },
   "dependencies": {
-    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-7.0.1-v20200720-164020.tgz"
+    "kaltura-typescript-client": "file:libs/kaltura-typescript-client-7.0.1-v20200720-164020.tgz",
+    "node-sass": "^4.14.1"
   },
   "devDependencies": {
     "@types/core-js": "^2.5.0",
@@ -48,7 +49,6 @@
     "core-js": "^2.5.7",
     "css-loader": "^1.0.0",
     "node-fetch": "^2.2.0",
-    "node-sass": "^4.13.1",
     "sass-loader": "^7.1.0",
     "script-loader": "^0.7.2",
     "style-loader": "^0.23.1",
