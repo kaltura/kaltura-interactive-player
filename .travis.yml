@@ -1,0 +1,79 @@
+conditions: v1
+sudo: required
+dist: xenial
+language: node_js
+node_js:
+  - '12'
+
+addons:
+  chrome: stable
+
+services:
+  - xvfb
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+before_install:
+  - export DISPLAY=:99.0
+  - chmod +x ./scripts/travis.sh
+  - chmod +x ./scripts/after_deploy.sh
+
+script: ./scripts/travis.sh
+
+stages:
+  - Release canary
+  - Release
+  - Deploy
+
+jobs:
+  fast_finish: true
+  include:
+    # https://docs.travis-ci.com/user/build-stages/deploy-github-releases/
+    - stage: Deploy
+      name: "Deploying a new version"
+      if: tag IS present
+      env: TRAVIS_MODE=deploy
+      deploy:
+        - provider: script
+          on:
+            tags: true
+            all_branches: true
+          script: bash ./scripts/after_deploy.sh "$JENKINS_TAG_TOKEN"
+    - stage: Release
+      name: 'Releasing a new version'
+      if: tag IS present
+      env: TRAVIS_MODE=release
+      deploy:
+        - provider: releases
+          api_key: $GH_TOKEN
+          file_glob: true
+          file: dist/*
+          prerelease: true
+          skip_cleanup: true
+          on:
+            branch: master
+            tags: true
+        - provider: npm
+          api_key: $NPM_TOKEN
+          email: $NPM_EMAIL
+          skip_cleanup: true
+          on:
+            tags: true
+            branch: master
+    # publish canary package if on master
+    - stage: Release canary
+      if: (branch = master) AND (type != pull_request) AND commit_message !~ /^chore\(release\)/
+      env: TRAVIS_MODE=releaseCanary
+      deploy:
+        provider: npm
+        api_key: $NPM_TOKEN
+        email: $NPM_EMAIL
+        skip_cleanup: true
+        tag: canary
+        on:
+          tags: false
+          branch: master
+      after_deploy:
+        - ./scripts/after_deploy.sh "$JENKINS_CANARY_TOKEN"

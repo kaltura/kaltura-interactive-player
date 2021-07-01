@@ -8,6 +8,6 @@
 bundle.js
 npm-debug.log*
 
-dist
+dist/
 index.html
 version.ts
