@@ -25,7 +25,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
   // merge uiconf rapt data with current config (priority is local config) - this is a one-level object
   // extract the uiconf JSON
   try {
-    const uiconfData: any = Object.values(__kalturaplayerdata.UIConf)[0];
+    const uiconfData: any = __kalturaplayerdata.UIConf ? Object.values(__kalturaplayerdata.UIConf)[0] : __kalturaplayerdata;
     const uiconfRaptData: any = uiconfData.rapt || {};
     const uiconfPlaybackData: any =
       (uiconfData.player && uiconfData.player.playback) || {};
