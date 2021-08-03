@@ -1,6 +1,6 @@
 {
   "name": "kaltura-interactive-player",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "license": "AGPL-3.0",
