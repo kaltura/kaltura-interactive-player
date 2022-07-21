@@ -74,12 +74,8 @@ export class PlayersBufferManager extends Dispatcher {
                 log("log", "pbm_getPlayer", "found player in buffer list", {entryId});
                 result = bufferedItem.player;
 
-                if (result.player.currentTime > 0) {
-                    log("log", "pbm_getPlayer", "seek player to the beginning or a specific time", {
-                        entryId
-                    });
-                    result.player.currentTime = seekTo ? seekTo : 0;
-                }
+                log("log", "pbm_getPlayer", "seek player to the beginning or a specific time", {entryId});
+                result.player.currentTime = seekTo ? seekTo : 0;
                 // TODO 3 [eitan] for persistancy - assign only synced persistancy
                 if (playImmediate && !result.player.isPlaying) {
                     log("log", "pbm_getPlayer", "execute play command", {entryId});
