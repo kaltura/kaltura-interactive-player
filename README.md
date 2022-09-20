@@ -207,3 +207,10 @@ This project is licensed under the AGPL-3.0 License - see the LICENSE.md file fo
         ``` 
 , this will output a tar.gz file in dist folder
 7. Go to the new tag in github and click on Edit and add the tar.gz file from dist folder
+
+
+## Deployment Instructions
+Extract the tgz files into a folder by the name of the version, in all bundle machines
+(E.G. /opt/kaltura/html5/html5lib/playkitSources/rapt/0.4.6/). The output is 2 files on that folder.
+
+Alternatively - copy the 2 files directly from the release (.js and .js.map) to the relevant folder.
