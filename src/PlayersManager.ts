@@ -469,7 +469,7 @@ export class PlayersManager extends Dispatcher {
         "use buffer manager to get player for entry",
         { entryId: newEntryId }
       );
-      const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode);
+      const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode, params.hotspotId);
       const bufferedPlayer = this.playersBufferManager.getPlayer(
         newEntryId,
         shouldPlayNow,
@@ -515,7 +515,7 @@ export class PlayersManager extends Dispatcher {
         }
         this.firstPlay = false;
         // grab seekto before updateActiveItems
-        const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode);
+        const seekTo = this.checkSeekTo(nextRaptNode, this.activeNode, params.hotspotId);
         this.updateActiveItems(this.activePlayer, nextRaptNode);
         if (this.config.rapt.syncVideos && currentPlayerPosition) {
           this.activePlayer.player.configure({
@@ -634,7 +634,7 @@ export class PlayersManager extends Dispatcher {
   }
 
   // this function checks if the current node that points to the next node is expected to have a seekto
-  checkSeekTo(nextNode: RaptNode, currentNode: RaptNode) {
+  checkSeekTo(nextNode: RaptNode, currentNode: RaptNode, clickedHotspotId: string) {
     try {
       if (!currentNode) {
         return;
@@ -659,28 +659,41 @@ export class PlayersManager extends Dispatcher {
         }
       }
       // we got here - this is not a defaultPath - we need to find the relevant hotspot and see if it has startFrom
-      const currentNodeHotspots = this.raptData.hotspots.filter(
-        (hotspot) => hotspot.nodeId === currentNode.id
+      if (!clickedHotspotId) {
+        log(
+            "error",
+            "pm_checkSeekTo",
+            `Error: hotspot with id: ${clickedHotspotId} is undefined. returning startFrom=0`
+        );
+        return 0;
+      }
+
+      const clickedHotspot = this.raptData.hotspots.find(
+          (hs) => hs.id === clickedHotspotId
       );
 
-      // find the hotspot that points to the new node
-      for (const hs of currentNodeHotspots) {
-        const onClick = hs.onClick;
-        if (onClick.length) {
-          // found a click = see of this click has a point to the current
-          const clickData = onClick.find((item: any) => {
-            return (
-              item.type === "project:jump" &&
-              item.payload &&
-              item.payload.startFrom &&
-              item.payload.destination &&
-              item.payload.destination === nextNode.id
-            );
-          });
-          if (clickData) {
-            return clickData.payload.startFrom;
-          }
+      if (clickedHotspot && clickedHotspot.onClick) {
+        let hotspotsJumpData = clickedHotspot.onClick.find(
+            (item) => item.type === "project:jump"
+        ).payload;
+        if (hotspotsJumpData &&
+            hotspotsJumpData.destination &&
+            hotspotsJumpData.destination === nextNode.id &&
+            typeof hotspotsJumpData.startFrom === 'number') {
+          return hotspotsJumpData.startFrom;
+        } else {
+          log(
+              "error",
+              "pm_checkSeekTo",
+              `Error: hotspotsJumpData of id ${clickedHotspotId} did not satisfy one or more of the conditions. returning startFrom=0`
+          );
         }
+      } else {
+        log(
+            "error",
+            "pm_checkSeekTo",
+            `Error: Could not find data of hotspot with id: ${clickedHotspotId}. returning startFrom=0`
+        );
       }
       return 0;
     } catch (e) {
