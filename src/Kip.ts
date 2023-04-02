@@ -27,7 +27,8 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
   try {
     const uiconfData: any = __kalturaplayerdata.UIConf ? Object.values(__kalturaplayerdata.UIConf)[0] : __kalturaplayerdata;
     const uiconfRaptData: any = uiconfData.rapt || {};
-    const uiconfPlaybackData: any = uiconfData.playback || {};
+    const uiconfPlaybackData: any =
+        (uiconfData.player && uiconfData.player.playback) || uiconfData.playback || {};
     // local config will override uiconf properties.
     config = {
       ...config,
