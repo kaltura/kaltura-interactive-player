@@ -1,5 +1,5 @@
 {
-  "name": "kaltura-interactive-player",
+  "name": "@playkit-js/rapt",
   "version": "0.4.9",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
@@ -31,19 +31,23 @@
     "tag": "scripts/tag.sh",
     "start": "webpack --watch & webpack-dev-server --dev",
     "serve-external": "webpack --watch & webpack-dev-server --host 0.0.0.0 --dev",
-    "clean": "del dist /Q",
+    "clean": "rm -rf ./dist",
     "tgz": "node scripts/dist-tgz.js",
     "prebuild": "npm run clean",
     "prebuild:dev": "npm run clean",
     "prestart": "npm run clean",
-    "build": "set NODE_ENV=production&&webpack",
+    "pushTaggedRelease": "git push --follow-tags --no-verify origin master",
+    "release": "standard-version",
+    "build": "node scripts/dist-tgz.js && webpack --mode production",
     "build:dev": "webpack"
   },
   "dependencies": {
     "kaltura-typescript-client": "file:libs/kaltura-typescript-client-7.0.1-v20200720-164020.tgz",
-    "node-sass": "^4.14.1"
+    "node-sass": "^4.14.1",
+    "tslib": "^2.5.0" 
   },
   "devDependencies": {
+    "@types/node": "^14.11.2",
     "@types/core-js": "^2.5.0",
     "archiver": "^3.0.0",
     "core-js": "^2.5.7",
