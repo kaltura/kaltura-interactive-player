@@ -7,7 +7,7 @@ on:
 
 jobs:
   prod:
-    uses: kaltura/ovp-pipelines-pub/.github/workflows/player_cicd.yaml@v@rapt-tgz
+    uses: kaltura/ovp-pipelines-pub/.github/workflows/player_cicd.yaml@rapt-tgz
     secrets:
       PLAYER_CENTRAL_ACCOUNT_ID: ${{ secrets.PLAYER_CENTRAL_ACCOUNT_ID }}
       PLAYER_SERVICES_ACCOUNT_ID: ${{ secrets.PLAYER_SERVICES_ACCOUNT_ID }}
