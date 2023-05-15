@@ -24,5 +24,5 @@ jobs:
       type: "plugin"
       stage: "canary"
       schema-type: "playerV3OvpVersions"
-      tests-yarn-run-to-execute: 'build'
-      
+      tests-yarn-run-to-execute: 'tgz build'
+

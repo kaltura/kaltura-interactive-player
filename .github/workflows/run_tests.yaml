@@ -11,7 +11,7 @@ jobs:
   running-tests:
     uses: kaltura/ovp-pipelines-pub/.github/workflows/player_tests.yaml@path
     with:
-      yarn-run-to-execute: 'build'
+      yarn-run-to-execute: 'tgz build'
   notification:
     if: always()
     uses: kaltura/ovp-pipelines-pub/.github/workflows/notification.yaml@path
