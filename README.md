@@ -1,3 +1,10 @@
+# PlayKit JS Rapt Player - Interactive Player Plugin for the [Kaltura Player JS]
+
+[![Build Status](https://github.com/kaltura/kaltura-interactive-player/actions/workflows/run_canary_full_flow.yaml/badge.svg)](https://github.com/kaltura/kaltura-interactive-player/actions/workflows/run_canary_full_flow.yaml)
+[![](https://img.shields.io/npm/v/@playkit-js/rapt/latest.svg)](https://www.npmjs.com/package/@playkit-js/rapt)
+[![](https://img.shields.io/npm/v/@playkit-js/rapt/canary.svg)](https://www.npmjs.com/package/@playkit-js/rapt/v/canary)
+
+
 # rapt-player
 'Rapt' is an interactive way to consume video, where the end-user can make decisions along the video or navigate to 
 external web pages. We will use the term 'interactive-video' or IV (and KIP for Kaltura-Interactive-Player) 

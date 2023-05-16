@@ -4,7 +4,6 @@
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "license": "AGPL-3.0",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/kaltura/kaltura-interactive-player.git"
@@ -19,12 +18,16 @@
   },
   "contributors": [
     {
-      "name": "Eitan Avgil",
-      "email": "eitan.avgil@kaltura.com"
+      "name": "Jonathan Golad",
+      "email": "jonathan.gold@kaltura.com"
     },
     {
-      "name": "Eran Sakal",
-      "email": "eran@sakalim.com"
+      "name": "Lian Binyamin",
+      "email": "lian.binyamin@kaltura.com"
+    },
+    {
+      "name": "Sivan Agranov",
+      "email": "sivan.agranov@kaltura.com"
     }
   ],
   "scripts": {
