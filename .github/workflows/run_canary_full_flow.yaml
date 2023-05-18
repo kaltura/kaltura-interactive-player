@@ -5,12 +5,12 @@ run-name: Canary Full Flow
 on:
   push:
     branches:
-      - devops-deployment
+      - master
 
 jobs:
   canary-full-flow:
     if: ${{ github.actor != 'PlaykitJs-Bot' }}
-    uses: kaltura/ovp-pipelines-pub/.github/workflows/player_cicd.yaml@path
+    uses: kaltura/ovp-pipelines-pub/.github/workflows/player_cicd.yaml@master
     secrets:
       PLAYER_CENTRAL_ACCOUNT_ID: ${{ secrets.PLAYER_CENTRAL_ACCOUNT_ID }}
       PLAYER_SERVICES_ACCOUNT_ID: ${{ secrets.PLAYER_SERVICES_ACCOUNT_ID }}
@@ -25,5 +25,6 @@ jobs:
       stage: "canary"
       schema-type: "playerV3OvpVersions"
       node-version: "14.x"
+      enabled-openssl-legacy-provider: 'false'
       tests-yarn-run-to-execute: 'tgz build'
       
