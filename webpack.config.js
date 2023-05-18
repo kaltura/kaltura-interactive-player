@@ -26,7 +26,7 @@ module.exports = {
   },
   output: {
     path: __dirname + "/dist",
-    filename: `path-kaltura-player.js`,
+    filename: `playkit-rapt.js`,
     libraryTarget: 'umd',
     // `library` determines the name of the global variable
     library: '[name]',
