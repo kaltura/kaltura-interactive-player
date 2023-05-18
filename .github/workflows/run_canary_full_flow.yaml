@@ -25,5 +25,6 @@ jobs:
       stage: "canary"
       schema-type: "playerV3OvpVersions"
       node-version: "14.x"
+      enabled-openssl-legacy-provider: 'false'
       tests-yarn-run-to-execute: 'tgz build'
       
