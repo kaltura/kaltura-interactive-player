@@ -64,7 +64,7 @@
     "uglifyjs-webpack-plugin": "^2.0.1",
     "standard-version": "^6.0.1",
     "webpack": "^4.41.6",
-    "webpack-cli": "^3.1.0",
+    "webpack-cli": "^3.3.12",
     "webpack-concat-plugin": "^3.0.0",
     "webpack-dev-server": "^3.10.3",
     "webpack-livereload-plugin": "^2.1.1"
