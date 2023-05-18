@@ -21,4 +21,5 @@ jobs:
       type: "plugin"
       env: "prod"
       schema-type: "playerV3OvpVersions"
+      node-version: "14.x"
       tests-yarn-run-to-execute: 'tgz build'

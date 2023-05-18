@@ -21,4 +21,5 @@ jobs:
     with:
       failure-status: ${{ contains(needs.*.result, 'failure') }}
       cancelled-status: ${{ contains(needs.*.result, 'cancelled') }}
+      node-version: "14.x"
       is-test: 'true'
