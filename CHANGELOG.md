@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.11 (2023-05-21)
+
+
+### Bug Fixes
+
+* **FEC-12123:** update 0.4.11 ([#125](https://github.com/kaltura/kaltura-interactive-player/issues/125)) ([be1af96](https://github.com/kaltura/kaltura-interactive-player/commit/be1af96))
+
+
+
 ### 0.4.10 (2023-05-18)
 
 
