@@ -22,4 +22,4 @@ jobs:
       env: "prod"
       schema-type: "playerV3OvpVersions"
       tests-yarn-run-to-execute: 'tgz build'
-      enabled-openssl-legacy-provider: 'false'
+      enabled-openssl-legacy-provider: 'true'

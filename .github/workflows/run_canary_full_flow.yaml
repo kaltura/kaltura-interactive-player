@@ -24,6 +24,6 @@ jobs:
       type: "plugin"
       stage: "canary"
       schema-type: "playerV3OvpVersions"
-      enabled-openssl-legacy-provider: 'false'
+      enabled-openssl-legacy-provider: 'true'
       tests-yarn-run-to-execute: 'tgz build'
       
