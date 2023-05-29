@@ -12,7 +12,6 @@ jobs:
     uses: kaltura/ovp-pipelines-pub/.github/workflows/player_tests.yaml@master
     with:
       yarn-run-to-execute: 'tgz build'
-      node-version: "14.x"
       enabled-openssl-legacy-provider: 'false'
   notification:
     if: always()
