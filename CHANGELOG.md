@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.12 (2023-08-08)
+
+
+### Bug Fixes
+
+* **FEC-13255:** RAPT Player missing Captions selection button ([#133](https://github.com/kaltura/kaltura-interactive-player/issues/133)) ([465851e](https://github.com/kaltura/kaltura-interactive-player/commit/465851e))
+
+
+
 ### 0.4.11 (2023-05-21)
 
 
