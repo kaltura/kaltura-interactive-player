@@ -159,6 +159,11 @@
     display: inline-block;
   }
 
+  .playkit-player .playkit-right-controls .playkit-control-button-container.playkit-control-settings .playkit-smart-container .playkit-smart-container-item:last-child
+  {
+    display: none;
+  }
+
 
   &.rapt-switching{
     .playkit-black-cover{

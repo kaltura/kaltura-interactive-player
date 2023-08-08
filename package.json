@@ -57,7 +57,7 @@
     "css-loader": "^1.0.0",
     "node-fetch": "^2.2.0",
     "sass": "^1.62.1",
-    "sass-loader": "^7.1.0",
+    "sass-loader": "^9.0.2",
     "script-loader": "^0.7.2",
     "standard-version": "^6.0.1",
     "style-loader": "^0.23.1",

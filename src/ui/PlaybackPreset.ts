@@ -51,7 +51,7 @@ export class PlaybackPreset {
           { className: "playkit-right-controls" },
           h(c.TimeDisplayPlaybackContainer, { format: "current / total" }),
           h(c.VolumeControl, { player: props.player }),
-          h(c.LanguageControl, { player: props.player }),
+          h(c.SettingsControl, { player: props.player }),
           h(customFullScreenButton)
         );
       };
@@ -61,7 +61,7 @@ export class PlaybackPreset {
           "div",
           { className: "playkit-right-controls" },
           h(c.VolumeControl, { player: props.player }),
-          h(c.LanguageControl, { player: props.player }),
+          h(c.SettingsControl, { player: props.player }),
           h(customFullScreenButton)
         );
       };
@@ -81,7 +81,7 @@ export class PlaybackPreset {
     let customFullScreenButton;
 
     if (this.deviceModel === "iPhone" || this.raptData.showFullscreen === false) {
-      // do not render the fullscreen button - return null as the button 
+      // do not render the fullscreen button - return null as the button
       customFullScreenButton = function() {
         return null;
       };
