@@ -38,13 +38,15 @@ npm start
 
 ## Embed: 
 This library will be bundled inside the Kaltura playkit-js library and served by it. 
-In most cases, KMS will generate the player uiconf for you, in case you create the player maually, you will need to make sure that the player V3 version incluses the Rapt V3 "plugin". You do that by setting the 'Additional flashvars' field to something that looks like this template:
+In most cases, KMS will generate the player uiconf for you, in case you create the player manually, you will need to make sure that the player V3 version incluses the Rapt V3 "plugin". You do that by setting the 'Additional flashvars' field to something that looks like this template:
 ```
-{"kaltura-ovp-player":"V3_PLAYER_VERSION","path" : "PATH_VERSION"}
+{"kaltura-ovp-player":"V3_PLAYER_VERSION","rapt" : "RAPT_VERSION"}
 ```
-E.G. {"kaltura-ovp-player":"0.37.2","path" : "0.1.5"}
+E.G. {"kaltura-ovp-player":"3.14.8","rapt" : "0.4.8"}
 
-This next snippet will show a typical embed code of a rapt player
+NOTE: up to rapt version 0.4.9 you should use the key "rapt" as in the example above. After this version, the correct field is "playkit-rapt" (E.G. {"kaltura-ovp-player":"3.14.8","playkit-rapt" : "0.4.13"})
+
+The following snippet is showing a typical embed code of a rapt player:
 
  ```
 <!-- playkit-js library code and Rapt  -->
@@ -199,25 +201,6 @@ This project is licensed under the AGPL-3.0 License - see the LICENSE.md file fo
 
 
 ## How to Release
-1. Go to package.json file and change the version
-2. Go to version.ts file and change the version
-3. Commit and Push with a message "chore(bump): bump to version $VERSION"
-4. Run  ```
-        npm tag
-        ```
-, or create a new tag via github
-5. Run  ```
-        npm build
-        ```
-6. Run  ```
-        npm tgz
-        ``` 
-, this will output a tar.gz file in dist folder
-7. Go to the new tag in github and click on Edit and add the tar.gz file from dist folder
-
-
-## Deployment Instructions
-Extract the tgz files into a folder by the name of the version, in all bundle machines
-(E.G. /opt/kaltura/html5/html5lib/playkitSources/rapt/0.4.6/). The output is 2 files on that folder.
-
-Alternatively - copy the 2 files directly from the release (.js and .js.map) to the relevant folder.
+1. Go to version.ts file and change the version
+2. Commit and Push with a message "chore(bump): bump to version $VERSION"
+3. Via GitHub actions, manually execute Prod action
