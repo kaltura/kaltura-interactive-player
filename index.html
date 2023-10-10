@@ -15,7 +15,7 @@
     <!-- <script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15219305"></script> -->
     <!-- THIS UICONF HAS GA -->
     <!-- 0.37.3 -->
-    <script src="https://qa-apache-php7.dev.kaltura.com/p/6222/embedPlaykitJs/uiconf_id/15220027/versions/kaltura-ovp-player=0.54.1-canary-3-990a688.0"></script>
+    <script src="https://cdnapisec.kaltura.com/p/4393802/embedPlaykitJs/uiconf_id/53470752"></script>
     <!-- 0.39.0 -->
     <!-- <script src="http://cdnapisec.kaltura.com/p/27017/embedPlaykitJs/uiconf_id/43642002"></script> -->
     <script src="dist/playkit-rapt.js" type="text/javascript"></script>
@@ -175,8 +175,15 @@
           name: "bug Adi",
           id: "0_n70vktfa",
           pid: 6603,
-          selected: true, ///////////////////////
+          selected: false, ///////////////////////
           isQA: true
+        },
+        {
+          name: "tzipi Adi",
+          id: "1_0aft3h1i",
+          pid: 4393802,
+          selected: true, ///////////////////////
+          isQA: false
         },
       ];
 
@@ -194,7 +201,7 @@
           cdnUrl: "//qa-apache-php7.dev.kaltura.com"
         };
       }
-      var pid = 27017; // default
+      var pid = "2171811"; // default
 
       if (selectedItem.pid) {
         pid = selectedItem.pid;
@@ -209,15 +216,11 @@
           preload: "auto"
         },
         provider: {
-          //////////////////////////////// KS /////////////////////
-          ks : "djJ8NjYwM3zRfJ8s5nHjigYJS2Erwy3esqxR058MA-0tOGGpn4rbXYn7JalHCUz_ZN-O1fxSd6sctA8G9vi1rsVBWoB699O27aDqp-K43e1__zoYFuGs3nX-Ke5c-DqxXMCcoSwS5JaLG2DfRuO8A_ClG-j2GlPxkvOh_WdQmku1inzrwPVMKXNE8-SirznyD3Sehghzbae444yQpIntVTW1sP01YjDHc5RB5UfApzkScYBhmkZaF44UodV1pV8wKG3MBBDGfISDV5rioZgiylD01Ru457rUU6JCn_tqpYCqEUYgZ_OTWW8NHH1t95HDhJpnulm6Rdj-CYq0pj7Nr_TTOgUKjRdH4R7Gl9n_SoHQQ34vLB6aV46h0Y-lm4UcD5y8d15COZhUrsEl_yCXIx8H9BDBCA0SupUyzdUmyIBhe2Yq7hR8J2Sxy5rgGWYDct6CfJwcFg4443Q7RFz0wcdIH-T-S9-_hW6F7Xe8dypWRDsGqb9B8L4x5CTL0SS9r-uPPGhYXre17QwhgQpmzqelneiN3WDi_4MNxKK3WnlOaH-GA0Lm5g==",
-          partnerId: pid,
-          uiconfId: "15219991",
-          env: env
+         partnerId: pid,
         },
         rapt: {
           initialBitrate: 75e4,
-          debug: false,
+          debug: true,
           capabilityCheck: true,
           bufferNextNodes: true,
           bufferTime: 6,

@@ -33,7 +33,7 @@
   "scripts": {
     "tag": "scripts/tag.sh",
     "start": "webpack --watch & webpack-dev-server --dev",
-    "serve-external": "webpack --watch & webpack-dev-server --host 0.0.0.0 --dev",
+    "serve-external": "webpack --watch & webpack-dev-server --dev",
     "clean": "rm -rf ./dist",
     "tgz": "node scripts/dist-tgz.js",
     "prebuild": "npm run clean",
@@ -42,7 +42,7 @@
     "pushTaggedRelease": "git push --follow-tags --no-verify origin master",
     "release": "standard-version",
     "build": "node scripts/dist-tgz.js && webpack --mode production",
-    "build:dev": "webpack"
+    "build:dev": "webpack --mode development"
   },
   "dependencies": {
     "kaltura-typescript-client": "file:libs/kaltura-typescript-client-7.0.1-v20200720-164020.tgz",
