@@ -10,8 +10,9 @@ export class PlaybackPreset {
     private deviceModel: string | undefined
   ) {
     let customSeekbarContainer: any;
-    let customLeftContainer: any;
-    let customRightContainer: any;
+    let customLeftControls: any[];
+    let customRightControls: any[];
+
 
     let showFullscreenClass = "show-fullscreen";
     if (this.deviceModel === "iPhone" || raptData.showFullscreen === false) {
@@ -20,64 +21,19 @@ export class PlaybackPreset {
 
     // switch showScrubber
     if (raptData.showScrubber) {
-      customSeekbarContainer = function (props: any) {
+      customSeekbarContainer = function(props: any) {
         return h(c.SeekBarPlaybackContainer, {
           showFramePreview: false,
           showTimeBubble: false,
           player: props.player,
-          playerContainer: props.playerContainer,
+          playerContainer: props.playerContainer
         });
       };
     } else {
-      customSeekbarContainer = function (props: any) {
+      customSeekbarContainer = function(props: any) {
         return null;
       };
     }
-
-    customLeftContainer = function (props: any) {
-      return h(
-        "div",
-        { className: "playkit-left-controls" },
-        h(c.PlayPauseControl, { player: props.player }),
-        h(c.RewindControl, { player: props.player, step: 10 })
-      );
-    };
-    if (this.raptData.showTimers) {
-      customRightContainer = function (props: any) {
-        return h(
-          "div",
-          { className: "playkit-right-controls" },
-          h(c.TimeDisplayPlaybackContainer, { format: "current / total" }),
-          h(c.VolumeControl, { player: props.player }),
-          h(c.SettingsControl, { player: props.player }),
-          h(customFullScreenButton)
-        );
-      };
-    } else {
-      customRightContainer = function (props: any) {
-        return h(
-          "div",
-          { className: "playkit-right-controls" },
-          h(c.VolumeControl, { player: props.player }),
-          h(c.SettingsControl, { player: props.player }),
-          h(customFullScreenButton)
-        );
-      };
-    }
-
-    const customControllers = function (props: any) {
-      return h(
-        c.BottomBar,
-          {leftControls: [c.PlayPauseControl, c.RewindControl], rightControls: [c.TimeDisplayPlaybackContainer, c.VolumeControl, c.SettingsControl, customFullScreenButton]},
-        customSeekbarContainer(props),
-        // h(
-        //   "div",
-        //   { className: "playkit-controls-container" },
-          // customLeftContainer(props),
-          // customRightContainer(props)
-        // )
-      );
-    };
 
     // define the app fullscreen button
     let customFullScreenButton;
@@ -120,6 +76,22 @@ export class PlaybackPreset {
         );
       };
     }
+
+    customLeftControls = [c.PlayPauseControl, c.RewindControl];
+    if (this.raptData.showTimers) {
+      customRightControls = [c.TimeDisplayPlaybackContainer, c.VolumeControl, c.SettingsControl, customFullScreenButton]
+    } else {
+      customRightControls = [c.VolumeControl, c.SettingsControl, customFullScreenButton]
+    }
+
+    const customControllers = function (props: any) {
+      return h(
+          c.BottomBar,
+          {leftControls: customLeftControls, rightControls: customRightControls},
+          customSeekbarContainer(props),
+      );
+    };
+
     this.presetWithPlayButton = function (props: any) {
       //if U change this change the other preset
       return h(
