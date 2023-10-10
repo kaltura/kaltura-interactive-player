@@ -1,6 +1,6 @@
 {
   "name": "@playkit-js/rapt",
-  "version": "0.4.13",
+  "version": "0.4.14",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "license": "AGPL-3.0",

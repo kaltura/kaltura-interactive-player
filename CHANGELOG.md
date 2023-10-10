@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.14 (2023-10-10)
+
+
+### Bug Fixes
+
+* **SUP-39514:** Interactive videos no longer working in KMS ([#136](https://github.com/kaltura/kaltura-interactive-player/issues/136)) ([95da6dd](https://github.com/kaltura/kaltura-interactive-player/commit/95da6dd))
+
+
+
 ### 0.4.13 (2023-08-21)
 
 
