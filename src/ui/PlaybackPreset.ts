@@ -10,8 +10,8 @@ export class PlaybackPreset {
     private deviceModel: string | undefined
   ) {
     let customSeekbarContainer: any;
-    let customLeftContainer: any;
-    let customRightContainer: any;
+    let customLeftControls: any[];
+    let customRightControls: any[];
 
 
     let showFullscreenClass = "show-fullscreen";
@@ -35,63 +35,24 @@ export class PlaybackPreset {
       };
     }
 
-
-    customLeftContainer = function(props: any) {
-      return h(
-          "div",
-          { className: "playkit-left-controls"},
-          h(c.PlayPauseControl, { player: props.player }),
-          h(c.RewindControl, { player: props.player, step: 10 })
-      );
-    };
-    if (this.raptData.showTimers) {
-      customRightContainer = function(props: any) {
-        return h(
-          "div",
-          { className: "playkit-right-controls" },
-          h(c.TimeDisplayPlaybackContainer, { format: "current / total" }),
-          h(c.VolumeControl, { player: props.player }),
-          h(c.SettingsControl, { player: props.player }),
-          h(customFullScreenButton)
-        );
-      };
-    }else{
-      customRightContainer = function(props: any) {
-        return h(
-          "div",
-          { className: "playkit-right-controls" },
-          h(c.VolumeControl, { player: props.player }),
-          h(c.SettingsControl, { player: props.player }),
-          h(customFullScreenButton)
-        );
-      };
-    }
-
-    const customControllers = function(props: any) {
-      return h(
-        c.BottomBar,
-        null,
-        customSeekbarContainer(props),
-        customLeftContainer(props),
-        customRightContainer(props)
-      );
-    };
-
     // define the app fullscreen button
     let customFullScreenButton;
 
-    if (this.deviceModel === "iPhone" || this.raptData.showFullscreen === false) {
+    if (
+      this.deviceModel === "iPhone" ||
+      this.raptData.showFullscreen === false
+    ) {
       // do not render the fullscreen button - return null as the button
-      customFullScreenButton = function() {
+      customFullScreenButton = function () {
         return null;
       };
     } else {
-      customFullScreenButton = function() {
+      customFullScreenButton = function () {
         return h(
           "div",
           {
             className:
-              "playkit-control-button-container playkit-control-fullscreen"
+              "playkit-control-button-container playkit-control-fullscreen",
           },
           h(
             "button",
@@ -101,29 +62,49 @@ export class PlaybackPreset {
               className: "playkit-control-button",
               onClick: () => {
                 fullscreenCallback();
-              }
+              },
             },
             h("icon", {
               className: "playkit-icon playkit-icon-maximize",
-              style: "transform: rotate(90deg)"
+              style: "transform: rotate(90deg)",
             }),
             h("icon", {
               className: "playkit-icon playkit-icon-minimize",
-              style: "transform: rotate(90deg)"
+              style: "transform: rotate(90deg)",
             })
           )
         );
       };
     }
-    this.presetWithPlayButton = function(props: any) {
+
+    customLeftControls = [c.PlayPauseControl, c.RewindControl];
+    if (this.raptData.showTimers) {
+      customRightControls = [c.TimeDisplayPlaybackContainer, c.VolumeControl, c.SettingsControl, customFullScreenButton]
+    } else {
+      customRightControls = [c.VolumeControl, c.SettingsControl, customFullScreenButton]
+    }
+
+    const customControllers = function (props: any) {
+      return h(
+          c.BottomBar,
+          {leftControls: customLeftControls, rightControls: customRightControls},
+          customSeekbarContainer(props),
+      );
+    };
+
+    this.presetWithPlayButton = function (props: any) {
       //if U change this change the other preset
       return h(
-        "div", null ,
+        "div",
+        null,
         h(c.KeyboardControl, { player: props.player, config: props.config }),
         h(c.Loading, { player: props.player }),
         h(
           "div",
-          { className: "playkit-player-gui " + showFullscreenClass, id: "player-gui" },
+          {
+            className: "playkit-player-gui " + showFullscreenClass,
+            id: "player-gui",
+          },
           h(c.OverlayPortal, null),
           h(c.UnmuteIndication, { player: props.player }),
           h(c.OverlayAction, { player: props.player }),
@@ -132,15 +113,19 @@ export class PlaybackPreset {
         h(c.PrePlaybackPlayOverlay, { player: props.player })
       );
     };
-    this.preset = function(props: any) {
+    this.preset = function (props: any) {
       //if U change this change the other preset
       return h(
-        "div", null,
+        "div",
+        null,
         h(c.KeyboardControl, { player: props.player, config: props.config }),
         h(c.Loading, { player: props.player }),
         h(
           "div",
-          { className: "playkit-player-gui " + showFullscreenClass, id: "player-gui" },
+          {
+            className: "playkit-player-gui " + showFullscreenClass,
+            id: "player-gui",
+          },
           h(c.OverlayPortal, null),
           h(c.UnmuteIndication, { player: props.player }),
           h(c.OverlayAction, { player: props.player }),
