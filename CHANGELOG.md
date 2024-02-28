@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.15 (2024-02-28)
+
+
+### Bug Fixes
+
+* **SUP-41626:** Avoid disable rapt loading on iphone and ipad ([#137](https://github.com/kaltura/kaltura-interactive-player/issues/137)) ([6fb958e](https://github.com/kaltura/kaltura-interactive-player/commit/6fb958e))
+
+
+
 ### 0.4.14 (2023-10-10)
 
 
