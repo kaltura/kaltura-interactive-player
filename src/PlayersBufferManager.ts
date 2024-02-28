@@ -44,11 +44,13 @@ export class PlayersBufferManager extends Dispatcher {
             this.playersFactory.playerLibrary.core.Env.device &&
             this.playersFactory.playerLibrary.core.Env.device.model; // desktops will be undefined
         this._isAvailable = true;
+
+        // Disbaling this option due to SUP-41626 failue on ipone / ipad 
         // On Safari desktop use pre-buffer, on ipad and iphone - don't because autoplay (defaultPath) needs user-gesture
-        if (model === "iPad" || model === "iPhone" || model === "Nexus 9") {
-            this._isAvailable = false;
-            log("log", "pbm_initializeAvailablity", "disabling prefetch", model);
-        }
+        //if (model === "iPad" || model === "iPhone" || model === "Nexus 9") {
+        //    this._isAvailable = false;
+        //    log("log", "pbm_initializeAvailablity", "disabling prefetch", model);
+        //}
     }
 
     /**
