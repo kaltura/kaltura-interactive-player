@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.16 (2024-04-09)
+
+
+### Bug Fixes
+
+* **SUP-42014:** rapt player control bar at the top ([#138](https://github.com/kaltura/kaltura-interactive-player/issues/138)) ([4c1ec7e](https://github.com/kaltura/kaltura-interactive-player/commit/4c1ec7e))
+
+
+
 ### 0.4.15 (2024-02-28)
 
 
