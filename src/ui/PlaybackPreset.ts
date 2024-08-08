@@ -79,9 +79,10 @@ export class PlaybackPreset {
 
     customLeftControls = [c.PlayPauseControl, c.RewindControl];
     if (this.raptData.showTimers) {
-      customRightControls = [c.TimeDisplayPlaybackContainer, c.VolumeControl, c.SettingsControl, customFullScreenButton]
+      customRightControls = [c.TimeDisplayPlaybackContainer, c.VolumeControl, c.
+          ClosedCaptions, c.SettingsControl, customFullScreenButton]
     } else {
-      customRightControls = [c.VolumeControl, c.SettingsControl, customFullScreenButton]
+      customRightControls = [c.VolumeControl, c.ClosedCaptions, c.SettingsControl, customFullScreenButton]
     }
 
     const customControllers = function (props: any) {
