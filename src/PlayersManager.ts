@@ -712,11 +712,7 @@ export class PlayersManager extends Dispatcher {
         const captionsTracks = tracks.find(
           (track) => track._kind === "subtitles"
         );
-        if (
-          audioTracks &&
-            audioTracks._language &&
-            audioTracks._language != undefined
-        ) {
+        if (audioTracks && audioTracks._language && audioTracks._language != undefined) {
           const view = player.getView().parentElement.parentElement
             .parentElement;
           view.classList.add("has-extra-tracks");
