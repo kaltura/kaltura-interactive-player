@@ -218,8 +218,10 @@
     .has-captions .playkit-player .playkit-seek-bar {
       width: calc(100% - 282px) !important;
     }
-    .has-extra-tracks .playkit-player .playkit-seek-bar,
     .has-captions .playkit-player .hide-fullscreen .playkit-seek-bar{
+      width: calc(100% - 246px) !important;
+    }
+    .has-extra-tracks .playkit-player .playkit-seek-bar{
       width: calc(100% - 246px) !important;
     }
     .has-extra-tracks .playkit-player .hide-fullscreen .playkit-seek-bar{
