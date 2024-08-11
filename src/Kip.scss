@@ -215,7 +215,13 @@
       width: calc(100% - 210px) !important;
     }
     /* Scrubber width (when timers are on) - with audio-tracks/captions */
-    .has-extra-tracks .playkit-player .playkit-seek-bar {
+    .has-captions .playkit-player .playkit-seek-bar {
+      width: calc(100% - 282px) !important;
+    }
+    .has-captions .playkit-player .hide-fullscreen .playkit-seek-bar{
+      width: calc(100% - 246px) !important;
+    }
+    .has-extra-tracks .playkit-player .playkit-seek-bar{
       width: calc(100% - 246px) !important;
     }
     .has-extra-tracks .playkit-player .hide-fullscreen .playkit-seek-bar{
