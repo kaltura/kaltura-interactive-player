@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.17 (2024-08-22)
+
+
+### Bug Fixes
+
+* **ADA-1526:** CC button availability in player (V7) Interactive video/Rapt ([#140](https://github.com/kaltura/kaltura-interactive-player/issues/140)) ([ab99007](https://github.com/kaltura/kaltura-interactive-player/commit/ab99007))
+
+
+
 ### 0.4.16 (2024-04-09)
 
 
