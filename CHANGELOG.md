@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.19 (2024-09-19)
+
+
+### Bug Fixes
+
+* **ADA-1670:** [V7 RAPT player] Focus moves over hidden elements ([#141](https://github.com/kaltura/kaltura-interactive-player/issues/141)) ([4c53f21](https://github.com/kaltura/kaltura-interactive-player/commit/4c53f21))
+
+
+
 ### 0.4.18 (2024-08-22)
 
 
