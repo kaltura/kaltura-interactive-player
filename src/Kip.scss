@@ -209,6 +209,10 @@
     width: calc(100% - 130px) !important;
   }
 
+  .has-captions .playkit-player .playkit-seek-bar{
+    width: calc(100% - 186px) !important;
+  }
+
   .has-timers {
 
     /* Scrubber width (when timers are on) - without audio-tracks/captions */
