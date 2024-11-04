@@ -196,6 +196,7 @@
     top: 13px;
     width: calc(100% - 126px);
     left: 45px;
+    z-index: 2 !important;
   }
   .hide-fullscreen .playkit-seek-bar {
     width: calc(100% - 96px);
@@ -206,6 +207,10 @@
   }
   .has-extra-tracks .playkit-player .hide-fullscreen .playkit-seek-bar {
     width: calc(100% - 130px) !important;
+  }
+
+  .has-captions .playkit-player .playkit-seek-bar{
+    width: calc(100% - 186px) !important;
   }
 
   .has-timers {
