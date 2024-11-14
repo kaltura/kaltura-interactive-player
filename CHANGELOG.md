@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.20 (2024-11-14)
+
+
+### Bug Fixes
+
+* **SUP-45429:** seek scrubber not available in KMS Rapt player ([#142](https://github.com/kaltura/kaltura-interactive-player/issues/142)) ([f45cdc3](https://github.com/kaltura/kaltura-interactive-player/commit/f45cdc3))
+
+
+
 ### 0.4.19 (2024-09-19)
 
 
