@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.21 (2025-03-06)
+
+
+### Bug Fixes
+
+* **SUP-46750:** (Salesforce+) GDPR on embeds for Path ([#144](https://github.com/kaltura/kaltura-interactive-player/issues/144)) ([6647e8c](https://github.com/kaltura/kaltura-interactive-player/commit/6647e8c))
+
+
+
 ### 0.4.20 (2024-11-14)
 
 
