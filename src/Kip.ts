@@ -29,6 +29,8 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     const uiconfRaptData: any = uiconfData.rapt || {};
     const uiconfPlaybackData: any =
         (uiconfData.player && uiconfData.player.playback) || uiconfData.playback || {};
+    const { serviceUrl } = uiconfData.provider?.env;
+
     // local config will override uiconf properties.
     config = {
       ...config,
@@ -41,6 +43,17 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
         ...config.playback
       }
     };
+
+    if (serviceUrl && !config.provider?.env?.serviceUrl) {
+      if (!config.provider) {
+        config.provider = {};
+      }
+      if (!config.provider.env) {
+        config.provider.env = {};
+      }
+      config.provider.env.serviceUrl = serviceUrl;
+    }
+
     // detect Google Analytics
     if (
       uiconfData.player.plugins.googleAnalytics &&
