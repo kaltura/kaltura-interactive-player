@@ -44,16 +44,14 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
       }
     };
 
-    if (serviceUrl) {
+    if (serviceUrl && !config.provider?.env?.serviceUrl) {
       if (!config.provider) {
         config.provider = {};
       }
       if (!config.provider.env) {
         config.provider.env = {};
       }
-      if(!config.provider.env.serviceUrl) {
-        config.provider.env.serviceUrl = serviceUrl;
-      }
+      config.provider.env.serviceUrl = serviceUrl;
     }
 
     // detect Google Analytics
