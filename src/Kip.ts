@@ -29,7 +29,7 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
     const uiconfRaptData: any = uiconfData.rapt || {};
     const uiconfPlaybackData: any =
         (uiconfData.player && uiconfData.player.playback) || uiconfData.playback || {};
-    const uiconfEnvData: any = uiconfData.provider?.env?.serviceUrl || {};
+    const { serviceUrl } = uiconfData.provider?.env;
 
     // local config will override uiconf properties.
     config = {
@@ -44,10 +44,17 @@ function setup(config: RaptConfig): KalturaInteractiveVideo {
       }
     };
 
-    uiconfEnvData ?
-        config.provider ? config.provider["env"] = {"serviceUrl": uiconfEnvData} :
-        config["provider"] = {"env": {"serviceUrl": uiconfEnvData}}
-    : config
+    if (serviceUrl) {
+      if (!config.provider) {
+        config.provider = {};
+      }
+      if (!config.provider.env) {
+        config.provider.env = {};
+      }
+      if(!config.provider.env.serviceUrl) {
+        config.provider.env.serviceUrl = serviceUrl;
+      }
+    }
 
     // detect Google Analytics
     if (
