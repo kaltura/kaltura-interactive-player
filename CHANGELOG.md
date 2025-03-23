@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.22 (2025-03-23)
+
+
+### Bug Fixes
+
+* **SUP-47494:** [FRP2 & IRP2] Embed Path entries showing error ([#145](https://github.com/kaltura/kaltura-interactive-player/issues/145)) ([ac53e26](https://github.com/kaltura/kaltura-interactive-player/commit/ac53e26))
+
+
+
 ### 0.4.21 (2025-03-06)
 
 
