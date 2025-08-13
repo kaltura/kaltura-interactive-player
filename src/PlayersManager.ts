@@ -368,7 +368,7 @@ export class PlayersManager extends Dispatcher {
     }, 269);
     const newEntryId = media.sources[0].src;
     const nextRaptNode: RaptNode = media.node;
-    const raptLayer: HTMLElement = document.querySelector(" .kiv-rapt-engine");
+    const raptLayer: HTMLElement = this.domManager.getContainer().querySelector(" .kiv-rapt-engine");
 
     // send analytics of nodePlay - event44
     if (this.analyticsModel) {
