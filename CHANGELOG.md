@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.23 (2025-08-28)
+
+
+### Bug Fixes
+
+* **SUP-49327:** [Novartis] Multiple rapt media embedded in single page issue ([#146](https://github.com/kaltura/kaltura-interactive-player/issues/146)) ([0cbf185](https://github.com/kaltura/kaltura-interactive-player/commit/0cbf185))
+
+
+
 ### 0.4.22 (2025-03-23)
 
 
