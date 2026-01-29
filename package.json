@@ -1,6 +1,6 @@
 {
   "name": "@playkit-js/rapt",
-  "version": "0.4.23",
+  "version": "0.4.24",
   "description": "Kaltura Interactive player based on Rapt engine",
   "main": "index.js",
   "license": "AGPL-3.0",
@@ -31,7 +31,7 @@
     }
   ],
   "scripts": {
-    "preinstall": "npx --yes --prefer-online --registry=https://npm.pkg.github.com --package @kaltura/kaltura-tools@latest kaltura-tools check --root=.",
+    "disabled-preinstall": "npx --yes --prefer-online --registry=https://npm.pkg.github.com --package @kaltura/kaltura-tools@latest kaltura-tools check --root=.",
     "tag": "scripts/tag.sh",
     "start": "webpack --watch & webpack-dev-server --dev",
     "serve-external": "webpack --watch & webpack-dev-server --dev",

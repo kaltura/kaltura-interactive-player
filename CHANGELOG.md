@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.24 (2026-01-29)
+
+
+### Bug Fixes
+
+* **SUP-51195:** Caption Language Selector on RAPT ([9528b71](https://github.com/kaltura/kaltura-interactive-player/commit/9528b71))
+
+
+
 ### 0.4.23 (2025-08-28)
 
 
