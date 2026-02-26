@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.4.25 (2026-02-26)
+
+
+### Bug Fixes
+
+* **SUP-51390:** Path buttons overlay player controls ([#151](https://github.com/kaltura/kaltura-interactive-player/issues/151)) ([be583f7](https://github.com/kaltura/kaltura-interactive-player/commit/be583f7))
+
+
+
 ### 0.4.24 (2026-01-29)
 
 
