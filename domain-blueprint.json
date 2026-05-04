@@ -1,0 +1,135 @@
+{
+  "repositoryName": "kaltura-interactive-player",
+  "packageName": "@playkit-js/rapt",
+  "coreResponsibility": "Interactive video player (Rapt engine wrapper) that enables branching video experiences with hotspot navigation, multi-player management, video buffering, and decision-based playback switching within the Kaltura Player ecosystem.",
+  "domainAndLogicOwnership": {
+    "featureOwnership": [
+      "Interactive video playback (branching/non-linear video)",
+      "Hotspot interaction and click handling",
+      "Multi-player instance management and switching",
+      "Video pre-buffering and caching for seamless transitions",
+      "Node-based video graph navigation",
+      "Rapt Engine layer integration and rendering",
+      "Fullscreen mode management",
+      "Playback state persistence across video nodes (volume, captions, audio track, playback rate)",
+      "Custom UI presets for interactive playback controls",
+      "Cue point event triggering",
+      "Analytics interception for KAVA (Kaltura Video Analytics)",
+      "Project lifecycle management (load, ready, start, ended, replay, reset)"
+    ],
+    "dataHandling": [
+      "Rapt graph data (nodes, hotspots, settings)",
+      "Interactive project metadata and configuration",
+      "Node navigation state (current node, previous node, next nodes)",
+      "Player buffering state and buffer list management",
+      "Hotspot objects with positions, styles, and click actions",
+      "Cue points with custom data",
+      "Video playback persistence (mute, volume, captions, audio track, playback rate)",
+      "Analytics model with rootEntryId, nodeId, entryId"
+    ]
+  },
+  "integrationPoints": {
+    "upstream": [
+      "Kaltura Backend API (cdnapisec.kaltura.com) - for Rapt data, file assets, playlists, and interactivity data",
+      "Rapt Media Composer - source of interactive video project definitions",
+      "MediaSpace (KMS) - generates player uiconf configurations"
+    ],
+    "downstream": [
+      "Kaltura Player JS (playkit-js) - consumed as a bundled plugin",
+      "Web applications embedding Kaltura interactive videos",
+      "MediaSpace player embeds"
+    ],
+    "externalApis": [
+      "Kaltura API v3 (playlist.get, fileAsset.list, fileAsset.serve, interactivity.get, session.startWidgetSession)",
+      "kaltura-typescript-client library",
+      "Rapt Engine SDK (engineWithNodeId.min.js)",
+      "Google Analytics (optional tracking integration)",
+      "KAVA (Kaltura Video Analytics) - analytics interception"
+    ]
+  },
+  "technicalStack": {
+    "primaryLanguages": ["TypeScript", "JavaScript", "SCSS"],
+    "frameworks": ["Webpack", "playkit-js (Kaltura Player)"],
+    "buildTools": ["webpack", "ts-loader", "sass-loader"],
+    "entryPoints": [
+      {
+        "file": "src/Kip.ts",
+        "description": "Main entry point - exports setup() function to initialize KalturaInteractiveVideo"
+      },
+      {
+        "file": "src/KalturaInteractiveVideo.ts",
+        "description": "Core class managing the interactive video experience, API exposure, and project lifecycle"
+      },
+      {
+        "file": "src/PlayersManager.ts",
+        "description": "Manages multiple Kaltura Player instances, Rapt engine integration, and node switching"
+      },
+      {
+        "file": "src/KipClient.ts",
+        "description": "Backend API client for loading Rapt data from Kaltura services"
+      },
+      {
+        "file": "src/PlayersBufferManager.ts",
+        "description": "Handles video pre-buffering for seamless transitions between nodes"
+      },
+      {
+        "file": "src/PlayersFactory.ts",
+        "description": "Factory for creating and configuring Kaltura Player instances"
+      },
+      {
+        "file": "src/PlayersDomManager.ts",
+        "description": "DOM management for player containers and Rapt engine layer"
+      },
+      {
+        "file": "src/ui/PlaybackPreset.ts",
+        "description": "Custom UI presets for interactive video controls"
+      }
+    ],
+    "outputArtifact": "dist/playkit-rapt.js"
+  },
+  "triageKeywords": [
+    "interactive video",
+    "rapt",
+    "rapt player",
+    "KIP",
+    "kaltura interactive player",
+    "hotspot",
+    "hotspot click",
+    "branching video",
+    "node switching",
+    "node:enter",
+    "node:exit",
+    "node:ended",
+    "project:load",
+    "project:ready",
+    "playlistId",
+    "PathKalturaPlayer",
+    "playkit-rapt",
+    "cue:forward",
+    "cue:reverse",
+    "video buffering rapt",
+    "prebuffer",
+    "raptMedia",
+    "graph data",
+    "GRAPH_DATA file asset",
+    "interactivity.get"
+  ],
+  "errorKeywordsAndPatterns": [
+    "missing rapt project id",
+    "Missing data. Could not retrieve attached file assets",
+    "Error with generating widget session KS",
+    "missing data interactivity",
+    "raptDataLoadError",
+    "firstPlayError",
+    "missingFirstNode",
+    "BufferManager is not available",
+    "could not destroy player",
+    "Failed to merge local config and uiconf"
+  ],
+  "version": "0.4.25",
+  "license": "AGPL-3.0",
+  "relatedRepositories": [
+    "kaltura/playkit-js",
+    "kaltura/kaltura-player-js"
+  ]
+}
